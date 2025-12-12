@@ -1,0 +1,179 @@
+{
+    "parts": {
+        "3268741": {
+            "weight": 1.112,
+            "handling": 2
+        },
+        "3425762": {
+            "weight": 0.138,
+            "handling": 1
+        },
+        "1966592X": {
+            "weight": 1.917,
+            "handling": 2
+        },
+        "3452192": {
+            "weight": 0.731,
+            "handling": 1
+        },
+        "1353870": {
+            "weight": 0.030,
+            "handling": 1
+        },
+        "3520162": {
+            "weight": 1.081,
+            "handling": 3
+        },
+        "3307092": {
+            "weight": 0.052,
+            "handling": 3
+        },
+        "3268740": {
+            "weight": 0.129,
+            "handling": 1
+        },
+        "3524054": {
+            "weight": 2.450,
+            "handling": 2
+        },
+        "3179975": {
+            "weight": 6.831,
+            "handling": 1
+        },
+        "3422998": {
+            "weight": 0.768,
+            "handling": 3
+        },
+        "2495223X": {
+            "weight": 1.473,
+            "handling": 3
+        },
+        "1353870_01": {
+            "weight": 0.030,
+            "handling": 1
+        },
+        "2245784X": {
+            "weight": 2.290,
+            "handling": 3
+        }
+    },
+    "joints": {
+        "joint1": {
+            "parts":[
+                "3425762",
+                "3268741"
+            ],
+            "technology": "MAG",
+            "time": 108,
+            "tolerance": 10
+        },
+        "joint2": {
+            "parts":[
+                "3268741",
+                "1966592X"
+            ],
+            "technology": "MAG",
+            "time": 244.92,
+            "tolerance": 6
+        },
+        "joint3": {
+            "parts":[
+                "3452192",
+                "1966592X"
+            ],
+            "technology": "MAG",
+            "time": 244.92,
+            "tolerance": 8
+        },
+        "joint4": {
+            "parts":[
+                "3452192",
+                "1353870"
+            ],
+            "technology": "MAG",
+            "time": 94.2,
+            "tolerance": 4
+        },
+        "joint5": {
+            "parts":[
+                "3452192",
+                "3520162"
+            ],
+            "technology": "MAG",
+            "time": 242,
+            "tolerance": 6
+        },
+        "joint6": {
+            "parts":[
+                "3307092",
+                "3520162"
+            ],
+            "technology": "MAG",
+            "time": 100.48,
+            "tolerance": 7
+        },
+        "joint7": {
+            "parts":[
+                "3268740",
+                "3524054"
+            ],
+            "technology": "MAG",
+            "time": 110,
+            "tolerance": 4
+        },
+        "joint8": {
+            "parts":[
+                "3520162",
+                "3524054"
+            ],
+            "technology": "MAG",
+            "time": 166,
+            "tolerance": 7
+        },
+        "joint9": {
+            "parts":[
+                "3179975",
+                "3524054"
+            ],
+            "technology": "MAG",
+            "time": 166,
+            "tolerance": 3
+        },
+        "joint10": {
+            "parts":[
+                "3179975",
+                "3422998"
+            ],
+            "technology": "MAG",
+            "time": 184.63,
+            "tolerance": 8
+        },
+        "joint11": {
+            "parts":[
+                "2495223X",
+                "3422998"
+            ],
+            "technology": "MAG",
+            "time": 235.5,
+            "tolerance": 4
+        },
+        "joint12": {
+            "parts":[
+                "3422998",
+                "1353870_01"
+            ],
+            "technology": "MAG",
+            "time": 94.2,
+            "tolerance": 8
+        },
+        "joint13": {
+            "parts":[
+                "2495223X",
+                "2245784X"
+            ],
+            "technology": "MAG",
+            "time": 166,
+            "tolerance": 3
+        }
+    }
+}

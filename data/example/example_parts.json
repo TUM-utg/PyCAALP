@@ -1,0 +1,36 @@
+{
+    "parts": {
+        "P1": {
+            "weight": 1,
+            "handling": 1
+        },
+        "P2": {
+            "weight": 0.1,
+            "handling": 3
+        },
+        "P3": {
+            "weight": 0.5,
+            "handling": 2
+        }
+    },
+    "joints": {
+        "joint1": {
+            "parts":[
+                "P1",
+                "P2"
+            ],
+            "technology": "WELD1",
+            "time": 100,
+            "tolerance": 1
+        },
+        "joint2": {
+            "parts":[
+                "P2",
+                "P3"
+            ],
+            "technology": "WELD2",
+            "time": 50,
+            "tolerance": 5
+        }
+    }
+}
