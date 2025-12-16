@@ -113,3 +113,12 @@ Chair of Metal Forming and Casting (UTG),
 Technical University of Munich (TUM).
 
 ## Contact
+
+__Project Maintainer:__ Marios Demetriades [@MariosDem](https://github.com/MariosDem)
+
+* __Bug Reports & Feature Requests:__ Please open an issue on the [GitHub Issue Tracker](https://github.com/TUM-utg/PyCAALP/issues).
+
+__Research Coordinator:__ Dr.-Ing. Christoph Hartmann
+
+* __Institution:__ Chair of Metal Forming and Casting, Technical University of Munich
+* __Research & Collaboration Inquiries:__ Email [christoph.hartmann@utg.de](mailto:christoph.hartmann@utg.de).
