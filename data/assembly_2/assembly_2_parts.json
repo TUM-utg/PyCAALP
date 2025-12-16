@@ -1,0 +1,219 @@
+{
+    "parts": {
+        "1769119X": {
+            "weight": 0.129,
+            "handling": 2
+        },
+        "1769143X": {
+            "weight": 0.452,
+            "handling": 1
+        },
+        "1280322X": {
+            "weight": 0.031,
+            "handling": 2
+        },
+        "1618293XB": {
+            "weight": 0.044,
+            "handling": 2
+        },
+        "1885921X": {
+            "weight": 4.911,
+            "handling": 3
+        },
+        "1618293XA": {
+            "weight": 0.044,
+            "handling": 2
+        },
+        "1769154X": {
+            "weight": 0.715,
+            "handling": 1
+        },
+        "1911442X": {
+            "weight": 0.07,
+            "handling": 1
+        },
+        "2284176X": {
+            "weight": 0.488,
+            "handling": 3
+        },
+        "2287314X": {
+            "weight": 0.34,
+            "handling": 1
+        },
+        "1769156X": {
+            "weight": 0.185,
+            "handling": 1
+        },
+        "1769115X": {
+            "weight": 0.084,
+            "handling": 1
+        },
+        "1769142X": {
+            "weight": 0.079,
+            "handling": 1
+        },
+        "1769141X": {
+            "weight": 0.071,
+            "handling": 3
+        },
+        "1769146X": {
+            "weight": 0.035,
+            "handling": 3
+        }
+    },
+    "joints": {
+        "joint1": {
+            "parts":[
+                "1769119X",
+                "1769143X"
+            ],
+            "technology": "MAG",
+            "time": 200,
+            "tolerance": 2
+        },
+        "joint2": {
+            "parts":[
+                "1769143X",
+                "1280322X"
+            ],
+            "technology": "MAG",
+            "time": 75,
+            "tolerance": 5
+        }, 
+        "joint3": {
+            "parts":[
+                "1769143X",
+                "1618293XB"
+            ],
+            "technology": "MAG",
+            "time": 93,
+            "tolerance": 5
+        },
+        "joint4": {
+            "parts":[
+                "1769143X",
+                "1885921X"
+            ],
+            "technology": "MAG",
+            "time": 560,
+            "tolerance": 3
+        },
+        "joint5": {
+            "parts":[
+                "1885921X",
+                "1618293XA"
+            ],
+            "technology": "MAG",
+            "time": 75,
+            "tolerance": 5
+        },
+        "joint6": {
+            "parts":[
+                "1885921X",
+                "1769154X"
+            ],
+            "technology": "MAG",
+            "time": 560,
+            "tolerance": 3
+        },
+        "joint7": {
+            "parts":[
+                "1769154X",
+                "1911442X"
+            ],
+            "technology": "MAG",
+            "time": 133,
+            "tolerance": 4
+        },
+        "joint8": {
+            "parts":[
+                "1769154X",
+                "2284176X"
+            ],
+            "technology": "MAG",
+            "time": 240,
+            "tolerance": 2
+        },
+        "joint9": {
+            "parts":[
+                "2284176X",
+                "2287314X"
+            ],
+            "technology": "MAG",
+            "time": 240,
+            "tolerance": 2
+        },
+        "joint10": {
+            "parts":[
+                "1769154X",
+                "1769156X"
+            ],
+            "technology": "MAG",
+            "time": 158,
+            "tolerance": 2
+        },
+        "joint11": {
+            "parts":[
+                "1885921X",
+                "1769142X"
+            ],
+            "technology": "MAG",
+            "time": 101,
+            "tolerance": 4
+        },
+        "joint12": {
+            "parts":[
+                "1769143X",
+                "1769115X"
+            ],
+            "technology": "MAG",
+            "time": 52,
+            "tolerance": 3
+        },
+        "joint13": {
+            "parts":[
+                "1885921X",
+                "1769115X"
+            ],
+            "technology": "MAG",
+            "time": 52,
+            "tolerance": 3
+        },
+        "joint14": {
+            "parts":[
+                "1769142X",
+                "1769141X"
+            ],
+            "technology": "MAG",
+            "time": 50,
+            "tolerance": 5
+        },
+        "joint15": {
+            "parts":[
+                "1769141X",
+                "1769146X"
+            ],
+            "technology": "MAG",
+            "time": 50,
+            "tolerance": 5
+        },
+        "joint16": {
+            "parts":[
+                "1769146X",
+                "1885921X"
+            ],
+            "technology": "MAG",
+            "time": 25,
+            "tolerance": 4
+        },
+        "joint17": {
+            "parts":[
+                "1769154X",
+                "1769141X"
+            ],
+            "technology": "MAG",
+            "time": 25,
+            "tolerance": 5
+        }
+    }
+}

@@ -1,4 +1,7 @@
-"""Solve an assembly and line planning problem for assembly 1"""
+"""Solve an assembly and line planning problem for assembly 1
+The assembly consists of 2 different technologies/manufacturing processes.
+The solution prioritizes the minimization of technology changes (MU_TECH=1.0)
+"""
 
 from pycaalp.run import create_assembly_digraph, optimize
 
@@ -6,7 +9,7 @@ if __name__ == "__main__":
     # Assembly digraph options
     FILE_NAME = "data/assembly_1/assembly_1_2_tech_parts.json"
 
-    # engineering constraint constanst (mu)
+    # engineering constraint constants (mu)
     MU_TECH = 1.0
     MU_HAND = 0.0
     MU_TOL = 0.0
