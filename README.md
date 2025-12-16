@@ -45,7 +45,7 @@ Libraries:
 
 ```bash
 # Clone the repository
-git clone [https://github.com/TUM-utg/PyCAALP.git](https://github.com/TUM-utg/PyCAALP.git)
+git clone https://github.com/TUM-utg/PyCAALP.git
 cd PyCAALP
 
 # Install dependencies
@@ -81,13 +81,13 @@ assembly_digraph = create_assembly_digraph(
     )
 
 # Solve the phase time balancing problem
-    result, best_path = optimize(
-        assembly_digraph=assembly_digraph,
-        num_phases=NUM_PHASES,
-        w_balanced=LAMBDA_TIME_BAL,
-        full_result_output=True, 
-        hide_output=False, # Print MIPs output
-    )
+result, best_path = optimize(
+    assembly_digraph=assembly_digraph,
+    num_phases=NUM_PHASES,
+    w_balanced=LAMBDA_TIME_BAL,
+    full_result_output=True, 
+    hide_output=False, # Print MIPs output
+)
 
 ```
 
@@ -97,7 +97,7 @@ assembly_digraph = create_assembly_digraph(
 
 ## Examples
 
-* `examples/01_sensitiviy_analysis.py`: This example uses Assembly 1 (14 parts, 13 joints) to show a simple assembly sequence calculation with balanced phase times.  
+* `examples/run_assembly_1.py`: This example uses Assembly 1 (14 parts, 13 joints) to show a simple assembly sequence calculation with balanced phase times.  
 
 ## API Reference
 
