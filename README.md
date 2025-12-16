@@ -60,6 +60,16 @@ pip install -r requirements.txt
 ```python
 from pycaalp.run import create_assembly_digraph, optimize
 
+FILE_NAME = "data/assembly_1/assembly_1_parts.json"
+
+# engineering constraint constants (mu)
+MU_TECH = 1.0
+MU_HAND = 0.0
+MU_TOL = 0.0
+
+# MIP options
+NUM_PHASES = 3
+LAMBDA_TIME_BAL = 0.5  # time balancing coefficient
 
 # Generate the weighted assembly directed graph
 assembly_digraph = create_assembly_digraph(
@@ -75,8 +85,8 @@ assembly_digraph = create_assembly_digraph(
         assembly_digraph=assembly_digraph,
         num_phases=NUM_PHASES,
         w_balanced=LAMBDA_TIME_BAL,
-        full_result_output=True,
-        hide_output=False,
+        full_result_output=True, 
+        hide_output=False, # Print MIPs output
     )
 
 ```
