@@ -1,5 +1,7 @@
 # PyCAALP (Computer-Aided Assembly Line Planning)
 
+[![CI](https://github.com/TUM-utg/PyCAALP/actions/workflows/ci.yml/badge.svg)](https://github.com/TUM-utg/PyCAALP/actions/workflows/ci.yml)
+
 A Unified Framework for Automated Assembly Sequence and Production Line Planning using Graph-based Optimization
 
 ## About
@@ -132,3 +134,5 @@ __Research Coordinator:__ Dr.-Ing. Christoph Hartmann
 
 * __Institution:__ Chair of Metal Forming and Casting, Technical University of Munich
 * __Research & Collaboration Inquiries:__ Email [christoph.hartmann@utg.de](mailto:christoph.hartmann@utg.de).
+
+
