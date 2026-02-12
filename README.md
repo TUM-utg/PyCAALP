@@ -32,17 +32,6 @@ __Customizable__: Flexible trade-off between sequence quality and assembly line 
 
 __python__ `>= 3.6`
 
-Libraries:
-
-* __numpy__ `==1.26.4`
-* __networkx__ `==3.4.2`
-* __matplotlib__ `==3.8.4`
-* __Pillow__ `==10.3.0`
-* __pandas__ `==2.2.2`
-* __openpyxl__ `==3.1.2`
-* __loguru__ `==0.7.2`
-* __PySCIPOpt__ `==5.0.1`
-
 ### Setup
 
 ```bash
@@ -134,6 +123,7 @@ __Research Coordinator:__ Dr.-Ing. Christoph Hartmann
 
 * __Institution:__ Chair of Metal Forming and Casting, Technical University of Munich
 * __Research & Collaboration Inquiries:__ Email [christoph.hartmann@utg.de](mailto:christoph.hartmann@utg.de).
+
 
 
 
