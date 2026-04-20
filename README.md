@@ -2,6 +2,7 @@
 
 [![CI](https://github.com/TUM-utg/PyCAALP/actions/workflows/python-package-conda.yml/badge.svg)](https://github.com/TUM-utg/PyCAALP/actions/workflows/python-package-conda.yml)
 [![codecov](https://codecov.io/gh/TUM-utg/PyCAALP/graph/badge.svg)](https://codecov.io/gh/TUM-utg/PyCAALP)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 A Unified Framework for Automated Assembly Sequence and Production Line Planning using Graph-based Optimization
 
