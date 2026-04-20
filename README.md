@@ -1,7 +1,7 @@
 # PyCAALP (Computer-Aided Assembly Line Planning)
 
 [![CI](https://github.com/TUM-utg/PyCAALP/actions/workflows/python-package-conda.yml/badge.svg)](https://github.com/TUM-utg/PyCAALP/actions/workflows/python-package-conda.yml)
-[![codecov](https://codecov.io/gh/TUM-utg/PyCAALP/graph/badge.svg)](https://codecov.io/gh/TUM-utg/PyCAALP)
+[![codecov](https://codecov.io/gh/TUM-utg/PyCAALP/branch/research%2Fwgp-2026/graph/badge.svg)](https://codecov.io/gh/TUM-utg/PyCAALP/branch/research%2Fwgp-2026)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 A Unified Framework for Automated Assembly Sequence and Production Line Planning using Graph-based Optimization
