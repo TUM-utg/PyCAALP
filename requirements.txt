@@ -1,11 +1,11 @@
-numpy==1.26.4
-networkx==3.4.2
-matplotlib==3.8.4
-Pillow==12.2.0
-pandas==2.2.2
-openpyxl==3.1.2
-loguru==0.7.2
-pyscipopt==5.0.1
+numpy>=1.26.4
+networkx>=3.4.2
+matplotlib>=3.8.4
+Pillow>=10.2.0
+pandas>=2.2.2
+openpyxl>=3.1.2
+loguru>=0.7.2
+pyscipopt>=5.0.1
 
 # Optional dependencies for freedom matrix calculation using STL files
 # (Uncomment to download)

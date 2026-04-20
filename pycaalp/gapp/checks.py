@@ -132,7 +132,7 @@ def check_num_subgraphs_and_one_assembly_policy(
     return num_connected_subgraphs == 1
 
 
-def check_one_assembly_policy(graph: nx.Graph) -> bool:
+def check_one_assembly_policy(graph: nx.Graph, one_assembly_policy=False) -> bool:
     """
     Checks if there is only one assembly policy in the graph.
 
@@ -142,6 +142,8 @@ def check_one_assembly_policy(graph: nx.Graph) -> bool:
     Returns:
         True if there is only one assembly policy, False otherwise.
     """
+    if not one_assembly_policy:
+        return True
     sub_graphs = np.array(list(nx.connected_components(graph)))
     sub_graphs_lengths = np.vectorize(len)(sub_graphs)
     num_connected_subgraphs = len(np.where(sub_graphs_lengths > 1)[0])
@@ -227,7 +229,7 @@ def dict_assembly_digraph_nodes_per_layer(assembly_digraph: nx.DiGraph) -> dict:
     return node_dict
 
 
-def binomial_coeff(y: int, x: int):
+def binomial_coeff(y: int, x: int) -> int:
     """Using the formula C(y,x)= y!/x!(y-x)!
 
     Args:
@@ -239,7 +241,7 @@ def binomial_coeff(y: int, x: int):
     """
     # Check if x is within the valid range
     if x < 0 or x > y:
-        return "Invalid input: x should be between 0 and y."
+        raise ValueError("Invalid input: x should be between 0 and y.")
 
     num_combinations = factorial(y) // (factorial(x) * factorial(y - x))
     return num_combinations

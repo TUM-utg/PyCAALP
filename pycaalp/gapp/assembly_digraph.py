@@ -1,4 +1,4 @@
-"""The main class for the Assemlby Digraph API.
+"""The main class for the Assembly Digraph API.
 
 All the functions used for the computation of the assembly digraph.
 """
@@ -12,7 +12,7 @@ import networkx as nx
 from loguru import logger
 
 
-from pycaalp.gapp.checks import check_one_assembly_policy, check_technology_changes
+from pycaalp.gapp.checks import check_one_assembly_policy
 from pycaalp.gapp.read_write import read_graph_from_json
 from pycaalp.gapp.file_formats import assembly_digraph_to_dict, save_to_pkl
 
@@ -50,6 +50,7 @@ class AssemblyDigraph:
         reduction_percentage=0,
         pkl_save_format: str = "dict",
         log_format: str = None,
+        one_assembly_policy=True,
     ):
         """Create an nx graph from a file or from a given graph, otherwise graph is None.
 
@@ -63,7 +64,7 @@ class AssemblyDigraph:
             w_tol: Tolerance weight.
             reduction_percentage: Edge reduction (%) for the assembly directed graph reduction.
             pkl_save_format: Format of the pkl file: "dict" or "class".
-            log_format: Loger format: "SET_OUT"(already set before the class creation),
+            log_format: Logger format: "SET_OUT"(already set before the class creation),
                 or loguru "INFO", "DEBUG".
         """
         if file_name.endswith(".json") or not isinstance(file_name, str):
@@ -92,6 +93,7 @@ class AssemblyDigraph:
         self.freedom_matrices = False
         self.pkl_save_format = pkl_save_format
         self.sum_of_sh_path_weights = None
+        self.one_assembly_policy = one_assembly_policy
 
         assert all(
             w >= 0.0 for w in [self.w_tech, self.w_hand, self.w_tol]
@@ -147,7 +149,7 @@ class AssemblyDigraph:
             new_edge: edge to be added.
             prev_edges: previous edges in the assembly.
             layer: current layer of the assembly digraph.
-            temp_graph_edge_tech: cuttent graphs edge weights.
+            temp_graph_edge_tech: current graphs edge weights.
 
         Returns:
             Calculated edge weight of the assembly digraph.
@@ -201,7 +203,7 @@ class AssemblyDigraph:
                 temp_graph.remove_edges_from(edges_to_remove)
 
                 # Keep only the combinations that satisfy the one assembly policy
-                if check_one_assembly_policy(temp_graph):
+                if check_one_assembly_policy(temp_graph, self.one_assembly_policy):
                     disassembly_states[layer].append(list(temp_graph.edges()))
                     curr_edge_index += 1
 
@@ -271,7 +273,7 @@ class AssemblyDigraph:
             )
             logger.debug(f"Number of initial states: {len(disassembly_states[layer])}")
 
-            # Try to remove all the nodes without succesor in the current layer of the digraph
+            # Try to remove all the nodes without successor in the current layer of the digraph
             # to avoid checking for them in the next layer
             # Usefull only when dmf
             if self.freedom_matrices:
@@ -294,10 +296,10 @@ class AssemblyDigraph:
         return digraph
 
     def compute_assembly_digraph_complete(self) -> nx.DiGraph:
-        """Computes the assebmly digraph of the given graph.
+        """Computes the assembly digraph of the given graph.
 
         Returns:
-            nx.DiGraph: A directed graph representing the assebmly digraph.
+            nx.DiGraph: A directed graph representing the assembly digraph.
         """
         # Check if there is no graph
         if self.graph is None:
@@ -342,9 +344,9 @@ class AssemblyDigraph:
         logger.info(f"Saved assembly digraph class to pickle file {file_name}")
 
     def generate_assembly_digraph_file_complete(
-        self, file_name="assemlby_digraph.pkl"
+        self, file_name="assembly_digraph.pkl"
     ) -> None:
-        """Generates an assembly digraph file by computing the assebmly digraph
+        """Generates an assembly digraph file by computing the assembly digraph
         and saving the assembly digraph class to a pickle file.
 
         Args:
