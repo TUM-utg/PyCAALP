@@ -36,7 +36,7 @@ from pycaalp.gapp.paths import calculate_sum_of_sh_path_weights
 class AssemblyDigraph:
     """Main class for the Assembly Digraph API.
     This class contains all the functions needed to compute the assembly digraph with the
-    option of using deegree of freedom matrices.
+    option of using degree of freedom matrices.
     """
 
     def __init__(
@@ -44,9 +44,10 @@ class AssemblyDigraph:
         file_name: str = None,
         graph: nx.Graph = None,
         dfm_file=None,
-        w_tech=0.3333,
-        w_hand=0.3333,
-        w_tol=0.3333,
+        w_tech=0.25,
+        w_hand=0.25,
+        w_tol=0.25,
+        w_mass=0.25,
         reduction_percentage=0,
         pkl_save_format: str = "dict",
         log_format: str = None,
@@ -62,6 +63,7 @@ class AssemblyDigraph:
             w_tech: Technology weight.
             w_hand: Handling weight.
             w_tol: Tolerance weight.
+            w_mass: Mass weight.
             reduction_percentage: Edge reduction (%) for the assembly directed graph reduction.
             pkl_save_format: Format of the pkl file: "dict" or "class".
             log_format: Logger format: "SET_OUT"(already set before the class creation),
@@ -89,6 +91,7 @@ class AssemblyDigraph:
         self.w_tech = w_tech
         self.w_hand = w_hand
         self.w_tol = w_tol
+        self.w_mass = w_mass
         self.reduction_percentage = reduction_percentage
         self.freedom_matrices = False
         self.pkl_save_format = pkl_save_format
@@ -96,16 +99,17 @@ class AssemblyDigraph:
         self.one_assembly_policy = one_assembly_policy
 
         assert all(
-            w >= 0.0 for w in [self.w_tech, self.w_hand, self.w_tol]
+            w >= 0.0 for w in [self.w_tech, self.w_hand, self.w_tol, self.w_mass]
         ), f"All attribute coefficients should be positive\n. w_tech:{self.w_tech}, w_hand:{self.w_hand}, w_tol:{self.w_tol}"
         assert math.isclose(
-            w_tech + w_hand + w_tol, 1.0, abs_tol=1e-3
+            self.w_tech + self.w_hand + self.w_tol + self.w_mass, 1.0, abs_tol=1e-3
         ), f"The attribute coefficients should sum to 1\n. w_tech:{self.w_tech}, w_hand:{self.w_hand}, w_tol:{self.w_tol}"
 
         # Main graph attributes
         self.node_handling = nx.get_node_attributes(graph, "handling")
         self.edge_tolerance = nx.get_edge_attributes(graph, "tolerance")
         self.edge_technology = nx.get_edge_attributes(graph, "technology")
+        self.edge_mass = nx.get_edge_attributes(graph, "mass")
 
         if dfm_file:
             if not isinstance(dfm_file, str):
@@ -157,9 +161,11 @@ class AssemblyDigraph:
         edge_weight = 0.0
         # Handling, Tolerance
         max_hand = self.graph[new_edge[0]][new_edge[1]]["handling"]
+        max_mass = self.graph[new_edge[0]][new_edge[1]]["mass"]
+        edge_tol = self.edge_tolerance.get(new_edge)
         # ΝΟΤΕ: This works since each layer adds only one edge
         edge_weight += (
-            self.edge_tolerance.get(new_edge) * self.w_tol + max_hand * self.w_hand
+            edge_tol * self.w_tol + max_hand * self.w_hand + max_mass * self.w_mass
         ) / layer
 
         # Technology
@@ -308,6 +314,9 @@ class AssemblyDigraph:
         logger.info("Computing assembly digraph...")
         # Run the complete assembly digraph code.
         self.create_assembly_digraph()
+
+        assert self.assembly_digraph is not None
+
         # Reduce the graph
         if self.reduction_percentage:
             unique_nodes_dict = find_all_shortest_paths(

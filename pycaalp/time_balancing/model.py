@@ -1,7 +1,7 @@
-"""MILP for the assembly line balancing problem.
+"""MIP for the assembly line balancing problem.
 
 Problem formulation:
-- The problem is formulated as a MILP
+- The problem is formulated as a MIP
 
 Problem variables:
 - x_e: binary variable that is equal to 1 if edge e is selected
@@ -43,7 +43,7 @@ def load_graph_class_from_pickle(file_name: str) -> dict:
         file_name: The path to the pickle file.
 
     Returns:
-        A dict with AssemblyDigraph atrributes.
+        A dict with AssemblyDigraph attributes.
     """
     with open(file_name, "rb") as _f:
         assem_dig = pickle.load(_f)
@@ -305,9 +305,11 @@ def check_and_print_results(
     results["handling"] = {}
     results["tolerance"] = {}
     results["time"] = {}
+    results["mass"] = {}
     results["absolute_handling"] = {}
     results["absolute_tolerance"] = {}
     results["absolute_time"] = {}
+    results["absolute_mass"] = {}
     results["phase"] = {}
     results["operations_per_phase"] = {}
     results["time_per_phase"] = {}
@@ -318,9 +320,11 @@ def check_and_print_results(
     handling = nx.get_edge_attributes(main_graph, "handling")
     tolerance = nx.get_edge_attributes(main_graph, "tolerance")
     time = nx.get_edge_attributes(main_graph, "time")
+    mass = nx.get_edge_attributes(main_graph, "mass")
     abs_handling = nx.get_edge_attributes(main_graph, "absolute_handling")
     abs_tolerance = nx.get_edge_attributes(main_graph, "absolute_tolerance")
     abs_time = nx.get_edge_attributes(main_graph, "absolute_time")
+    abs_mass = nx.get_edge_attributes(main_graph, "absolute_mass")
 
     for var in model.getVars():
         if var.name.startswith("x") and model.getVal(var) > 0.99:
@@ -333,9 +337,11 @@ def check_and_print_results(
             results["handling"][edge_str] = handling[oper_used]
             results["tolerance"][edge_str] = tolerance[oper_used]
             results["time"][edge_str] = time[oper_used]
+            results["mass"][edge_str] = mass[oper_used]
             results["absolute_handling"][edge_str] = abs_handling[oper_used]
             results["absolute_tolerance"][edge_str] = abs_tolerance[oper_used]
             results["absolute_time"][edge_str] = abs_time[oper_used]
+            results["absolute_mass"][edge_str] = abs_mass[oper_used]
 
         if var.name.startswith("y") and model.getVal(var) > 0.99:
             phase = int(var.name.split("_")[-1])
@@ -392,21 +398,21 @@ def check_and_print_results(
     return results, operations_list
 
 
-def run_milp(
-    assembly_digraph: AssemblyDigraph = None,
-    pickle_filename: str = None,
+def run_mip(
+    assembly_digraph: AssemblyDigraph | None = None,
+    pickle_filename: str = "",
     full_result_output: bool = False,
     return_model: bool = False,
-    bal_res_filename: str = None,
-    write_milp_res: str = False,
-    print_all_solutions: str = False,
+    bal_res_filename: str = "",
+    write_milp_res: bool = False,
+    print_all_solutions: bool = False,
     num_phases: int = 3,
-    w_balanced: int = 0.5,
-    relative_gap: float = 0.05,
+    w_balanced: float = 0.5,
+    relative_gap: float = 0.0,
     hide_output: bool = True,
-    var_type: bool = "BINARY",
+    var_type: str = "BINARY",
 ):
-    """Run the MILP for the assembly line balancing problem.
+    """Run the MIP for the assembly line balancing problem.
 
     The PKL file should be a dict and contain the following:
     - assembly_digraph: The assembly digraph.
@@ -424,12 +430,13 @@ def run_milp(
         The objective function value.
     """
     logger.info("Running MIP solver ...")
-    # Access the assebmly digraph
+    # Access the assembly digraph
     if assembly_digraph:
         assem_digr = assembly_digraph.assembly_digraph
         main_graph = assembly_digraph.graph
-    elif pickle_filename:
-        assem_digr, main_graph = get_pkl_data(pickle_filename)
+    # elif pickle_filename:
+    # TODO: need to access the sum_of_sh_path_weights
+    # assem_digr, main_graph = get_pkl_data(pickle_filename)
     else:
         raise ValueError("Please provide an assembly digraph class or a pickle file")
 
@@ -441,13 +448,14 @@ def run_milp(
     time_weights = nx.get_edge_attributes(main_graph, "time")
 
     # Equal effect factor using shortest path
+    assert assembly_digraph.sum_of_sh_path_weights is not None
     equal_effect_factor = (
         assembly_digraph.sum_of_sh_path_weights
         * num_phases
         / sum(time_weights.values())
     )
 
-    # Create MILP model
+    # Create MIP model
     model = Model()
 
     # Set model parameters (https://www.scipopt.org/doc/html/PARAMETERS.php)
@@ -496,7 +504,7 @@ def run_milp(
         if not os.path.exists(res_dir):
             os.makedirs(res_dir)
         # Add date and time to the filename
-        if bal_res_filename is None:
+        if not bal_res_filename:
             bal_res_filename = (
                 res_dir
                 + pickle_filename.split("/")[-1][:-4]

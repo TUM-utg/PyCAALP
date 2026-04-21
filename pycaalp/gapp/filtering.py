@@ -255,7 +255,7 @@ def find_all_shortest_paths(
     return find_unique_nodes_from_short_path(all_shortest_paths)
 
 
-def minmax_norm(attr_vals: dict) -> list:
+def minmax_norm(attr_vals: dict) -> dict:
     """Calculate the minmax norm of a vector
 
     Args:
@@ -276,7 +276,7 @@ def minmax_norm(attr_vals: dict) -> list:
     return attr_vals
 
 
-def scale_to(attr_vals: dict, div: str = "mean") -> list:
+def scale_to(attr_vals: dict, div: str = "mean") -> dict:
     """Scales the vector by dividing with its mean/median
     Args:
         vec_2_norm: Unnormalized values of a vector.
@@ -315,14 +315,16 @@ def normalize_attributes(graph: nx.Graph) -> nx.Graph:
     Returns:
         Graph with normalized attributes (weights, time)
     """
-    tol = "tolerance"
-    hand = "handling"
-    ti = "time"
+    tol_s = "tolerance"
+    hand_s = "handling"
+    ti_s = "time"
+    mass_s = "mass"  # avoid confusion with attribute/graph weights
 
-    tolerance = nx.get_edge_attributes(graph, tol)
-    node_handling = nx.get_node_attributes(graph, hand)
-    edge_handling = nx.get_edge_attributes(graph, hand)
-    time = nx.get_edge_attributes(graph, ti)
+    tolerance = nx.get_edge_attributes(graph, tol_s)
+    node_handling = nx.get_node_attributes(graph, hand_s)
+    edge_handling = nx.get_edge_attributes(graph, hand_s)
+    time = nx.get_edge_attributes(graph, ti_s)
+    mass = nx.get_edge_attributes(graph, mass_s)
 
     # First, make a copy of the absolute values
     # to be use later in the results
@@ -330,9 +332,15 @@ def normalize_attributes(graph: nx.Graph) -> nx.Graph:
     nx.set_node_attributes(graph, node_handling, name="absolute_handling")
     nx.set_edge_attributes(graph, edge_handling, name="absolute_handling")
     nx.set_edge_attributes(graph, time, name="absolute_time")
+    nx.set_edge_attributes(graph, mass, name="absolute_mass")
 
-    nx.set_edge_attributes(graph, minmax_norm(tolerance), tol)
-    nx.set_node_attributes(graph, minmax_norm(node_handling), hand)
-    nx.set_edge_attributes(graph, minmax_norm(edge_handling), hand)
-    nx.set_edge_attributes(graph, scale_to(time, div="median"), ti)
+    nx.set_edge_attributes(graph, minmax_norm(tolerance), tol_s)
+    nx.set_node_attributes(graph, minmax_norm(node_handling), hand_s)
+    nx.set_edge_attributes(graph, minmax_norm(edge_handling), hand_s)
+    nx.set_edge_attributes(graph, minmax_norm(mass), mass_s)
+    # scale_to results in better time balancing compared to minmax_norm
+    # For assembly 1: max phase time for num phases 1 to 5.
+    # minmax_norm: [2156.85, 1222.81, 878.68, 807.90, 462.92]
+    # scale_to(median): [2156.85, 1100.04, 753.4, 567.5, 449.12]
+    nx.set_edge_attributes(graph, scale_to(time, div="median"), ti_s)
     return graph

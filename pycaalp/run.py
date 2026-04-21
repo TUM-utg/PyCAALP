@@ -1,5 +1,5 @@
 from pycaalp.gapp.assembly_digraph import AssemblyDigraph
-from pycaalp.time_balancing.model import run_milp
+from pycaalp.time_balancing.model import run_mip
 
 
 def create_assembly_digraph(**kwargs) -> AssemblyDigraph:
@@ -33,4 +33,4 @@ def optimize(**kwargs):
         [optional] result: all results per operation or phase
         best path: part connections per phase
     """
-    return run_milp(**kwargs)
+    return run_mip(**kwargs)
