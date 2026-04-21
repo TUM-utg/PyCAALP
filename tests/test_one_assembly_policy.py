@@ -30,6 +30,7 @@ def default_kwargs():
         "w_tech": 1.0,
         "w_hand": 0.0,
         "w_tol": 0.0,
+        "w_mass": 0.0,
     }
 
 
