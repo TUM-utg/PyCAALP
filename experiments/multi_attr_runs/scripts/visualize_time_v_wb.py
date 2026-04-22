@@ -94,7 +94,7 @@ def plot_line_time_vs_w_balanced(attr_res: dict, attr: str, save_dir: str):
     plt.title(
         "Influence of time-balancing factor on maximum welding length",
         # fontweight="bold",
-        fontname="Arial",
+        fontname="Liberation Serif",
         fontsize=13,
     )
     if attr == "absolute_time_per_phase":
@@ -102,12 +102,12 @@ def plot_line_time_vs_w_balanced(attr_res: dict, attr: str, save_dir: str):
 
     plt.ylabel(
         "Maximum phase welding lenght [mm]",
-        fontname="Arial",
+        fontname="Liberation Serif",
         fontsize=11,
     )
     plt.xlabel(
         r"Time balancing weight ($\lambda$)",
-        fontname="Arial",
+        fontname="Liberation Serif",
         fontsize=11,
     )
     plt.xticks(list(attr_res.keys()))

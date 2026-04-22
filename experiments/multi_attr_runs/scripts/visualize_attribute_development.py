@@ -24,27 +24,34 @@ def plot_line_attr_dev(attr_res: dict, attr: str, save_dir: str):
     for weight_set, val in attr_res.items():
         indices = range(len(list(val)) + 1)
         # Color: up to 4 colors i.e. limited to 4 plots
+        weight_set_int = (
+            int(weight_set[0]),
+            int(weight_set[1]),
+            int(weight_set[2]),
+            int(weight_set[3]),
+            weight_set[4],
+        )
         attr_vals = list(val.values())
         accum_attr_vals = [sum(attr_vals[: i + 1]) for i in range(len(attr_vals))]
         accum_attr_vals.insert(0, 0.0)
         color = color_copy.pop()
-        plt.plot(indices, accum_attr_vals, label=weight_set, color=color)
+        plt.plot(indices, accum_attr_vals, label=weight_set_int, color=color)
         plt.plot(indices, accum_attr_vals, ".", color=color)
 
     plt.title(
         f"Cumulative development of {attr.capitalize().split("_",)[1]} cost",
-        # fontweight="bold",
-        fontname="Arial",
+        fontweight="bold",
+        fontname="Liberation Serif",
         fontsize=13,
     )
     plt.xlabel(
         "Assembly operation step",
-        fontname="Arial",
+        fontname="Liberation Serif",
         fontsize=11,
     )
     plt.ylabel(
         f"Cumulative {attr.split("_")[1]} cost",
-        fontname="Arial",
+        fontname="Liberation Serif",
         fontsize=11,
     )
     plt.xticks(indices)

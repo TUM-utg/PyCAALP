@@ -42,7 +42,8 @@ def plot_bar_attr_change(attr_change_res: dict, attr: str, save_dir: str):
     plt.grid(True, axis="y", linewidth=0.3, color="gray", alpha=0.4)
     # Just use the first digit for x ticks clarity
     xtick_labels = [
-        (int(v[0]), int(v[1]), int(v[2]), int(v[3])) for v in attr_change_res.keys()
+        str((int(v[0]), int(v[1]), int(v[2]), int(v[3]))).replace(" ", "")
+        for v in attr_change_res.keys()
     ]
     plt.xticks(indices, xtick_labels, fontsize=8, rotation=0)
     # ax.xaxis.set_label_position("top")
@@ -50,18 +51,18 @@ def plot_bar_attr_change(attr_change_res: dict, attr: str, save_dir: str):
     print(f"{max(attr_change_res.values())=}")
     plt.title(
         f"{attr.capitalize()} switching sensitivity",
-        # fontweight="bold",
-        fontname="Arial",
+        fontweight="bold",
+        fontname="Liberation Serif",
         fontsize=13,
     )
     plt.ylabel(
         f"Number of {attr} changes",
-        fontname="Arial",
+        fontname="Liberation Serif",
         fontsize=11,
     )
     plt.xlabel(
-        r"User-defined engineering weights $(\mu_{tech}, \mu_{hand}, \mu_{tol})$",
-        fontname="Arial",
+        r"User-defined engineering weights $(\mu_{tech}, \mu_{hand}, \mu_{tol}, \mu_{mass})$",
+        fontname="Liberation Serif",
         fontsize=11,
     )
     ax.legend(title="λ", fontsize=7)
