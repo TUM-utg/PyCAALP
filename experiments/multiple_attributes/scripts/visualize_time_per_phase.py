@@ -86,8 +86,8 @@ def plot_time_per_phase_combined(res_fname, _plot_dir):
 
 if __name__ == "__main__":
     set_cols()
-    RES_PKL_FNAME = "multi_attr_runs/results/res.pkl"
-    PLOT_DIR = "multi_attr_runs/plots"
+    RES_PKL_FNAME = "multiple_attributes/results/res.pkl"
+    PLOT_DIR = "multiple_attributes/plots"
 
     parser = argparse.ArgumentParser(description="Process command line arguments.")
     parser.add_argument(

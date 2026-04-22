@@ -1,17 +1,17 @@
 """Main run file for mutliple attributes tests
 
 Basic usage:
-    $ python -m multi_attr_runs.run
+    $ python -m multiple_attributes.run
 
 For further example tests:
-    Create a new test case folder e.g., multi_attr_runs/test_assembly_X
-    Create a config file based on multi_attr_runs/template_config.py and save it in the new folder
+    Create a new test case folder e.g., multiple_attributes/test_assembly_X
+    Create a config file based on multiple_attributes/template_config.py and save it in the new folder
     Then run:
-    $ python -m multi_attr_runs.run --config-file <new-config-dir>
+    $ python -m multiple_attributes.run --config-file <new-config-dir>
 
 Only plots run:
     For occasions where the results are already generated and only the plots are needed.
-    $ python -m multi_attr_runs.run --config-file <config-dir> --only-plots
+    $ python -m multiple_attributes.run --config-file <config-dir> --only-plots
 """
 
 import os
@@ -19,25 +19,25 @@ import argparse
 import importlib.util
 from loguru import logger
 
-from experiments.multi_attr_runs.scripts.combination_runs import (
+from experiments.multiple_attributes.scripts.combination_runs import (
     run_full_run_attr_change,
 )
-from experiments.multi_attr_runs.scripts.visualize_attribute_changes import (
+from experiments.multiple_attributes.scripts.visualize_attribute_changes import (
     plot_attribute_changes_combined,
 )
-from experiments.multi_attr_runs.scripts.visualize_attribute_development import (
+from experiments.multiple_attributes.scripts.visualize_attribute_development import (
     plot_attribute_development_combined,
 )
-from experiments.multi_attr_runs.scripts.visualize_time_per_phase import (
+from experiments.multiple_attributes.scripts.visualize_time_per_phase import (
     plot_time_per_phase_combined,
 )
-from experiments.multi_attr_runs.scripts.visualize_time_v_wb import (
+from experiments.multiple_attributes.scripts.visualize_time_v_wb import (
     plot_time_v_wb_combined,
 )
 from pycaalp.gapp.file_formats import save_to_pkl, save_all_res_to_json
 
 
-def import_config_dynamically(config_dir: str = "multi_attr_runs/config.py"):
+def import_config_dynamically(config_dir: str = "multiple_attributes/config.py"):
     """Import configuation file dynamically given the test's directory path.
 
     Args:
@@ -121,7 +121,7 @@ if __name__ == "__main__":
         required=False,
         help="Whether to run plots code only",
     )
-    CONFIG_DIR = "multi_attr_runs/config.py"
+    CONFIG_DIR = "multiple_attributes/config.py"
     args = parser.parse_args()
     if args.config:
         CONFIG_DIR = args.config

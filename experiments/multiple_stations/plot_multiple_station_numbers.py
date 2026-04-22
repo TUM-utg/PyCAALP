@@ -36,6 +36,7 @@ def plot_variable_num_stations(result_dict, res_dir):
         "Time balancing for variable station numbers",
         fontname="Liberation Serif",
         fontsize=13,
+        fontweight="bold",
     )
     plt.grid(True, linewidth=0.3, color="gray", alpha=0.4)
     plt.savefig(os.path.join(res_dir, "plot_multiple_station_numbers.svg"), dpi=1200)
@@ -53,7 +54,7 @@ def get_csv_data(csv_file):
 
 
 if __name__ == "__main__":
-    CSV_FNAME = "experiments/case_study/test_multiple_station_numbers.csv"
+    CSV_FNAME = "experiments/multiple_stations/test_multiple_station_numbers.csv"
     set_cols()
     multiple_stations_res = get_csv_data(CSV_FNAME)
     print(multiple_stations_res)

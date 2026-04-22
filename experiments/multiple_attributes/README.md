@@ -7,19 +7,19 @@ We want to confirm that not favoring technology changes, i.e., $w\_tech \approx 
 
 ## Basic run
 
-Just run `python -m experiments.multi_attr_runs.run` for the basic results run.
+Just run `python -m experiments.multiple_attributes.run` for the basic results run.
 
 ## Extra tests
 
 * For further example tests:
-    Create a new test case folder e.g., multi_attr_runs/test_assembly_X
-    Create a config file based on multi_attr_runs/template_config.py and save it in the new folder
+    Create a new test case folder e.g., multiple_attributes/test_assembly_X
+    Create a config file based on multiple_attributes/template_config.py and save it in the new folder
     Then run:
-    `$ python -m experiments.multi_attr_runs.run --config-file <new-config-path-filename>`
+    `$ python -m experiments.multiple_attributes.run --config-file <new-config-path-filename>`
 
 * Only plots run:
     For occasions where the results are already generated and only the plots are needed.
-    `$ python -m experiments.multi_attr_runs.run --config-file <config-path-filename> --only-plots`
+    `$ python -m experiments.multiple_attributes.run --config-file <config-path-filename> --only-plots`
 
 ## Results
 

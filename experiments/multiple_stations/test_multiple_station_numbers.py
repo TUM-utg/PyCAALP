@@ -23,7 +23,7 @@ def run_variable_num_phase_mip(_num_phases_list, _assembly_digraph, w_bal):
 if __name__ == "__main__":
     # Assembly digraph options
     file_name = "data/assembly_1/assembly_1_parts.json"
-    results_fname = "experiments/case_study/test_multiple_station_numbers.csv"
+    results_fname = "experiments/multiple_stations/test_multiple_station_numbers.csv"
 
     # 1st create the assembly graph
     assembly_digraph = AssemblyDigraph(file_name=file_name)

@@ -172,8 +172,8 @@ def plot_time_v_wb_combined(res_fname, _plot_dir):
 
 if __name__ == "__main__":
     set_cols()
-    RES_PKL_FNAME = "multi_attr_runs/sample_tests/test_1_ref/results/res.pkl"
-    PLOT_DIR = "multi_attr_runs/sample_tests/test_1_ref/plots"
+    RES_PKL_FNAME = "multiple_attributes/sample_tests/test_1_ref/results/res.pkl"
+    PLOT_DIR = "multiple_attributes/sample_tests/test_1_ref/plots"
 
     parser = argparse.ArgumentParser(description="Process command line arguments.")
     parser.add_argument(
