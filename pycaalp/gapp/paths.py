@@ -1,6 +1,7 @@
-"""Operations to measure assembly digraph paths
-"""
+"""Operations to measure assembly digraph paths"""
 
+from itertools import islice
+from loguru import logger
 import networkx as nx
 
 
@@ -38,3 +39,7 @@ def calculate_sum_of_sh_path_weights(cutsets):
         edge_sum += edge_weights[(sh_path[i], sh_path[i + 1])]
 
     return edge_sum
+
+
+def k_shortest_paths(G, source, target, k, weight=None):
+    return list(islice(nx.shortest_simple_paths(G, source, target, weight=weight), k))

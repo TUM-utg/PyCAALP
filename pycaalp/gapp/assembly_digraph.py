@@ -322,6 +322,7 @@ class AssemblyDigraph:
             unique_nodes_dict = find_all_shortest_paths(
                 self.assembly_digraph, self.graph.number_of_edges()
             )
+            logger.debug(f"Unique nodes from all_shortest_path {unique_nodes_dict}")
             self.assembly_digraph = filter_assembly_digraph_edges(
                 self.assembly_digraph,
                 self.reduction_percentage,

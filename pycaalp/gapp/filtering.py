@@ -5,6 +5,9 @@ import re
 import pandas as pd
 import numpy as np
 import networkx as nx
+from loguru import logger
+
+from pycaalp.gapp.paths import k_shortest_paths
 
 
 def pick_random_percentage(
@@ -58,8 +61,8 @@ def filter_assembly_digraph_edges(
     curr_layer = num_layers - 2
     edge_list = []
     for node in assembly_digraph.nodes():
-        # TODO: protect second layer
-        if int(node.split("_")[0]) in [0, 1, num_layers - 1]:
+        # TODO: which layers to protect
+        if int(node.split("_")[0]) in [0, num_layers - 1]:
             continue
 
         # Filter the nodes of the current layer
@@ -245,12 +248,20 @@ def find_all_shortest_paths(
 ) -> dict:
     if not method:
         method = "dijkstra"
-    all_shortest_paths = nx.all_shortest_paths(
+    # all_shortest_paths = nx.all_shortest_paths(
+    #     assembly_digraph,
+    #     source="0_1",
+    #     target=f"{main_graph_num_edges}_1",
+    #     weight="edge_weight",
+    #     method=method,
+    # )
+    logger.debug("Runnning all shortest paths")
+    all_shortest_paths = k_shortest_paths(
         assembly_digraph,
         source="0_1",
         target=f"{main_graph_num_edges}_1",
+        k=2000,
         weight="edge_weight",
-        method=method,
     )
     return find_unique_nodes_from_short_path(all_shortest_paths)
 
