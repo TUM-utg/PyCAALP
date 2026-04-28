@@ -132,7 +132,24 @@ def check_num_subgraphs_and_one_assembly_policy(
     return num_connected_subgraphs == 1
 
 
-def check_one_assembly_policy(graph: nx.Graph, one_assembly_policy=False) -> bool:
+def get_num_connected_subgraphs(graph: nx.Graph) -> int:
+    """
+    Checks if there is only one assembly policy in the graph.
+
+    Args:
+        graph: The graph to be checked.
+
+    Returns:
+        Number of connected subgraphs of the given graph.
+    """
+    sub_graphs = np.array(list(nx.connected_components(graph)))
+    sub_graphs_lengths = np.vectorize(len)(sub_graphs)
+    return len(np.where(sub_graphs_lengths > 1)[0])
+
+
+def check_one_assembly_policy(
+    graph: nx.Graph, one_assembly_policy: bool = False, num_par_ass: int = 1
+) -> bool:
     """
     Checks if there is only one assembly policy in the graph.
 
@@ -144,10 +161,12 @@ def check_one_assembly_policy(graph: nx.Graph, one_assembly_policy=False) -> boo
     """
     if not one_assembly_policy:
         return True
-    sub_graphs = np.array(list(nx.connected_components(graph)))
-    sub_graphs_lengths = np.vectorize(len)(sub_graphs)
-    num_connected_subgraphs = len(np.where(sub_graphs_lengths > 1)[0])
-    return num_connected_subgraphs in [0, 1]
+    allowed_subgraphs_num = [0, 1]
+    if num_par_ass != 1:
+        allowed_subgraphs_num.append(num_par_ass)
+    num_connected_subgraphs = get_num_connected_subgraphs(graph)
+
+    return num_connected_subgraphs in [0, 1, 2]
 
 
 def find_max_edges_connected_per_node(graph: nx.Graph) -> int:

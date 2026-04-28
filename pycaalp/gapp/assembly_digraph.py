@@ -12,7 +12,7 @@ import networkx as nx
 from loguru import logger
 
 
-from pycaalp.gapp.checks import check_one_assembly_policy
+from pycaalp.gapp.checks import check_one_assembly_policy, get_num_connected_subgraphs
 from pycaalp.gapp.read_write import read_graph_from_json
 from pycaalp.gapp.file_formats import assembly_digraph_to_dict, save_to_pkl
 
@@ -52,6 +52,7 @@ class AssemblyDigraph:
         pkl_save_format: str = "dict",
         log_format: str = None,
         one_assembly_policy=True,
+        num_par_ass=1,
     ):
         """Create an nx graph from a file or from a given graph, otherwise graph is None.
 
@@ -97,6 +98,7 @@ class AssemblyDigraph:
         self.pkl_save_format = pkl_save_format
         self.sum_of_sh_path_weights = None
         self.one_assembly_policy = one_assembly_policy
+        self.num_par_ass = num_par_ass
 
         assert all(
             w >= 0.0 for w in [self.w_tech, self.w_hand, self.w_tol, self.w_mass]
@@ -209,7 +211,9 @@ class AssemblyDigraph:
                 temp_graph.remove_edges_from(edges_to_remove)
 
                 # Keep only the combinations that satisfy the one assembly policy
-                if check_one_assembly_policy(temp_graph, self.one_assembly_policy):
+                if check_one_assembly_policy(
+                    temp_graph, self.one_assembly_policy, self.num_par_ass
+                ):
                     disassembly_states[layer].append(list(temp_graph.edges()))
                     curr_edge_index += 1
 
@@ -265,11 +269,20 @@ class AssemblyDigraph:
                                 list(digraph.out_edges(to_name, "operation")),
                             )
 
+                            connected_subgraphs = get_num_connected_subgraphs(
+                                temp_graph
+                            )
+                            w_conn_subgraphs = (
+                                1 / (connected_subgraphs * 10 + 1) if layer > 2 else 0
+                            )
+
                             digraph.add_edge(
                                 from_name,
                                 to_name,
                                 operation=new_edge,
                                 edge_weight=edge_weight,
+                                connected_subgraphs=connected_subgraphs,
+                                w_conn_subgraphs=w_conn_subgraphs,
                             )
 
                 temp_graph.add_edges_from(edges_to_remove)
