@@ -166,7 +166,7 @@ def check_one_assembly_policy(
         allowed_subgraphs_num.append(num_par_ass)
     num_connected_subgraphs = get_num_connected_subgraphs(graph)
 
-    return num_connected_subgraphs in [0, 1, 2]
+    return num_connected_subgraphs in allowed_subgraphs_num
 
 
 def find_max_edges_connected_per_node(graph: nx.Graph) -> int:
