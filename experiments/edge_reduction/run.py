@@ -24,10 +24,10 @@ from pycaalp.gapp.file_formats import save_to_pkl, save_all_res_to_json
 
 
 def import_config_dynamically(config_dir: str = "multi_attr_runs/config.py"):
-    """Import configuation file dynamically given the test's directory path.
+    """Import configuration file dynamically given the test's directory path.
 
     Args:
-        config_dir : Configuaration file path.
+        config_dir : Configuration file path.
 
     Returns:
         Imported configuration file.
@@ -126,7 +126,7 @@ if __name__ == "__main__":
     RELATIVE_GAP = 0.0
     NUM_REP_RUNS = 3
 
-    # Upack config data
+    # Unpack config data
     for key, val in config_data.items():
         match key:
             case "assembly_fname":
@@ -203,11 +203,11 @@ if __name__ == "__main__":
                 logger.info("Running plot_total_time")
                 plot_total_time(RES_FNAME, PLOT_DIR, NUM_PHASES)
             case "speedup":
-                logger.info("Running plot_speedup")
-                plot_speedup(RES_FNAME, PLOT_DIR, NUM_PHASES)
-                logger.info("Running plot_speedup_vs_qual_lost")
-                plot_speedup_vs_qual_lost(RES_FNAME, PLOT_DIR, NUM_PHASES)
-                logger.info("Running plot_speedup_vs_max_legnth_lost")
+                # logger.info("Running plot_speedup")
+                # plot_speedup(RES_FNAME, PLOT_DIR, NUM_PHASES)
+                # logger.info("Running plot_speedup_vs_qual_lost")
+                # plot_speedup_vs_qual_lost(RES_FNAME, PLOT_DIR, NUM_PHASES)
+                logger.info("Running plot_speedup_vs_max_length_lost")
                 plot_speedup_vs_max_length_lost(RES_FNAME, PLOT_DIR, NUM_PHASES)
             case "avg_max_time":
                 logger.info("Running plot_average_max_time")

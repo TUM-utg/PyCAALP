@@ -22,3 +22,16 @@ Results and plots can be found inside the results directory specified in the con
 
 * `<result-dirname>/results`
 * `<result-dirname>/plots`
+
+* res .pkl file data
+
+```python
+results[red_perc] = (
+            np.mean(solving_time),
+            np.mean(objective_value),
+            np.mean(max_phase_time),
+            np.std(solving_time),
+            np.std(objective_value),
+            np.std(max_phase_time),
+        )
+```

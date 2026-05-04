@@ -12,7 +12,6 @@ config_data = {
     "num_rep_runs": 5,
     "relative_gap": 0.00,  # MIP solver relative gap [0-1]
     "plots": [
-        "objective_value",
         "total_time",
         "speedup",  # NOTICE: when there are not results for edge reduction=0 this will fail
         "avg_max_time",
