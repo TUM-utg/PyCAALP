@@ -186,7 +186,7 @@ class AssemblyDigraph:
         """
         Computes the assembly digraph of the given graph.
         Fully fused approach: The assembly digraph is computed in place while
-        the dissasembly states are computed.
+        the disassembly states are computed.
 
         Returns:
             nx.DiGraph: A directed graph representing the assembly states.
@@ -273,7 +273,7 @@ class AssemblyDigraph:
                                 temp_graph
                             )
                             w_conn_subgraphs = (
-                                1 / (connected_subgraphs * 10 + 1) if layer > 2 else 0
+                                1 / (connected_subgraphs**10 + 1) if layer > 2 else 0
                             )
 
                             digraph.add_edge(

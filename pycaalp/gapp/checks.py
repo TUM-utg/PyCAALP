@@ -39,7 +39,7 @@ def count_num_different_technologies(technology_weights: list) -> int:
     return len(tech_list) - 1
 
 
-def create_tech_list_with_occurences(technology_values: list):
+def create_tech_list_with_occurrences(technology_values: list):
     tech_occur = {}
     for value in technology_values:
         if value not in tech_occur.keys():
@@ -63,7 +63,7 @@ def find_min_diff(technology_occur: dict):
 
 
 def check_technology_changes(technology_values: dict, new_edge_technology: str):
-    tech_occur = create_tech_list_with_occurences(list(technology_values.values()))
+    tech_occur = create_tech_list_with_occurrences(list(technology_values.values()))
     min_diff_prev = find_min_diff(tech_occur)
     if new_edge_technology not in tech_occur:
         tech_occur[new_edge_technology] = 1
@@ -222,7 +222,7 @@ def dict_assembly_digraph_length_per_layer(
     if print_results:
         print("Assembly digraph length per layer:")
         print(f"Total number of nodes: {len(assembly_digraph.nodes())}")
-        print("Toal number of nodes per layer:")
+        print("Total number of nodes per layer:")
         print(layer_dict)
         print(f"Total number of edges: {len(assembly_digraph.edges())}")
     return layer_dict
