@@ -307,17 +307,21 @@ class AssemblyDigraph:
                             phase_after = min(
                                 int(t_done_to / phase_width), self.num_phases - 1
                             )
-                            crosses = phase_after > phase_before
-                            if crosses:
-                                # How close does the crossing land to the ideal boundary?
-                                # 0 = perfect alignment, up to 1/(2*P) = worst crossing.
-                                crossing_fraction = t_done_to / T_total
-                                time_balanced_weight = min(
-                                    abs(crossing_fraction - p / self.num_phases)
-                                    for p in range(1, self.num_phases)
-                                )
+                            # Minimum distance from either endpoint of this operation to the
+                            # nearest ideal phase boundary. This scores how well this layer
+                            # transition serves as a potential MIP split point regardless of
+                            # whether the operation itself crosses a boundary.
+                            if T_total > 0 and self.num_phases > 1:
+                                from_frac = t_done_from / T_total
+                                to_frac = t_done_to / T_total
+                                ideal_fracs = [
+                                    p / self.num_phases for p in range(1, self.num_phases)
+                                ]
+                                dist_from = min(abs(from_frac - f) for f in ideal_fracs)
+                                dist_to = min(abs(to_frac - f) for f in ideal_fracs)
+                                time_balanced_weight = min(dist_from, dist_to)
                             else:
-                                time_balanced_weight = 1.0
+                                time_balanced_weight = edge_weight
 
                             digraph.add_edge(
                                 from_name,
