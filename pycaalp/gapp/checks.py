@@ -52,12 +52,12 @@ def create_tech_list_with_occurrences(technology_values: list):
 
 def find_min_diff(technology_occur: dict):
     max_key = max(technology_occur, key=technology_occur.get)
-    min_diff = float("-inf")
+    min_diff = float("inf")
     for tech, occurs in technology_occur.items():
         if tech != max_key:
             curr_min_diff = technology_occur[max_key] - occurs
             min_diff = min(curr_min_diff, min_diff)
-    if min_diff == float("-inf"):
+    if min_diff == float("inf"):  # loop never ran: only one technology type
         return 0
     return min_diff
 

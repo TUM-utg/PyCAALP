@@ -61,7 +61,6 @@ def filter_assembly_digraph_edges(
     curr_layer = num_layers - 2
     edge_list = []
     for node in assembly_digraph.nodes():
-        # TODO: which layers to protect
         if int(node.split("_")[0]) in [0, num_layers - 1]:
             continue
 
@@ -87,6 +86,18 @@ def filter_assembly_digraph_edges(
             edge_list = []
 
         edge_list.extend(list(assembly_digraph.out_edges(node)))
+
+    # The loop ends without triggering the filter for the last accumulated layer
+    # (layer 1), because layer-0 nodes are skipped via `continue`. Process it now.
+    if edge_list and curr_layer not in [0, num_layers - 1]:
+        if unique_nodes_dict is not None:
+            rand_edges_to_remove = pick_random_percentage(
+                edge_list, filter_percentage, unique_nodes_dict.get(curr_layer, [])
+            )
+        else:
+            rand_edges_to_remove = pick_random_percentage(edge_list, filter_percentage)
+        for u, v in rand_edges_to_remove:
+            assembly_digraph.remove_edge(u, v)
 
     # Remove all the successors
     nodes_to_remove = []
@@ -244,24 +255,17 @@ def keep_only_unique_nodes(
 
 
 def find_all_shortest_paths(
-    assembly_digraph: nx.DiGraph, main_graph_num_edges: int, method: str = None
+    assembly_digraph: nx.DiGraph,
+    main_graph_num_edges: int,
+    weight_attr: str = "edge_weight",
 ) -> dict:
-    if not method:
-        method = "dijkstra"
-    # all_shortest_paths = nx.all_shortest_paths(
-    #     assembly_digraph,
-    #     source="0_1",
-    #     target=f"{main_graph_num_edges}_1",
-    #     weight="edge_weight",
-    #     method=method,
-    # )
     logger.debug("Runnning all shortest paths")
     all_shortest_paths = k_shortest_paths(
         assembly_digraph,
         source="0_1",
         target=f"{main_graph_num_edges}_1",
         k=2000,
-        weight="edge_weight",
+        weight=weight_attr,
     )
     return find_unique_nodes_from_short_path(all_shortest_paths)
 

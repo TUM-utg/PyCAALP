@@ -137,7 +137,7 @@ def write_results_to_file(
         _f.write(f"alpha = {model.getVal(alpha)}\n")
 
         _f.write("\nX variables: operation\n")
-        for key, val in operations.items():
+        for key, val in results.items():
             _f.write(f"{key}: {val}\n")
 
         if print_all_solutions:
@@ -314,7 +314,6 @@ def check_and_print_results(
     results["operations_per_phase"] = {}
     results["time_per_phase"] = {}
     results["absolute_time_per_phase"] = {}
-    phase_per_operation_list = []
     used_operations = []
     technology = nx.get_edge_attributes(main_graph, "technology")
     handling = nx.get_edge_attributes(main_graph, "handling")
@@ -326,12 +325,13 @@ def check_and_print_results(
     abs_time = nx.get_edge_attributes(main_graph, "absolute_time")
     abs_mass = nx.get_edge_attributes(main_graph, "absolute_mass")
 
+    # Build layer→phase mapping from y variables (keyed by layer index)
+    layer_to_phase = {}
     for var in model.getVars():
         if var.name.startswith("x") and model.getVal(var) > 0.99:
             edge_str = ast.literal_eval(var.name[2:])
             oper_used = assembly_digraph.edges[edge_str]["operation"]
-            used_operations.append(oper_used)  # for testing
-            # print(f"{_x.name}: {oper_used}")
+            used_operations.append(oper_used)
             results["operations"][edge_str] = oper_used
             results["technology"][edge_str] = technology[oper_used]
             results["handling"][edge_str] = handling[oper_used]
@@ -344,27 +344,26 @@ def check_and_print_results(
             results["absolute_mass"][edge_str] = abs_mass[oper_used]
 
         if var.name.startswith("y") and model.getVal(var) > 0.99:
-            phase = int(var.name.split("_")[-1])
-            phase_per_operation_list.insert(0, phase)
+            # y variable names are "y_<layer>_<phase>"
+            parts = var.name.split("_")
+            layer_to_phase[int(parts[1])] = int(parts[2])
 
         if var.name == "alpha":
             results["alpha"] = model.getVal(var)
 
-    for ed_str, ph in zip(list(results["operations"].keys()), phase_per_operation_list):
+    # Assign phase to each selected edge using the explicit layer→phase mapping
+    for ed_str, oper in results["operations"].items():
+        layer = int(ed_str[0].split("_")[0])
+        ph = layer_to_phase[layer]
         results["phase"][ed_str] = ph
-
         results["time_per_phase"][ph] = (
-            results["time_per_phase"].get(ph, 0) + time[results["operations"][ed_str]]
+            results["time_per_phase"].get(ph, 0) + time[oper]
         )
-
         results["absolute_time_per_phase"][ph] = (
-            results["absolute_time_per_phase"].get(ph, 0)
-            + abs_time[results["operations"][ed_str]]
+            results["absolute_time_per_phase"].get(ph, 0) + abs_time[oper]
         )
-
-    for ph in phase_per_operation_list:
         results["operations_per_phase"][ph] = (
-            results["operations_per_phase"].get(ph, 0) + 1  # Just accumulate
+            results["operations_per_phase"].get(ph, 0) + 1
         )
 
     # Check if all the used operations are in the operations list
@@ -384,16 +383,15 @@ def check_and_print_results(
                     oper_used = assembly_digraph.edges[ast.literal_eval(v.name[2:])][
                         "operation"
                     ]
-
                     print(
-                        f"{v.name}: {model.getSolVal(sol, v)}, {main_graph.parts[oper_used[0]]}, {main_graph.parts_dict[oper_used[1]]} "
+                        f"{v.name}: {model.getSolVal(sol, v)}, "
+                        f"{oper_used[0]}, {oper_used[1]}"
                     )
 
-    operations_list = []
-    operations_list = [[] for _ in range(max(phase_per_operation_list) + 1)]
-    op_list = list(results["operations"].values())
-    for i in range(len(op_list) - 1, -1, -1):
-        operations_list[phase_per_operation_list[i]].append(op_list[i])
+    num_phases_used = max(results["phase"].values()) + 1 if results["phase"] else 0
+    operations_list = [[] for _ in range(num_phases_used)]
+    for ed_str, oper in results["operations"].items():
+        operations_list[results["phase"][ed_str]].append(oper)
 
     return results, operations_list
 

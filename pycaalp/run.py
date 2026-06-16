@@ -23,7 +23,7 @@ def create_assembly_digraph(**kwargs) -> AssemblyDigraph:
 def optimize(**kwargs):
     """
     Accepted arguments:
-    - assem_digr: Assembly digraph.
+    - assembly_digraph: Assembly digraph.
     - num_phases: Number of phases for MIP, defaults to 3.
     - w_balanced: Time balancing weight, defaults to 0.5. Range [0,1]
     - relative_gap: Relative gap for the MIP model solution. Range [0,1]

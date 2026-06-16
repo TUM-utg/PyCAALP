@@ -17,7 +17,7 @@ def calculate_num_simple_paths(assem_dig: "AssemblyDigraph") -> int:
     final_layer = assem_dig.graph.number_of_edges()
     all_simple_paths = nx.all_simple_paths(
         assem_dig.assembly_digraph,
-        source="0",
+        source="0_1",
         target=f"{final_layer}_1",
     )
     num_all_simple_paths = 0
@@ -43,3 +43,129 @@ def calculate_sum_of_sh_path_weights(cutsets):
 
 def k_shortest_paths(G, source, target, k, weight=None):
     return list(islice(nx.shortest_simple_paths(G, source, target, weight=weight), k))
+
+
+def compute_cumulative_operation_time(digraph, time_weights):
+    """Compute cumulative operation time for each node in the digraph via forward DP.
+
+    Each node encodes a specific assembly cutset, so the set of assembled joints is
+    fixed per node — cumulative time is path-independent.
+
+    Args:
+        digraph: nx.DiGraph with 'operation' attribute on edges.
+        time_weights: dict mapping operation tuple -> normalized time (from main graph).
+
+    Returns:
+        dict: mapping node_id -> cumulative_time
+    """
+    cum_time = {"0_1": 0.0}
+
+    for node in nx.topological_sort(digraph):
+        if node not in cum_time:
+            cum_time[node] = 0.0
+
+        for u, v, data in digraph.out_edges(node, data=True):
+            operation = data.get("operation")
+            if operation:
+                op_time = time_weights.get(operation, 0.0)
+                cum_time[v] = cum_time[u] + op_time
+            else:
+                logger.warning(
+                    f"Edge ({u}, {v}) has no 'operation' attribute — time skipped"
+                )
+                if v not in cum_time:
+                    cum_time[v] = cum_time[u]
+
+    return cum_time
+
+
+def compute_phase_boundary_crossing(digraph, time_weights, num_phases=3):
+    """Identify edges that cross between phase regions.
+
+    For num_phases=P, divide total operation time into P regions at boundaries
+    0, T/P, 2T/P, ..., T. Mark edges that transition between regions.
+
+    Args:
+        digraph: nx.DiGraph with operation edges.
+        time_weights: dict mapping operation tuple -> normalized time (from main graph).
+        num_phases: Number of assembly phases.
+
+    Returns:
+        dict: mapping (u,v) edge -> phase_region_crossed (bool)
+    """
+    cum_time = compute_cumulative_operation_time(digraph, time_weights)
+
+    # Find total time at the sink (node with no outgoing edges)
+    sinks = [n for n in digraph.nodes() if digraph.out_degree(n) == 0]
+    t_max = max((cum_time.get(n, 0.0) for n in sinks), default=0.0)
+
+    if t_max == 0:
+        t_max = 1.0
+
+    phase_width = t_max / num_phases
+
+    crossing = {}
+    for u, v, data in digraph.edges(data=True):
+        t_u = cum_time.get(u, 0.0)
+        t_v = cum_time.get(v, 0.0)
+
+        region_u = int(t_u / phase_width)
+        region_v = int(t_v / phase_width)
+
+        # Clamp to valid regions
+        region_u = min(region_u, num_phases)
+        region_v = min(region_v, num_phases)
+
+        crosses = region_v > region_u
+        crossing[(u, v)] = crosses
+
+    return crossing, cum_time
+
+
+def create_time_balanced_edge_weights(
+    digraph,
+    time_weights,
+    original_weight_attr="edge_weight",
+    num_phases=3,
+    lambda_param=0.5,
+):
+    """Modify edge weights to incorporate phase-balance heuristic.
+
+    Edges that cross phase boundaries get a bonus (lower weight), encouraging
+    k-shortest-paths to find paths with good phase alignment.
+
+    Args:
+        digraph: nx.DiGraph with operation edges.
+        time_weights: dict mapping operation tuple -> normalized time (from main graph).
+        original_weight_attr: Name of existing weight attribute.
+        num_phases: Number of assembly phases.
+        lambda_param: Trade-off weight (0=ignore, 1=maximize boundary crossing).
+
+    Returns:
+        dict: mapping (u,v) edge -> modified_weight
+    """
+    crossing, cum_time = compute_phase_boundary_crossing(
+        digraph, time_weights, num_phases
+    )
+
+    # Normalize original weights
+    orig_weights = nx.get_edge_attributes(digraph, original_weight_attr)
+    if orig_weights:
+        max_w = max(orig_weights.values()) if orig_weights.values() else 1.0
+        min_w = min(orig_weights.values()) if orig_weights.values() else 0.0
+        w_range = max_w - min_w if max_w > min_w else 1.0
+    else:
+        max_w = min_w = w_range = 1.0
+
+    modified_weights = {}
+    for u, v, data in digraph.edges(data=True):
+        orig_w = data.get(original_weight_attr, 0.0)
+        normalized_w = (orig_w - min_w) / w_range if w_range > 0 else 0.0
+
+        # Bonus for crossing: reduce weight by a fraction
+        crossing_bonus = -0.1 if crossing.get((u, v), False) else 0.0
+
+        modified_w = normalized_w + lambda_param * crossing_bonus
+        modified_weights[(u, v)] = max(0.001, modified_w)  # Keep positive
+
+    return modified_weights

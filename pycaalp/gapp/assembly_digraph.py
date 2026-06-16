@@ -53,6 +53,8 @@ class AssemblyDigraph:
         log_format: str = None,
         one_assembly_policy=True,
         num_par_ass=1,
+        num_phases: int = 3,
+        lambda_balance: float = 0.5,
     ):
         """Create an nx graph from a file or from a given graph, otherwise graph is None.
 
@@ -70,10 +72,16 @@ class AssemblyDigraph:
             log_format: Logger format: "SET_OUT"(already set before the class creation),
                 or loguru "INFO", "DEBUG".
         """
-        if file_name.endswith(".json") or not isinstance(file_name, str):
+        if file_name is not None:
+            if not isinstance(file_name, str):
+                raise ValueError("file_name must be a string path to a JSON file")
+            if not file_name.endswith(".json"):
+                raise ValueError(f"file_name must end with '.json', got: {file_name}")
             graph = read_graph_from_json(file_name)
-        else:
-            raise ValueError("File should be a string in JSON format")
+        elif graph is None:
+            raise ValueError(
+                "Provide either file_name (JSON path) or a pre-built graph"
+            )
 
         # Check if the graph is empty, fully connected and obeys the one assembly policy
         if graph is None:
@@ -99,6 +107,8 @@ class AssemblyDigraph:
         self.sum_of_sh_path_weights = None
         self.one_assembly_policy = one_assembly_policy
         self.num_par_ass = num_par_ass
+        self.num_phases = num_phases
+        self.lambda_balance = lambda_balance
 
         assert all(
             w >= 0.0 for w in [self.w_tech, self.w_hand, self.w_tol, self.w_mass]
@@ -195,6 +205,15 @@ class AssemblyDigraph:
         edges = list(self.graph.edges)
         total_num_layers = self.graph.number_of_edges()
         digraph = nx.DiGraph()
+
+        # Backward DP state for time_balanced_weight computation.
+        # t_remaining[v] = sum of operation times from v to the sink (path-independent,
+        # since each node encodes the exact set of remaining joints).
+        time_weights = nx.get_edge_attributes(self.graph, "time")
+        T_total = sum(time_weights.values()) if time_weights else 0.0
+        phase_width = T_total / self.num_phases if T_total > 0 else 1.0
+        sink_node = f"{total_num_layers}_1"
+        t_remaining = {sink_node: 0.0}
         # Add node layer if needed (it is already included on the node name)
         # digraph.add_node(f"{total_num_layers}_1", layer=total_num_layers)
 
@@ -228,7 +247,7 @@ class AssemblyDigraph:
 
                         if set(temp_graph.edges()).issubset(set(prev_edges)):
 
-                            new_edge = (prev_edges - temp_graph.edges()).pop()
+                            new_edge = (set(prev_edges) - set(temp_graph.edges())).pop()
 
                             # DFM check
                             if self.freedom_matrices:
@@ -276,6 +295,26 @@ class AssemblyDigraph:
                                 1 / (connected_subgraphs**10 + 1) if layer > 2 else 0
                             )
 
+                            op_time = time_weights.get(new_edge, 0.0)
+                            t_rem_to = t_remaining.get(to_name, 0.0)
+                            t_remaining.setdefault(from_name, op_time + t_rem_to)
+
+                            t_done_from = T_total - t_remaining[from_name]
+                            t_done_to = t_done_from + op_time
+                            phase_before = min(
+                                int(t_done_from / phase_width), self.num_phases - 1
+                            )
+                            phase_after = min(
+                                int(t_done_to / phase_width), self.num_phases - 1
+                            )
+                            crosses = phase_after > phase_before
+                            time_balanced_weight = 0 if crosses else 1
+                            # time_balanced_weight = (
+                            #     edge_weight
+                            #     if crosses
+                            #     else edge_weight * (1.0 + self.lambda_balance)
+                            # )
+
                             digraph.add_edge(
                                 from_name,
                                 to_name,
@@ -283,6 +322,7 @@ class AssemblyDigraph:
                                 edge_weight=edge_weight,
                                 connected_subgraphs=connected_subgraphs,
                                 w_conn_subgraphs=w_conn_subgraphs,
+                                time_balanced_weight=time_balanced_weight,
                             )
 
                 temp_graph.add_edges_from(edges_to_remove)
@@ -360,7 +400,7 @@ class AssemblyDigraph:
         if self.pkl_save_format == "dict":
             graph_to_dict = assembly_digraph_to_dict(self)
             save_to_pkl(graph_to_dict, file_name=file_name)
-            # elif self.pkl_save_format == "class":
+        elif self.pkl_save_format == "class":
             save_to_pkl(self, file_name=file_name)
         else:
             raise ValueError("Unknown pickle save format")
