@@ -64,7 +64,7 @@ if __name__ == "__main__":
         weight=weight,
     )
     # print(list(k_paths))
-    k_paths_1 = list(k_paths)[7]
+    k_paths_1 = list(k_paths)[0]
 
     k_p_1_conn_subgraphs_sequence = [
         assembly_digraph.assembly_digraph[k_paths_1[i]][k_paths_1[i + 1]][
