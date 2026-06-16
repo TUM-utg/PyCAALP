@@ -308,12 +308,16 @@ class AssemblyDigraph:
                                 int(t_done_to / phase_width), self.num_phases - 1
                             )
                             crosses = phase_after > phase_before
-                            time_balanced_weight = 0 if crosses else 1
-                            # time_balanced_weight = (
-                            #     edge_weight
-                            #     if crosses
-                            #     else edge_weight * (1.0 + self.lambda_balance)
-                            # )
+                            if crosses:
+                                # How close does the crossing land to the ideal boundary?
+                                # 0 = perfect alignment, up to 1/(2*P) = worst crossing.
+                                crossing_fraction = t_done_to / T_total
+                                time_balanced_weight = min(
+                                    abs(crossing_fraction - p / self.num_phases)
+                                    for p in range(1, self.num_phases)
+                                )
+                            else:
+                                time_balanced_weight = 1.0
 
                             digraph.add_edge(
                                 from_name,

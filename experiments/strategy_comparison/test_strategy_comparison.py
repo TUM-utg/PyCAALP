@@ -34,8 +34,8 @@ FILE_NAME = "data/assembly_1/assembly_1_2_tech_parts.json"
 NUM_PHASES = 3
 W_BALANCED = 1.0
 
-K_VALUES = [10, 50, 200, 500, 1000, 2000, 5000, 10000, 20000]
-# K_VALUES = [10, 50, 200, 500]
+# K_VALUES = [10, 50, 200, 500, 1000, 2000, 5000, 10000, 20000]
+K_VALUES = [10, 50, 200, 500]
 
 RESULTS_FILE = "experiments/strategy_comparison/strategy_comparison.csv"
 
