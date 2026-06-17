@@ -11,8 +11,10 @@ import pytest
 
 from pycaalp.run import create_assembly_digraph, optimize
 from pycaalp.time_balancing.path_mip import solve_by_path_mip
-from pycaalp.time_balancing.subgraph_mip import build_kpath_subgraph, solve_by_subgraph_mip
-
+from pycaalp.time_balancing.subgraph_mip import (
+    build_kpath_subgraph,
+    solve_by_subgraph_mip,
+)
 
 ASSEMBLY_1_JSON = "data/assembly_1/assembly_1_2_tech_parts.json"
 NUM_JOINTS = 13
@@ -21,10 +23,22 @@ W_BALANCED = 0.5
 K = 50  # small k keeps fixtures fast; large enough to contain the optimal path
 
 EXPECTED_RESULT_KEYS = {
-    "operations", "technology", "handling", "tolerance", "time", "mass",
-    "absolute_handling", "absolute_tolerance", "absolute_time", "absolute_mass",
-    "phase", "operations_per_phase", "time_per_phase", "absolute_time_per_phase",
+    "operations",
+    "technology",
+    "handling",
+    "tolerance",
+    "time",
+    "mass",
+    "absolute_handling",
+    "absolute_tolerance",
+    "absolute_time",
+    "absolute_mass",
+    "phase",
+    "operations_per_phase",
+    "time_per_phase",
+    "absolute_time_per_phase",
     "alpha",
+    "objective",
 }
 
 
@@ -32,11 +46,15 @@ EXPECTED_RESULT_KEYS = {
 # Fixtures — built once per test session
 # ---------------------------------------------------------------------------
 
+
 @pytest.fixture(scope="module")
 def assembly1():
     return create_assembly_digraph(
         file_name=ASSEMBLY_1_JSON,
-        w_tech=1.0, w_hand=0.0, w_tol=0.0, w_mass=0.0,
+        w_tech=1.0,
+        w_hand=0.0,
+        w_tol=0.0,
+        w_mass=0.0,
     )
 
 
@@ -79,6 +97,7 @@ def subgraph_mip_results(assembly1):
 # Feasibility — all joints must be assigned
 # ---------------------------------------------------------------------------
 
+
 def test_full_mip_covers_all_joints(full_mip_results):
     _, ops_list = full_mip_results
     assert len([op for phase in ops_list for op in phase]) == NUM_JOINTS
@@ -98,6 +117,7 @@ def test_subgraph_mip_covers_all_joints(subgraph_mip_results):
 # Result dict structure
 # ---------------------------------------------------------------------------
 
+
 def test_full_mip_result_keys(full_mip_results):
     results, _ = full_mip_results
     assert set(results.keys()) == EXPECTED_RESULT_KEYS
@@ -116,6 +136,7 @@ def test_subgraph_mip_result_keys(subgraph_mip_results):
 # ---------------------------------------------------------------------------
 # Phase count and non-empty phases
 # ---------------------------------------------------------------------------
+
 
 def test_full_mip_phase_count(full_mip_results):
     _, ops_list = full_mip_results
@@ -139,6 +160,7 @@ def test_subgraph_mip_phase_count(subgraph_mip_results):
 # No joint appears in more than one phase
 # ---------------------------------------------------------------------------
 
+
 def test_full_mip_no_duplicate_joints(full_mip_results):
     _, ops_list = full_mip_results
     all_ops = [op for phase in ops_list for op in phase]
@@ -161,6 +183,7 @@ def test_subgraph_mip_no_duplicate_joints(subgraph_mip_results):
 # Alpha consistency — alpha must equal max phase time
 # ---------------------------------------------------------------------------
 
+
 def test_path_mip_alpha_equals_max_phase_time(path_mip_results):
     results, _ = path_mip_results
     assert results["alpha"] == pytest.approx(
@@ -178,6 +201,7 @@ def test_subgraph_mip_alpha_equals_max_phase_time(subgraph_mip_results):
 # ---------------------------------------------------------------------------
 # Subgraph structure
 # ---------------------------------------------------------------------------
+
 
 def test_kpath_subgraph_smaller_than_full(assembly1):
     full_edges = assembly1.assembly_digraph.number_of_edges()
@@ -202,13 +226,16 @@ def test_kpath_subgraph_grows_monotonically(assembly1):
 # full MIP optimum (measured on absolute phase time in seconds)
 # ---------------------------------------------------------------------------
 
+
 def test_path_mip_alpha_within_25_percent_of_full(full_mip_results, path_mip_results):
     full_alpha = max(full_mip_results[0]["absolute_time_per_phase"].values())
     path_alpha = max(path_mip_results[0]["absolute_time_per_phase"].values())
     assert path_alpha <= full_alpha * 1.25
 
 
-def test_subgraph_mip_alpha_within_5_percent_of_full(full_mip_results, subgraph_mip_results):
+def test_subgraph_mip_alpha_within_5_percent_of_full(
+    full_mip_results, subgraph_mip_results
+):
     full_alpha = max(full_mip_results[0]["absolute_time_per_phase"].values())
     sub_alpha = max(subgraph_mip_results[0]["absolute_time_per_phase"].values())
     assert sub_alpha <= full_alpha * 1.05
