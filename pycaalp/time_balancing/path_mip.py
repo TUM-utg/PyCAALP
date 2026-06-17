@@ -208,6 +208,8 @@ def solve_by_path_mip(
     if best_results is None:
         raise ValueError(f"No feasible path found among the {k} shortest paths")
 
+    best_results["objective"] = best_obj
+
     if full_result_output:
         return best_results, best_ops_list
     return best_ops_list

@@ -460,7 +460,7 @@ def run_mip(
     model.hideOutput(hide_output)
     model.setParam("limits/gap", relative_gap)  # relative gap
     # Use parallel mode
-    model.setParam("parallel/maxnthreads", 4)
+    model.setParam("parallel/maxnthreads", 0)
 
     # STEP 1: ADD VARIABLES
     x, y, z, alpha = add_vars(
@@ -495,6 +495,7 @@ def run_mip(
     )
 
     results = results_in_ascending_order(results)
+    results["objective"] = model.getObjVal()
 
     if write_milp_res:
         # Create balancing results dir

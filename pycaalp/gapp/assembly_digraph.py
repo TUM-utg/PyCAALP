@@ -48,6 +48,7 @@ class AssemblyDigraph:
         w_hand=0.25,
         w_tol=0.25,
         w_mass=0.25,
+        w_bal=0.5,
         reduction_percentage=0,
         pkl_save_format: str = "dict",
         log_format: str = None,
@@ -101,6 +102,7 @@ class AssemblyDigraph:
         self.w_hand = w_hand
         self.w_tol = w_tol
         self.w_mass = w_mass
+        self.w_bal = w_bal
         self.reduction_percentage = reduction_percentage
         self.freedom_matrices = False
         self.pkl_save_format = pkl_save_format
@@ -174,7 +176,7 @@ class AssemblyDigraph:
         # Handling, Tolerance
         max_hand = self.graph[new_edge[0]][new_edge[1]]["handling"]
         max_mass = self.graph[new_edge[0]][new_edge[1]]["mass"]
-        edge_tol = self.edge_tolerance.get(new_edge)
+        edge_tol = self.edge_tolerance.get(new_edge, 0.0)
         # ΝΟΤΕ: This works since each layer adds only one edge
         edge_weight += (
             edge_tol * self.w_tol + max_hand * self.w_hand + max_mass * self.w_mass
@@ -213,7 +215,7 @@ class AssemblyDigraph:
         T_total = sum(time_weights.values()) if time_weights else 0.0
         phase_width = T_total / self.num_phases if T_total > 0 else 1.0
         sink_node = f"{total_num_layers}_1"
-        t_remaining = {sink_node: 0.0}
+        t_total_assembly = {sink_node: T_total}
         # Add node layer if needed (it is already included on the node name)
         # digraph.add_node(f"{total_num_layers}_1", layer=total_num_layers)
 
@@ -291,37 +293,55 @@ class AssemblyDigraph:
                             connected_subgraphs = get_num_connected_subgraphs(
                                 temp_graph
                             )
-                            w_conn_subgraphs = (
-                                1 / (connected_subgraphs**10 + 1) if layer > 2 else 0
-                            )
+                            # Heuristic to enforce multiple connected subgraphs at first layers
+                            # w_conn_subgraphs = (
+                            #     1 / (connected_subgraphs**10 + 1) if layer > 2 else 0
+                            # )
 
                             op_time = time_weights.get(new_edge, 0.0)
-                            t_rem_to = t_remaining.get(to_name, 0.0)
-                            t_remaining.setdefault(from_name, op_time + t_rem_to)
+                            # Save subassembly times / per digraph nodes
+                            t_tot_asmb = t_total_assembly.get(to_name, 0.0)
+                            t_total_assembly.setdefault(from_name, t_tot_asmb - op_time)
 
-                            t_done_from = T_total - t_remaining[from_name]
-                            t_done_to = t_done_from + op_time
+                            t_done_from = t_total_assembly[from_name]
+                            t_done_to = t_total_assembly[to_name]
+
                             phase_before = min(
                                 int(t_done_from / phase_width), self.num_phases - 1
                             )
                             phase_after = min(
                                 int(t_done_to / phase_width), self.num_phases - 1
                             )
-                            # Minimum distance from either endpoint of this operation to the
-                            # nearest ideal phase boundary. This scores how well this layer
-                            # transition serves as a potential MIP split point regardless of
-                            # whether the operation itself crosses a boundary.
-                            if T_total > 0 and self.num_phases > 1:
-                                from_frac = t_done_from / T_total
-                                to_frac = t_done_to / T_total
-                                ideal_fracs = [
-                                    p / self.num_phases for p in range(1, self.num_phases)
-                                ]
-                                dist_from = min(abs(from_frac - f) for f in ideal_fracs)
-                                dist_to = min(abs(to_frac - f) for f in ideal_fracs)
-                                time_balanced_weight = min(dist_from, dist_to)
+                            if phase_before < phase_after:
+                                t_bal_weight = 0  # Need to find range of edge_weights
                             else:
-                                time_balanced_weight = edge_weight
+                                t_bal_weight = 1  # Need to find range of edge_weights
+
+                            # time_balanced_weight = (
+                            #     self.w_bal * t_bal_weight
+                            #     + (1 - self.w_bal) * edge_weight
+                            # )
+                            time_balanced_weight = t_bal_weight
+
+                            # TODO: try . Principled replacement: for each ideal
+                            # boundary b_k = k * phase_width inside
+                            # (t_done_from, t_done_to], add the best achievable
+                            # cut error
+                            #   min(|t_done_from - b_k|, |t_done_to - b_k|)
+                            #       / phase_width
+
+                            # if T_total > 0 and self.num_phases > 1:
+                            #     from_frac = t_done_from / T_total
+                            #     to_frac = t_done_to / T_total
+                            #     ideal_fracs = [
+                            #         p / self.num_phases
+                            #         for p in range(1, self.num_phases)
+                            #     ]
+                            #     dist_from = min(abs(from_frac - f) for f in ideal_fracs)
+                            #     dist_to = min(abs(to_frac - f) for f in ideal_fracs)
+                            #     time_balanced_weight = min(dist_from, dist_to)
+                            # else:
+                            #     time_balanced_weight = edge_weight
 
                             digraph.add_edge(
                                 from_name,
@@ -329,7 +349,7 @@ class AssemblyDigraph:
                                 operation=new_edge,
                                 edge_weight=edge_weight,
                                 connected_subgraphs=connected_subgraphs,
-                                w_conn_subgraphs=w_conn_subgraphs,
+                                # w_conn_subgraphs=w_conn_subgraphs,
                                 time_balanced_weight=time_balanced_weight,
                             )
 
@@ -448,7 +468,7 @@ class AssemblyDigraph:
 
     @property
     def get_num_layers(self) -> int:
-        """Get the number of layers of a assebmly digraph"""
+        """Get the number of layers of a assembly digraph"""
         # NOTE: compute indirectly the number of layers but efficient
         if not self.assembly_digraph:
             raise ValueError("No assembly digraph exists")

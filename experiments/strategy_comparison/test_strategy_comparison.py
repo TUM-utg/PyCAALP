@@ -31,10 +31,9 @@ from pycaalp.time_balancing.subgraph_mip import (
 
 FILE_NAME = "data/assembly_1/assembly_1_2_tech_parts.json"
 
-NUM_PHASES = 3
-W_BALANCED = 1.0
+NUM_PHASES = 7
+W_BALANCED = 0.9
 
-# K_VALUES = [10, 50, 200, 500, 1000, 2000, 5000, 10000, 20000]
 K_VALUES = [10, 50, 200, 500]
 
 RESULTS_FILE = "experiments/strategy_comparison/strategy_comparison.csv"
@@ -46,6 +45,8 @@ CSV_FIELDS = [
     "elapsed_s",
     "digraph_edges",
     "subgraph_edges",
+    "objective",
+    "obj_vs_full_pct",
     "alpha_abs",
     "abs_time_phase_0",
     "abs_time_phase_1",
@@ -76,12 +77,19 @@ def _record(
     results,
     ops_list,
     full_alpha,
+    full_obj,
     digraph_edges,
     subgraph_edges=None,
 ):
     abs_times = results["absolute_time_per_phase"]
     alpha_abs = max(abs_times.values())
     vs_full = round((alpha_abs / full_alpha - 1) * 100, 2) if full_alpha else None
+    objective = results.get("objective")
+    obj_vs_full = (
+        round((objective / full_obj - 1) * 100, 2)
+        if objective is not None and full_obj
+        else None
+    )
 
     return {
         "strategy": strategy,
@@ -92,6 +100,8 @@ def _record(
         "subgraph_edges": (
             subgraph_edges if subgraph_edges is not None else digraph_edges
         ),
+        "objective": round(objective, 3) if objective is not None else "",
+        "obj_vs_full_pct": obj_vs_full if obj_vs_full is not None else "",
         "alpha_abs": round(alpha_abs, 3),
         "abs_time_phase_0": round(abs_times.get(0, 0), 3),
         "abs_time_phase_1": round(abs_times.get(1, 0), 3),
@@ -114,7 +124,9 @@ if __name__ == "__main__":
 
     # Build digraph once (time_balanced_weight is set at construction time)
     print("\nBuilding assembly digraph …")
-    ad, build_time = _timed(create_assembly_digraph, file_name=FILE_NAME)
+    ad, build_time = _timed(
+        create_assembly_digraph, file_name=FILE_NAME, w_bal=W_BALANCED
+    )
     n_edges = ad.assembly_digraph.number_of_edges()
     print(
         f"  {ad.assembly_digraph.number_of_nodes()} nodes, {n_edges} edges  ({build_time:.1f}s)"
@@ -135,9 +147,12 @@ if __name__ == "__main__":
         full_result_output=True,
     )
     full_alpha = max(results1["absolute_time_per_phase"].values())
-    r1 = _record("full_mip", "—", None, t1, results1, ops1, full_alpha, n_edges)
+    full_obj = results1["objective"]
+    r1 = _record(
+        "full_mip", "—", None, t1, results1, ops1, full_alpha, full_obj, n_edges
+    )
     records.append(r1)
-    print(f"  alpha={r1['alpha_abs']:.1f}s  time={t1:.2f}s")
+    print(f"  obj={r1['objective']:.3f}  alpha={r1['alpha_abs']:.1f}s  time={t1:.2f}s")
 
     # ------------------------------------------------------------------
     # Methods 2 & 3: sweep over k, both weight variants
@@ -148,70 +163,135 @@ if __name__ == "__main__":
         # Subgraph sizes for reporting
         sg_ew = build_kpath_subgraph(ad, k, weight_attr="edge_weight")
         sg_bw = build_kpath_subgraph(ad, k, weight_attr="time_balanced_weight")
+        sg_cw = build_kpath_subgraph(
+            ad, k, weight_attr=["edge_weight", "time_balanced_weight"]
+        )
         sg_ew_edges = sg_ew.number_of_edges()
         sg_bw_edges = sg_bw.number_of_edges()
+        sg_cw_edges = sg_cw.number_of_edges()
         print(
             f"  Subgraph edges — edge_w: {sg_ew_edges} ({sg_ew_edges/n_edges*100:.1f}%)  "
-            f"bal_w: {sg_bw_edges} ({sg_bw_edges/n_edges*100:.1f}%)"
+            f"bal_w: {sg_bw_edges} ({sg_bw_edges/n_edges*100:.1f}%)  "
+            f"combined: {sg_cw_edges} ({sg_cw_edges/n_edges*100:.1f}%)"
         )
 
-        # 2a: Path-Enum MIP — edge_weight
-        print(f"  [2a] Path-Enum / edge_w  k={k} …")
-        (results2a, ops2a), t2a = _timed(
-            solve_by_path_mip,
-            assembly_digraph_obj=ad,
-            k=k,
-            num_phases=NUM_PHASES,
-            w_balanced=W_BALANCED,
-            hide_output=True,
-            full_result_output=True,
-            weight_attr="edge_weight",
-        )
-        r2a = _record(
-            "path_enum_mip",
-            "edge_weight",
-            k,
-            t2a,
-            results2a,
-            ops2a,
-            full_alpha,
-            n_edges,
-        )
-        records.append(r2a)
-        print(
-            f"      alpha={r2a['alpha_abs']:.1f}s  time={t2a:.3f}s  vs_full={r2a['vs_full_pct']:+.2f}%"
-        )
+        # # 2a: Path-Enum MIP — edge_weight
+        # print(f"  [2a] Path-Enum / edge_w  k={k} …")
+        # (results2a, ops2a), t2a = _timed(
+        #     solve_by_path_mip,
+        #     assembly_digraph_obj=ad,
+        #     k=k,
+        #     num_phases=NUM_PHASES,
+        #     w_balanced=W_BALANCED,
+        #     hide_output=True,
+        #     full_result_output=True,
+        #     weight_attr="edge_weight",
+        # )
+        # r2a = _record(
+        #     "path_enum_mip",
+        #     "edge_weight",
+        #     k,
+        #     t2a,
+        #     results2a,
+        #     ops2a,
+        #     full_alpha,
+        #     full_obj,
+        #     n_edges,
+        # )
+        # records.append(r2a)
+        # print(
+        #     f"      obj={r2a['objective']:.3f} (vs_full={r2a['obj_vs_full_pct']:+.2f}%)  alpha={r2a['alpha_abs']:.1f}s  time={t2a:.3f}s  vs_full={r2a['vs_full_pct']:+.2f}%"
+        # )
 
         # 2b: Path-Enum MIP — time_balanced_weight
-        print(f"  [2b] Path-Enum / bal_w   k={k} …")
-        (results2b, ops2b), t2b = _timed(
-            solve_by_path_mip,
-            assembly_digraph_obj=ad,
-            k=k,
-            num_phases=NUM_PHASES,
-            w_balanced=W_BALANCED,
-            hide_output=True,
-            full_result_output=True,
-            weight_attr="time_balanced_weight",
-        )
-        r2b = _record(
-            "path_enum_mip",
-            "time_balanced_weight",
-            k,
-            t2b,
-            results2b,
-            ops2b,
-            full_alpha,
-            n_edges,
-        )
-        records.append(r2b)
-        print(
-            f"      alpha={r2b['alpha_abs']:.1f}s  time={t2b:.3f}s  vs_full={r2b['vs_full_pct']:+.2f}%"
-        )
+        # print(f"  [2b] Path-Enum / bal_w   k={k} …")
+        # (results2b, ops2b), t2b = _timed(
+        #     solve_by_path_mip,
+        #     assembly_digraph_obj=ad,
+        #     k=k,
+        #     num_phases=NUM_PHASES,
+        #     w_balanced=W_BALANCED,
+        #     hide_output=True,
+        #     full_result_output=True,
+        #     weight_attr="time_balanced_weight",
+        # )
+        # r2b = _record(
+        #     "path_enum_mip",
+        #     "time_balanced_weight",
+        #     k,
+        #     t2b,
+        #     results2b,
+        #     ops2b,
+        #     full_alpha,
+        #     full_obj,
+        #     n_edges,
+        # )
+        # records.append(r2b)
+        # print(
+        #     f"      obj={r2b['objective']:.3f} (vs_full={r2b['obj_vs_full_pct']:+.2f}%)  alpha={r2b['alpha_abs']:.1f}s  time={t2b:.3f}s  vs_full={r2b['vs_full_pct']:+.2f}%"
+        # )
 
-        # 3a: Subgraph MIP — edge_weight
-        print(f"  [3a] Subgraph / edge_w   k={k} …")
-        (results3a, ops3a), t3a = _timed(
+        # 3a: Subgraph MIP — edge_weight (disabled for now)
+        # print(f"  [3a] Subgraph / edge_w   k={k} …")
+        # (results3a, ops3a), t3a = _timed(
+        #     solve_by_subgraph_mip,
+        #     assembly_digraph_obj=ad,
+        #     k=k,
+        #     num_phases=NUM_PHASES,
+        #     w_balanced=W_BALANCED,
+        #     hide_output=True,
+        #     full_result_output=True,
+        #     weight_attr="edge_weight",
+        # )
+        # r3a = _record(
+        #     "subgraph_mip",
+        #     "edge_weight",
+        #     k,
+        #     t3a,
+        #     results3a,
+        #     ops3a,
+        #     full_alpha,
+        #     full_obj,
+        #     n_edges,
+        #     sg_ew_edges,
+        # )
+        # records.append(r3a)
+        # print(
+        #     f"      obj={r3a['objective']:.3f} (vs_full={r3a['obj_vs_full_pct']:+.2f}%)  alpha={r3a['alpha_abs']:.1f}s  time={t3a:.3f}s  vs_full={r3a['vs_full_pct']:+.2f}%"
+        # )
+
+        # 3b: Subgraph MIP — time_balanced_weight (disabled for now)
+        # print(f"  [3b] Subgraph / bal_w    k={k} …")
+        # (results3b, ops3b), t3b = _timed(
+        #     solve_by_subgraph_mip,
+        #     assembly_digraph_obj=ad,
+        #     k=k,
+        #     num_phases=NUM_PHASES,
+        #     w_balanced=W_BALANCED,
+        #     hide_output=True,
+        #     full_result_output=True,
+        #     weight_attr="time_balanced_weight",
+        # )
+        # r3b = _record(
+        #     "subgraph_mip",
+        #     "time_balanced_weight",
+        #     k,
+        #     t3b,
+        #     results3b,
+        #     ops3b,
+        #     full_alpha,
+        #     full_obj,
+        #     n_edges,
+        #     sg_bw_edges,
+        # )
+        # records.append(r3b)
+        # print(
+        #     f"      obj={r3b['objective']:.3f} (vs_full={r3b['obj_vs_full_pct']:+.2f}%)  alpha={r3b['alpha_abs']:.1f}s  time={t3b:.3f}s  vs_full={r3b['vs_full_pct']:+.2f}%"
+        # )
+
+        # 3c: Subgraph MIP — combined (union of edge_w + bal_w, up to 2k paths)
+        print(f"  [3c] Subgraph / combined k={k} …")
+        (results3c, ops3c), t3c = _timed(
             solve_by_subgraph_mip,
             assembly_digraph_obj=ad,
             k=k,
@@ -219,50 +299,23 @@ if __name__ == "__main__":
             w_balanced=W_BALANCED,
             hide_output=True,
             full_result_output=True,
-            weight_attr="edge_weight",
+            weight_attr=["edge_weight", "time_balanced_weight"],
         )
-        r3a = _record(
+        r3c = _record(
             "subgraph_mip",
-            "edge_weight",
+            "combined",
             k,
-            t3a,
-            results3a,
-            ops3a,
+            t3c,
+            results3c,
+            ops3c,
             full_alpha,
+            full_obj,
             n_edges,
-            sg_ew_edges,
+            sg_cw_edges,
         )
-        records.append(r3a)
+        records.append(r3c)
         print(
-            f"      alpha={r3a['alpha_abs']:.1f}s  time={t3a:.3f}s  vs_full={r3a['vs_full_pct']:+.2f}%"
-        )
-
-        # 3b: Subgraph MIP — time_balanced_weight
-        print(f"  [3b] Subgraph / bal_w    k={k} …")
-        (results3b, ops3b), t3b = _timed(
-            solve_by_subgraph_mip,
-            assembly_digraph_obj=ad,
-            k=k,
-            num_phases=NUM_PHASES,
-            w_balanced=W_BALANCED,
-            hide_output=True,
-            full_result_output=True,
-            weight_attr="time_balanced_weight",
-        )
-        r3b = _record(
-            "subgraph_mip",
-            "time_balanced_weight",
-            k,
-            t3b,
-            results3b,
-            ops3b,
-            full_alpha,
-            n_edges,
-            sg_bw_edges,
-        )
-        records.append(r3b)
-        print(
-            f"      alpha={r3b['alpha_abs']:.1f}s  time={t3b:.3f}s  vs_full={r3b['vs_full_pct']:+.2f}%"
+            f"      obj={r3c['objective']:.3f} (vs_full={r3c['obj_vs_full_pct']:+.2f}%)  alpha={r3c['alpha_abs']:.1f}s  time={t3c:.3f}s  vs_full={r3c['vs_full_pct']:+.2f}%"
         )
 
     # ------------------------------------------------------------------
@@ -277,19 +330,21 @@ if __name__ == "__main__":
     # ------------------------------------------------------------------
     # Summary table
     # ------------------------------------------------------------------
-    print("\n" + "=" * 80)
+    print("\n" + "=" * 100)
     print("SUMMARY")
-    print("=" * 80)
+    print("=" * 100)
     hdr = (
         f"{'Strategy':<16} {'Weight':<22} {'k':>6} "
-        f"{'Time(s)':>8} {'Alpha(s)':>9} {'vs Full':>8} {'Edges':>7}"
+        f"{'Time(s)':>8} {'Obj':>10} {'Obj vsFull':>11} {'Alpha(s)':>9} {'vs Full':>8} {'Edges':>7}"
     )
     print(hdr)
-    print("-" * 80)
+    print("-" * 100)
     for r in records:
         vs = f"{r['vs_full_pct']:+.2f}%" if r["vs_full_pct"] != "" else "—"
+        obj = f"{r['objective']:.3f}" if r["objective"] != "" else "—"
+        obj_vs = f"{r['obj_vs_full_pct']:+.2f}%" if r["obj_vs_full_pct"] != "" else "—"
         print(
             f"{r['strategy']:<16} {r['weight_attr']:<22} {str(r['k']):>6} "
-            f"{r['elapsed_s']:>8.3f} {r['alpha_abs']:>9.2f} {vs:>8} {r['subgraph_edges']:>7}"
+            f"{r['elapsed_s']:>8.3f} {obj:>10} {obj_vs:>11} {r['alpha_abs']:>9.2f} {vs:>8} {r['subgraph_edges']:>7}"
         )
-    print("=" * 80)
+    print("=" * 100)
