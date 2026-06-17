@@ -29,9 +29,10 @@ from pycaalp.time_balancing.subgraph_mip import (
 # Experiment settings
 # ---------------------------------------------------------------------------
 
-FILE_NAME = "data/assembly_1/assembly_1_2_tech_parts.json"
+FILE_NAME = "data/assembly_2/assembly_2_parts.json"
+DFM_FILE_NAME = "data/assembly_2/assembly_2_dfm.json"
 
-NUM_PHASES = 7
+NUM_PHASES = 2
 W_BALANCED = 0.9
 
 K_VALUES = [10, 50, 200, 500]
@@ -143,7 +144,7 @@ if __name__ == "__main__":
         assembly_digraph=ad,
         num_phases=NUM_PHASES,
         w_balanced=W_BALANCED,
-        hide_output=True,
+        hide_output=False,
         full_result_output=True,
     )
     full_alpha = max(results1["absolute_time_per_phase"].values())
