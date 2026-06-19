@@ -19,7 +19,8 @@ import csv
 import time
 
 from pycaalp.run import create_assembly_digraph, optimize
-from pycaalp.time_balancing.path_mip import solve_by_path_mip
+
+# from pycaalp.time_balancing.path_mip import solve_by_path_mip
 from pycaalp.time_balancing.subgraph_mip import (
     build_kpath_subgraph,
     solve_by_subgraph_mip,
@@ -29,13 +30,14 @@ from pycaalp.time_balancing.subgraph_mip import (
 # Experiment settings
 # ---------------------------------------------------------------------------
 
-FILE_NAME = "data/assembly_2/assembly_2_parts.json"
-DFM_FILE_NAME = "data/assembly_2/assembly_2_dfm.json"
+# FILE_NAME = "data/assembly_2/assembly_2_parts.json"
+# DFM_FILE_NAME = "data/assembly_2/assembly_2_dfm.json"
+FILE_NAME = "data/assembly_1/assembly_1_parts.json"
 
-NUM_PHASES = 3
-W_BALANCED = 0.9
+NUM_PHASES = 5
+W_BALANCED = 1.0
 
-K_VALUES = [10, 50, 200, 500, 1000, 2000]
+K_VALUES = [10, 50, 200, 500, 1000, 2000, 5000]
 
 RESULTS_FILE = "experiments/strategy_comparison/strategy_comparison.csv"
 
@@ -126,10 +128,7 @@ if __name__ == "__main__":
     # Build digraph once (time_balanced_weight is set at construction time)
     print("\nBuilding assembly digraph …")
     ad, build_time = _timed(
-        create_assembly_digraph,
-        file_name=FILE_NAME,
-        w_bal=W_BALANCED,
-        dfm_file=DFM_FILE_NAME,
+        create_assembly_digraph, file_name=FILE_NAME, w_bal=W_BALANCED
     )
     n_edges = ad.assembly_digraph.number_of_edges()
     print(
@@ -147,7 +146,7 @@ if __name__ == "__main__":
         assembly_digraph=ad,
         num_phases=NUM_PHASES,
         w_balanced=W_BALANCED,
-        hide_output=False,
+        hide_output=True,
         full_result_output=True,
     )
     full_alpha = max(results1["absolute_time_per_phase"].values())
