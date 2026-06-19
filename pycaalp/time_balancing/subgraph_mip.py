@@ -59,7 +59,7 @@ def build_kpath_subgraph(
     weight_attrs = [weight_attr] if isinstance(weight_attr, str) else weight_attr
 
     edge_set = set()
-    for attr in weight_attrs:
+    for attr in weight_attrs:  # It might be more than 1 attr weights
         paths = k_shortest_paths(
             digraph,
             source="0_1",
@@ -83,6 +83,7 @@ def solve_by_subgraph_mip(
     hide_output: bool = True,
     full_result_output: bool = False,
     weight_attr: str | list[str] = "time_balanced_weight",
+    subgraph: nx.DiGraph | None = None,
 ):
     """Solve the assembly line balancing problem on the k-path union subgraph.
 
@@ -101,8 +102,14 @@ def solve_by_subgraph_mip(
         weight_attr: Edge attribute(s) used for path enumeration. A list
             unions the per-attribute enumerations (up to len*k paths); see
             build_kpath_subgraph.
+        subgraph: Pre-built k-path subgraph. If given, the build step is skipped
+            (lets the caller time enumeration/build and solve separately and
+            avoids building the subgraph twice).
     """
-    subgraph = build_kpath_subgraph(assembly_digraph_obj, k, weight_attr=weight_attr)
+    if subgraph is None:
+        subgraph = build_kpath_subgraph(
+            assembly_digraph_obj, k, weight_attr=weight_attr
+        )
     proxy = _SubgraphProxy(
         assembly_digraph=subgraph,
         graph=assembly_digraph_obj.graph,
