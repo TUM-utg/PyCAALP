@@ -32,9 +32,12 @@ from pycaalp.time_balancing.subgraph_mip import (
 # Experiment settings
 # ---------------------------------------------------------------------------
 
-FILE_NAME = "data/assembly_2/assembly_2_parts.json"
-# FILE_NAME = "data/assembly_1/assembly_1_parts.json"
-DFM_FILE_NAME = "data/assembly_2/assembly_2_dfm.json"
+FILE_NAME = "data/assembly_1/assembly_1_parts.json"
+DFM_FILE_NAME = None
+
+# Assembly 2
+# FILE_NAME = "data/assembly_2/assembly_2_parts.json"
+# DFM_FILE_NAME = "data/assembly_2/assembly_2_dfm.json"
 
 # Instance identifier (e.g. "assembly_2") — recorded on every row so results
 # from different assemblies/configs can be concatenated and told apart.
