@@ -15,6 +15,7 @@ Run from the project root via:
     python -m experiments.strategy_comparison.test_strategy_comparison
 """
 
+import argparse
 import csv
 import json
 import os
@@ -32,7 +33,7 @@ from pycaalp.time_balancing.subgraph_mip import (
 # ---------------------------------------------------------------------------
 
 FILE_NAME = "data/assembly_2/assembly_2_parts.json"
-#FILE_NAME = "data/assembly_1/assembly_1_parts.json"
+# FILE_NAME = "data/assembly_1/assembly_1_parts.json"
 DFM_FILE_NAME = "data/assembly_2/assembly_2_dfm.json"
 
 # Instance identifier (e.g. "assembly_2") — recorded on every row so results
@@ -173,8 +174,25 @@ def _record(
 # ---------------------------------------------------------------------------
 
 if __name__ == "__main__":
+    # CLI overrides let one config (instance, P, λ) run per process so the sweep
+    # can be fanned out one-per-core. Defaults reproduce the single-run behaviour.
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--w-balanced", type=float, default=W_BALANCED)
+    parser.add_argument("--num-phases", type=int, default=NUM_PHASES)
+    parser.add_argument(
+        "--out",
+        default=RESULTS_FILE,
+        help="output CSV path (give each parallel task its own file)",
+    )
+    args = parser.parse_args()
+    W_BALANCED = args.w_balanced
+    NUM_PHASES = args.num_phases
+    RESULTS_FILE = args.out
+
     print("=" * 72)
-    print(f"Strategy Comparison Experiment — {INSTANCE}")
+    print(
+        f"Strategy Comparison Experiment — {INSTANCE}  P={NUM_PHASES}  λ={W_BALANCED}"
+    )
     print("=" * 72)
 
     # Build digraph once (time_balanced_weight is set at construction time)
