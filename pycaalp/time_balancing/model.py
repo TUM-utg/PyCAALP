@@ -433,7 +433,6 @@ def run_mip(
         assem_digr = assembly_digraph.assembly_digraph
         main_graph = assembly_digraph.graph
     # elif pickle_filename:
-    # TODO: need to access the sum_of_sh_path_weights
     # assem_digr, main_graph = get_pkl_data(pickle_filename)
     else:
         raise ValueError("Please provide an assembly digraph class or a pickle file")
