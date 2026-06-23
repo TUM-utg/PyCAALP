@@ -16,25 +16,36 @@ import os
 
 import matplotlib.pyplot as plt
 
-CSV_FNAME = "experiments/strategy_comparison/strategy_comparison.csv"
+CSV_FNAME = "experiments/strategy_comparison/assembly_1_np_3/strategy_comparison.csv"
 FORMAT = "svg"
 
-# TUM colour palette (grey, blue, black, green), as RGB 0-255.
-MFCS_RGB = [(153, 153, 153), (0, 101, 189), (0, 0, 0), (159, 186, 54)]
+# TUM colour palette (grey, blue, black, green, orange, purple), as RGB 0-255.
+MFCS_RGB = [
+    (153, 153, 153),
+    (0, 101, 189),
+    (0, 0, 0),
+    (159, 186, 54),
+    (227, 114, 34),
+    (101, 55, 142),
+]
 
 # Subgraph weight variants: (csv weight_attr, legend label, MFCS_RGB index, marker)
 WEIGHT_STYLE = [
     ("edge_weight", "edge_w", 1, "o"),
     ("time_balanced_weight", "bal_w", 3, "s"),
     ("combined", "combined", 2, "v"),
+    ("blended", "blended", 4, "D"),
+    ("blended_union", "bl-union", 5, "X"),
 ]
 
 
 def set_cols():
-    """Normalise MFCS_RGB from 0-255 to matplotlib 0-1 floats (in place)."""
-    for i, sett in enumerate(MFCS_RGB):
-        MFCS_RGB[i] = tuple(elem / 255 for elem in sett)
-    return MFCS_RGB
+    """Return MFCS_RGB normalised from 0-255 to matplotlib 0-1 floats.
+
+    Pure: it reads the 0-255 constant and returns a fresh list, so calling it
+    more than once per process is safe (it does not re-divide a global).
+    """
+    return [tuple(elem / 255 for elem in sett) for sett in MFCS_RGB]
 
 
 def read_rows(csv_file):

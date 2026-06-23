@@ -45,6 +45,65 @@ def k_shortest_paths(G, source, target, k, weight=None):
     return list(islice(nx.shortest_simple_paths(G, source, target, weight=weight), k))
 
 
+def set_blended_weights(
+    digraph,
+    time_weights,
+    num_phases,
+    lam,
+    out_attr="blended_weight",
+):
+    """Write a per-edge blended enumeration weight in place and return the digraph.
+
+        w_blend(e; λ) = (1 - λ) · ew_norm(e)  +  λ · misalign_norm(e)
+
+    ``ew_norm`` is the min-max-normalised engineering ``edge_weight``. ``misalign``
+    is a continuous, *path-additive* proxy for the makespan-balance objective:
+    each ideal phase boundary b_k = k · phase_width is crossed by exactly one edge
+    of any source→sink path (cumulative time is monotone), and that edge is charged
+    the best achievable cut error ``min(b_k − t_u, t_v − b_k) / phase_width`` — i.e.
+    how far the nearer endpoint (the only places a phase can actually be cut) sits
+    from the ideal boundary. Summed along a path this is exactly "how cleanly this
+    sequence can be split into equal-load phases".
+
+    Both terms are min-max normalised to [0, 1] so λ is a fair knob and matches the
+    MIP objective's λ. Enumerating k-shortest paths by ``out_attr`` then targets the
+    λ-specific *compromise* path directly, instead of unioning the two corner
+    enumerations (edge_weight, time_balanced_weight) and hoping one is right.
+
+    NOTE: the balance term is a heuristic surrogate — the true objective uses
+    α = max phase time (not a path sum) — so this must be validated empirically.
+    """
+    cum_time = compute_cumulative_operation_time(digraph, time_weights)
+    sinks = [n for n in digraph.nodes() if digraph.out_degree(n) == 0]
+    t_max = max((cum_time.get(n, 0.0) for n in sinks), default=0.0) or 1.0
+    phase_width = t_max / num_phases if num_phases else t_max
+    boundaries = [k * phase_width for k in range(1, num_phases)]
+
+    misalign = {}
+    for u, v in digraph.edges():
+        t_u, t_v = cum_time.get(u, 0.0), cum_time.get(v, 0.0)
+        err = 0.0
+        for b in boundaries:
+            if t_u < b <= t_v:
+                err += min(b - t_u, t_v - b) / phase_width
+        misalign[(u, v)] = err
+
+    edge_w = nx.get_edge_attributes(digraph, "edge_weight")
+
+    def _norm(d):
+        vals = d.values()
+        lo, hi = (min(vals), max(vals)) if vals else (0.0, 1.0)
+        rng = hi - lo if hi > lo else 1.0
+        return {key: (val - lo) / rng for key, val in d.items()}
+
+    ew_n, mis_n = _norm(edge_w), _norm(misalign)
+    for u, v in digraph.edges():
+        digraph[u][v][out_attr] = (1 - lam) * ew_n.get((u, v), 0.0) + lam * mis_n.get(
+            (u, v), 0.0
+        )
+    return digraph
+
+
 def compute_cumulative_operation_time(digraph, time_weights):
     """Compute cumulative operation time for each node in the digraph via forward DP.
 

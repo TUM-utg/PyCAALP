@@ -24,6 +24,7 @@ import time
 from pycaalp.run import create_assembly_digraph, optimize
 from pycaalp.time_balancing.path_mip import solve_by_path_mip
 from pycaalp.time_balancing.subgraph_mip import (
+    build_blended_union_subgraph,
     build_kpath_subgraph,
     solve_by_subgraph_mip,
 )
@@ -47,6 +48,11 @@ NUM_PHASES = 3
 W_BALANCED = 1.0
 
 K_VALUES = [1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000]
+
+# Blend values unioned by the blended_union strategy (frontier union). blend=0
+# reproduces the edge_weight ranking, blend=1 is the continuous balance ranking,
+# the middle catches compromise paths. λ-agnostic (the MIP still solves at λ).
+BLEND_GRID = [0.0, 0.5, 1.0]
 
 RESULTS_FILE = "experiments/strategy_comparison/strategy_comparison.csv"
 
@@ -210,6 +216,11 @@ if __name__ == "__main__":
     n_edges = ad.assembly_digraph.number_of_edges()
     print(f"  {n_nodes} nodes, {n_edges} edges  ({build_time:.1f}s)")
 
+    # Blended enumeration weight at the true λ: a single ranking that targets the
+    # λ-specific compromise path (no union, no ratio to tune). Set once; reused
+    # for every k below via weight_attr="blended_weight".
+    ad.set_blended_weights(W_BALANCED)
+
     records = []
 
     # ------------------------------------------------------------------
@@ -262,13 +273,23 @@ if __name__ == "__main__":
             k,
             weight_attr=["edge_weight", "time_balanced_weight"],
         )
+        sg_bl, tb_bl = _timed(
+            build_kpath_subgraph, ad, k, weight_attr="blended_weight"
+        )
+        sg_bu, tb_bu = _timed(
+            build_blended_union_subgraph, ad, k, BLEND_GRID
+        )
         sg_ew_edges = sg_ew.number_of_edges()
         sg_bw_edges = sg_bw.number_of_edges()
         sg_cw_edges = sg_cw.number_of_edges()
+        sg_bl_edges = sg_bl.number_of_edges()
+        sg_bu_edges = sg_bu.number_of_edges()
         print(
             f"  Subgraph edges — edge_w: {sg_ew_edges} ({sg_ew_edges/n_edges*100:.1f}%)  "
             f"bal_w: {sg_bw_edges} ({sg_bw_edges/n_edges*100:.1f}%)  "
-            f"combined: {sg_cw_edges} ({sg_cw_edges/n_edges*100:.1f}%)"
+            f"combined: {sg_cw_edges} ({sg_cw_edges/n_edges*100:.1f}%)  "
+            f"blended: {sg_bl_edges} ({sg_bl_edges/n_edges*100:.1f}%)  "
+            f"blended_union: {sg_bu_edges} ({sg_bu_edges/n_edges*100:.1f}%)"
         )
 
         # # 2a: Path-Enum MIP — edge_weight
@@ -412,6 +433,64 @@ if __name__ == "__main__":
         print(
             f"      obj={r3c['objective']:.3f} (vs_full={r3c['obj_vs_full_pct']:+.2f}%)  "
             f"alpha={r3c['alpha_abs']:.1f}s  build={tb_cw:.3f}s solve={t3c:.3f}s  vs_full={r3c['vs_full_pct']:+.2f}%"
+        )
+
+        # 3d: Subgraph MIP — blended (single enumeration by w_blend at the true λ)
+        print(f"  [3d] Subgraph / blended  k={k} …")
+        (results3d, ops3d), t3d = _timed(
+            solve_by_subgraph_mip,
+            assembly_digraph_obj=ad,
+            k=k,
+            num_phases=NUM_PHASES,
+            w_balanced=W_BALANCED,
+            hide_output=True,
+            full_result_output=True,
+            subgraph=sg_bl,
+        )
+        r3d = _record(
+            ctx,
+            "subgraph_mip",
+            "blended",
+            k,
+            tb_bl,
+            t3d,
+            results3d,
+            ops3d,
+            sg_bl_edges,
+        )
+        records.append(r3d)
+        print(
+            f"      obj={r3d['objective']:.3f} (vs_full={r3d['obj_vs_full_pct']:+.2f}%)  "
+            f"alpha={r3d['alpha_abs']:.1f}s  build={tb_bl:.3f}s solve={t3d:.3f}s  vs_full={r3d['vs_full_pct']:+.2f}%"
+        )
+
+        # 3e: Subgraph MIP — blended_union (frontier union of blended over BLEND_GRID)
+        print(f"  [3e] Subgraph / bl-union k={k} …")
+        (results3e, ops3e), t3e = _timed(
+            solve_by_subgraph_mip,
+            assembly_digraph_obj=ad,
+            k=k,
+            num_phases=NUM_PHASES,
+            w_balanced=W_BALANCED,
+            hide_output=True,
+            full_result_output=True,
+            subgraph=sg_bu,
+        )
+        r3e = _record(
+            ctx,
+            "subgraph_mip",
+            "blended_union",
+            k,
+            tb_bu,
+            t3e,
+            results3e,
+            ops3e,
+            sg_bu_edges,
+        )
+        records.append(r3e)
+        print(
+            f"      obj={r3e['objective']:.3f} (vs_full={r3e['obj_vs_full_pct']:+.2f}%)  "
+            f"alpha={r3e['alpha_abs']:.1f}s  build={tb_bu:.3f}s solve={t3e:.3f}s  vs_full={r3e['vs_full_pct']:+.2f}%"
         )
 
     # ------------------------------------------------------------------

@@ -419,6 +419,21 @@ class AssemblyDigraph:
         logger.debug(f"Time to compute assembly digraph: {stop_comp_cuts_ev} sec")
         return self.assembly_digraph
 
+    def set_blended_weights(self, lam, out_attr="blended_weight"):
+        """Set the per-edge blended enumeration weight for the given λ.
+
+        Writes w_blend = (1-λ)·edge_weight_norm + λ·misalignment_norm onto every
+        edge of the assembly digraph (see pycaalp.gapp.paths.set_blended_weights).
+        One call serves any k; re-call with a different λ to re-blend without
+        rebuilding the (expensive) digraph. Returns the assembly digraph.
+        """
+        from pycaalp.gapp.paths import set_blended_weights as _set_blended
+
+        time_weights = nx.get_edge_attributes(self.graph, "time")
+        return _set_blended(
+            self.assembly_digraph, time_weights, self.num_phases, lam, out_attr
+        )
+
     def save_class_to_pickle(self, file_name: str = "assembly_digraph.pkl") -> None:
         """Saves the AssemblyDigraph class to a pickle file by converting it to a dictionary.
 

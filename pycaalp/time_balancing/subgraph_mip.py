@@ -74,6 +74,40 @@ def build_kpath_subgraph(
     return digraph.edge_subgraph(edge_set).copy()
 
 
+def build_blended_union_subgraph(
+    assembly_digraph_obj,
+    k: int,
+    blends,
+    tmp_attr: str = "_blend_tmp",
+) -> nx.DiGraph:
+    """Union of the k shortest paths enumerated by the blended weight at several
+    blend values — the "frontier union" analogue of the combined strategy.
+
+    The combined strategy unions two *corner* enumerations (edge_weight, the
+    binary balance weight). This unions the blended weight at each value in
+    ``blends``: blend=0 reproduces the edge_weight ranking exactly (min-max is
+    monotone), blend=1 is the continuous balance ranking, and the intermediate
+    values add the genuine compromise paths. The multiple enumerations also
+    supply the path diversity a single blended enumeration lacks. Up to
+    len(blends)*k paths; enumeration is λ-agnostic (the MIP still solves at the
+    true λ).
+    """
+    digraph = assembly_digraph_obj.assembly_digraph
+    num_joints = assembly_digraph_obj.graph.number_of_edges()
+
+    edge_set = set()
+    for b in blends:
+        assembly_digraph_obj.set_blended_weights(b, out_attr=tmp_attr)
+        paths = k_shortest_paths(
+            digraph, source="0_1", target=f"{num_joints}_1", k=k, weight=tmp_attr
+        )
+        for path_nodes in paths:
+            for i in range(len(path_nodes) - 1):
+                edge_set.add((path_nodes[i], path_nodes[i + 1]))
+
+    return digraph.edge_subgraph(edge_set).copy()
+
+
 def solve_by_subgraph_mip(
     assembly_digraph_obj,
     k: int = 500,
