@@ -210,6 +210,7 @@ if __name__ == "__main__":
         create_assembly_digraph,
         file_name=FILE_NAME,
         w_bal=W_BALANCED,
+        num_phases=NUM_PHASES,
         dfm_file=DFM_FILE_NAME,
     )
     n_nodes = ad.assembly_digraph.number_of_nodes()
@@ -273,12 +274,8 @@ if __name__ == "__main__":
             k,
             weight_attr=["edge_weight", "time_balanced_weight"],
         )
-        sg_bl, tb_bl = _timed(
-            build_kpath_subgraph, ad, k, weight_attr="blended_weight"
-        )
-        sg_bu, tb_bu = _timed(
-            build_blended_union_subgraph, ad, k, BLEND_GRID
-        )
+        sg_bl, tb_bl = _timed(build_kpath_subgraph, ad, k, weight_attr="blended_weight")
+        sg_bu, tb_bu = _timed(build_blended_union_subgraph, ad, k, BLEND_GRID)
         sg_ew_edges = sg_ew.number_of_edges()
         sg_bw_edges = sg_bw.number_of_edges()
         sg_cw_edges = sg_cw.number_of_edges()

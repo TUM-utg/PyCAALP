@@ -63,18 +63,19 @@ from experiments.strategy_comparison.plot_k_sensitivity import (
 )
 
 # Default to the combined CSV that run_sweep.sh concatenates the per-λ files into.
-DEFAULT_CSV = "experiments/strategy_comparison/assembly_1_np_4/strategy_comparison.csv"
+DEFAULT_CSV = "experiments/strategy_comparison/assembly_2_np_3/strategy_comparison.csv"
 FORMAT = "svg"
 NCOLS = 3  # panels per row in the small-multiples grid
 TARGET_GAPS = (1.0, 5.0)  # %, the min-k curve thresholds
 HEATMAP_ANNOTATE = False  # write the gap % into each heatmap cell
-HEATMAP_VMAX = 5  # cap the colour scale (%) so low-gap differences show; None = auto
+HEATMAP_VMAX: float | None = (
+    5  # cap colour scale (%) so low-gap diffs show; None = auto
+)
 HEATMAP_CMAP = "jet"  # perceptually-uniform; dark = optimal → yellow = worst
 HEATMAP_DIV_CMAP = "RdBu_r"  # diverging map for signed gaps (blue < full < red)
-# Common "% of full-graph edges" grid the heatmap columns are resampled onto, so
-# any instance/variant lands on the same axis (k itself is not comparable across
-# assemblies — the same k is a different fraction of each digraph).
-PCT_GRID = [5, 10, 20, 30, 40, 50, 60, 70, 80]
+# The "% of full-graph edges" grid the heatmap columns are resampled onto is
+# derived per-run from the measured subgraph_pct range (see _pct_grid), so it
+# lands where the data is — assembly_1 reaches double-digit %, assembly_2 ~1%.
 
 
 def group_by_instance(rows):
@@ -133,6 +134,62 @@ def _interp_to_grid(xs, ys, grid):
     return out
 
 
+def _pct_range(rows):
+    """Min/max subgraph_pct over all subgraph_mip rows (the measured x-range).
+
+    The same k is a wildly different fraction of each assembly: on assembly_1 the
+    k-paths reach double-digit % of edges, on assembly_2 they barely clear 1%.
+    Deriving the axis/grid range from the data keeps both readable instead of
+    squashing a 0.01–1.5% sweep against a hardcoded 0–100% axis.
+    """
+    vals = [
+        float(r["subgraph_pct"])
+        for r in rows
+        if r["strategy"] == "subgraph_mip" and r["subgraph_pct"] not in ("", "None")
+    ]
+    return (min(vals), max(vals)) if vals else (0.01, 100.0)
+
+
+def _pct_xlim(rows):
+    """Padded (lo, hi) %-of-edges limits for a log axis spanning the measured
+    subgraph_pct range."""
+    lo, hi = _pct_range(rows)
+    return (lo * 0.7, hi * 1.4)
+
+
+def _pct_grid(rows, n=8):
+    """Log-spaced %-of-edges grid spanning the measured subgraph_pct range, so the
+    heatmap columns land where the data actually is. Replaces a fixed 5–80% grid
+    that fell entirely outside assembly_2's ~0.01–1.5% coverage (all-NaN columns)."""
+    lo, hi = _pct_range(rows)
+    grid = []
+    for g in np.logspace(np.log10(lo), np.log10(hi), n):
+        val = float(f"{g:.2g}")  # 2 sig figs for readable tick labels
+        if val not in grid:
+            grid.append(val)
+    return grid
+
+
+def _k_vals(rows):
+    """Sorted unique k over the subgraph_mip rows — the heatmap k columns / the
+    x-axis grid for the by-k figures (every λ is run on the same k grid)."""
+    return sorted(
+        {
+            float(r["k"])
+            for r in rows
+            if r["strategy"] == "subgraph_mip" and r["k"] not in ("", "None")
+        }
+    )
+
+
+def _full_solve_s(rows):
+    """Full-MIP solve time for this λ subset — the timing reference line."""
+    for r in rows:
+        if r["strategy"] == "full_mip" and r["solve_s"] not in ("", "None"):
+            return float(r["solve_s"])
+    return None
+
+
 def _make_grid(n, sharey=True):
     """A (fig, flat-axes) grid sized for n panels.
 
@@ -159,12 +216,14 @@ def _make_grid(n, sharey=True):
     return fig, flat
 
 
-def _panel(ax, rows, field, cols):
+def _panel(ax, rows, field, cols, xlim):
     """Draw one weight-variant line per series of (% of full-graph edges, field).
 
-    x is subgraph_pct (instance-comparable), not raw k. Each variant sits at its
-    own %edges, so e.g. edge_w covers far less of the graph than combined at the
-    same k.
+    x is subgraph_pct (instance-comparable), not raw k, on a log axis whose limits
+    come from the data (xlim) — the coverage spans <0.01% to ~tens of %, so a
+    linear 0–100 axis squashes everything against the left edge. Each variant sits
+    at its own %edges, so e.g. edge_w covers far less of the graph than combined at
+    the same k.
     """
     for weight_attr, label, ci, marker in WEIGHT_STYLE:
         x_vals, y_vals = _xy(rows, weight_attr, "subgraph_pct", field)
@@ -180,8 +239,9 @@ def _panel(ax, rows, field, cols):
                 mfc=cols[ci],
                 label=label,
             )
-    ax.set_xlim(0, 100)
-    ax.grid(True, linewidth=0.3, color="gray", alpha=0.4)
+    ax.set_xscale("log")
+    ax.set_xlim(*xlim)
+    ax.grid(True, which="both", linewidth=0.3, color="gray", alpha=0.4)
 
 
 def _finish(fig, flat, n, suptitle, xlabel, ylabel, fname, sharey=True):
@@ -219,10 +279,11 @@ def _finish(fig, flat, n, suptitle, xlabel, ylabel, fname, sharey=True):
 def plot_quality_grid(rows, res_dir, instance, num_phases, lambdas):
     """Objective gap to full MIP (%) vs k — one panel per λ."""
     cols = set_cols()
+    xlim = _pct_xlim(rows)
     fig, flat = _make_grid(len(lambdas))
     for ax, lam in zip(flat, lambdas):
         sub = _rows_for_lambda(rows, lam)
-        _panel(ax, sub, "obj_vs_full_pct", cols)
+        _panel(ax, sub, "obj_vs_full_pct", cols, xlim)
         ax.axhline(0.0, color=cols[0], linestyle="--", linewidth=1.0)
         ax.set_title(f"λ = {lam:g}", fontname="Liberation Serif", fontsize=11)
     fname = os.path.join(
@@ -242,10 +303,11 @@ def plot_quality_grid(rows, res_dir, instance, num_phases, lambdas):
 def plot_makespan_grid(rows, res_dir, instance, num_phases, lambdas):
     """Makespan (α) vs k — one panel per λ, full-MIP α as dashed reference."""
     cols = set_cols()
+    xlim = _pct_xlim(rows)
     fig, flat = _make_grid(len(lambdas), sharey=False)
     for ax, lam in zip(flat, lambdas):
         sub = _rows_for_lambda(rows, lam)
-        _panel(ax, sub, "alpha_abs", cols)
+        _panel(ax, sub, "alpha_abs", cols, xlim)
         full_a = _full_alpha(sub)
         if full_a is not None:
             ax.axhline(full_a, color=cols[0], linestyle="--", linewidth=1.0)
@@ -266,6 +328,77 @@ def plot_makespan_grid(rows, res_dir, instance, num_phases, lambdas):
     )
 
 
+def _panel_k(ax, rows, field, cols, *, logy=False):
+    """Like _panel but x is the raw k (log), not subgraph_pct. Used by the by-k
+    line grids (quality / makespan / timing) where k is the natural sweep knob and
+    the run is a single instance, so cross-assembly comparability is moot."""
+    for weight_attr, label, ci, marker in WEIGHT_STYLE:
+        x_vals, y_vals = _xy(rows, weight_attr, "k", field)
+        if x_vals:
+            ax.plot(
+                x_vals,
+                y_vals,
+                "-",
+                color=cols[ci],
+                linewidth=1.0,
+                marker=marker,
+                ms=5,
+                mfc=cols[ci],
+                label=label,
+            )
+    ax.set_xscale("log")
+    if logy:
+        ax.set_yscale("log")
+    ax.grid(True, which="both", linewidth=0.3, color="gray", alpha=0.4)
+
+
+def plot_grid_by_k(
+    rows,
+    res_dir,
+    instance,
+    num_phases,
+    lambdas,
+    *,
+    field,
+    fname_key,
+    suptitle,
+    ylabel,
+    sharey=True,
+    logy=False,
+    hline=None,
+    full_ref=None,
+):
+    """Small-multiples line grid of `field` vs k, one panel per λ.
+
+    hline draws a constant per-panel reference (e.g. 0 for the gap); full_ref(sub)
+    draws a per-λ reference computed from that λ's full-MIP row (e.g. its α or its
+    solve time). Both, either, or neither may be given.
+    """
+    cols = set_cols()
+    fig, flat = _make_grid(len(lambdas), sharey=sharey)
+    for ax, lam in zip(flat, lambdas):
+        sub = _rows_for_lambda(rows, lam)
+        _panel_k(ax, sub, field, cols, logy=logy)
+        if hline is not None:
+            ax.axhline(hline, color=cols[0], linestyle="--", linewidth=1.0)
+        if full_ref is not None:
+            ref = full_ref(sub)
+            if ref is not None:
+                ax.axhline(ref, color=cols[0], linestyle="--", linewidth=1.0)
+        ax.set_title(f"λ = {lam:g}", fontname="Liberation Serif", fontsize=11)
+    fname = os.path.join(res_dir, f"{fname_key}_{instance}_P{num_phases}.{FORMAT}")
+    _finish(
+        fig,
+        flat,
+        len(lambdas),
+        f"{suptitle}  —  {instance}  P={num_phases}",
+        "k (shortest paths)",
+        ylabel,
+        fname,
+        sharey=sharey,
+    )
+
+
 def _heatmap(
     rows,
     res_dir,
@@ -278,32 +411,55 @@ def _heatmap(
     suptitle,
     key,
     diverging,
+    xmode="pct",
+    vmax_cap=HEATMAP_VMAX,
 ):
-    """λ × k heatmap of `field`, one panel per weight variant.
+    """λ × (subgraph size | k) heatmap of `field`, one panel per weight variant.
+
+    xmode="pct": columns are % of full-graph edges, resampled onto a log grid so
+    the same column is the same coverage on any assembly. xmode="k": columns are
+    the raw k values actually run — exact, no interpolation (every λ shares the
+    same k grid), readable within a single instance.
 
     Sequential (diverging=False): scale runs 0 → cap, for always-positive gaps
     like the objective gap. Diverging (diverging=True): scale is symmetric about
     0 so signed gaps (e.g. makespan, which can dip below the full MIP at λ<1)
-    read as blue < full < red. Cell numbers are off by default (HEATMAP_ANNOTATE).
+    read as blue < full < red. vmax_cap caps the colour scale (None = auto-fit,
+    needed when `field` is a time in seconds rather than a small %).
+    Cell numbers are off by default (HEATMAP_ANNOTATE).
     """
     cmap = plt.get_cmap(HEATMAP_DIV_CMAP if diverging else HEATMAP_CMAP).copy()
     cmap.set_bad("0.85")  # absent (λ, k) cells in light grey
 
     variants = [(w, lbl) for (w, lbl, _ci, _m) in WEIGHT_STYLE]
-    grid = PCT_GRID  # columns are % of full-graph edges, comparable across runs
+    if xmode == "k":
+        grid = _k_vals(rows)
+        xlabel = "k (shortest paths)"
+
+        def _fill(sub, w):
+            d = dict(zip(*_xy(sub, w, "k", field)))
+            return np.array([d.get(g, np.nan) for g in grid])
+
+    else:
+        grid = _pct_grid(rows)  # % of full-graph edges, comparable across runs
+        xlabel = "Subgraph size [% of full-graph edges]"
+
+        def _fill(sub, w):
+            xs, ys = _xy(sub, w, "subgraph_pct", field)
+            return _interp_to_grid(xs, ys, grid)
+
     mats = []
     for w, _ in variants:
         mat = np.full((len(lambdas), len(grid)), np.nan)
         for i, lam in enumerate(lambdas):
-            xs, ys = _xy(_rows_for_lambda(rows, lam), w, "subgraph_pct", field)
-            mat[i] = _interp_to_grid(xs, ys, grid)
+            mat[i] = _fill(_rows_for_lambda(rows, lam), w)
         mats.append(np.ma.masked_invalid(mat))
     finite = [m for m in mats if m.count()]
     data_max = max((m.max() for m in finite), default=1.0)
     data_min = min((m.min() for m in finite), default=0.0)
 
     if diverging:
-        lim = HEATMAP_VMAX if HEATMAP_VMAX is not None else max(abs(data_min), data_max)
+        lim = vmax_cap if vmax_cap is not None else max(abs(data_min), data_max)
         vmin, vmax = -lim, lim
         extend = (
             "both"
@@ -313,7 +469,7 @@ def _heatmap(
         dark = lim  # text turns white near either saturated end
     else:
         vmin = 0.0
-        vmax = HEATMAP_VMAX if HEATMAP_VMAX is not None else data_max
+        vmax = vmax_cap if vmax_cap is not None else data_max
         extend = "max" if vmax < data_max else "neither"
         dark = vmax
 
@@ -364,7 +520,7 @@ def _heatmap(
                         color="white" if abs(v) > 0.6 * dark else "black",
                     )
     last_ax.set_xlabel(
-        "Subgraph size [% of full-graph edges]",
+        xlabel,
         fontname="Liberation Serif",
         fontsize=11,
     )
@@ -419,21 +575,37 @@ def plot_makespan_heatmap(rows, res_dir, instance, num_phases, lambdas):
 
 
 def _min_pct(sub, weight_attr, thr):
-    """Smallest subgraph size (% of full-graph edges) whose objective gap to the
-    full MIP is ≤ thr (%), or None if never reached within the tested range."""
+    """Smallest subgraph size (% of full-graph edges) at/after which the objective
+    gap to the full MIP *stays* ≤ thr (%) — i.e. one step past the last subgraph
+    that still violates the target.
+
+    This is the conservative budget: the first dip under the threshold can be a
+    lucky small-k subgraph that a slightly larger one falls back above (the gap
+    curve is not guaranteed monotone), so reporting that first crossing
+    understates what you actually need. The last crossing is what guarantees the
+    target. None if the target is never reached within the tested range."""
     xs, ys = _xy(sub, weight_attr, "subgraph_pct", "obj_vs_full_pct")
-    for pct, v in zip(xs, ys):  # xs sorted ascending
-        if v <= thr:
+    if not xs:
+        return None
+    last_above = None  # largest subgraph size that still exceeds the target
+    for pct, v in zip(xs, ys):
+        if v > thr:
+            last_above = pct
+    if last_above is None:
+        return xs[0]  # already within target at the smallest subgraph
+    for pct in xs:  # first size strictly past the last violation
+        if pct > last_above:
             return pct
-    return None
+    return None  # largest subgraph still violates → target not robustly reached
 
 
 def plot_min_k(rows, res_dir, instance, num_phases, lambdas):
-    """Min subgraph size (% of full-graph edges) needed to get within a target
+    """Subgraph size (% of full-graph edges) needed to *stay* within a target
     objective gap, as a function of λ — one panel per target gap, one line per
-    weight variant. The actionable, instance-comparable distillation of the
-    heatmap: 'what fraction of the graph do I need at this λ'. A missing point
-    means the target was never reached within the tested range."""
+    weight variant. The actionable distillation of the heatmap: 'what fraction of
+    the graph does this weighting need at this λ'. A missing point means the
+    weighting never robustly reached the target within the tested k range (see
+    _min_pct)."""
     cols = set_cols()
     fig, axes = plt.subplots(
         1,
@@ -462,16 +634,20 @@ def plot_min_k(rows, res_dir, instance, num_phases, lambdas):
                     mfc=cols[ci],
                     label=label,
                 )
-        ax.set_ylim(0, 100)
+        ax.set_yscale("log")
+        ax.set_ylim(*_pct_xlim(rows))
         ax.set_xlabel("λ (w_balanced)", fontname="Liberation Serif", fontsize=11)
         ax.set_title(f"gap ≤ {thr:g}%", fontname="Liberation Serif", fontsize=11)
         ax.grid(True, linewidth=0.3, color="gray", alpha=0.4)
     axes[0, 0].set_ylabel(
-        "min subgraph size [% of edges]", fontname="Liberation Serif", fontsize=11
+        "subgraph size to stay within target [% of edges]",
+        fontname="Liberation Serif",
+        fontsize=11,
     )
     handles, labels = axes[0, 0].get_legend_handles_labels()
     fig.suptitle(
-        f"Graph fraction needed to hit a target gap across λ  —  {instance}  P={num_phases}",
+        f"Graph fraction needed to stay within a target gap across λ  —  "
+        f"{instance}  P={num_phases}",
         fontname="Liberation Serif",
         fontsize=13,
     )
@@ -530,7 +706,8 @@ def plot_k_vs_subgraph(rows, res_dir, instance, num_phases):
             label=f"{label} (2k)" if mult == 2 else f"{label} (k)",
         )
     ax.set_xscale("log")
-    ax.set_ylim(0, 100)
+    ax.set_yscale("log")
+    ax.set_ylim(*_pct_xlim(rows))
     ax.set_xlabel(
         "Paths enumerated  (edge_w / bal_w: k;  combined: 2k)",
         fontname="Liberation Serif",
@@ -566,9 +743,94 @@ if __name__ == "__main__":
                 "(λ sweep plots need ≥2 λ values)."
             )
             continue
+        # --- vs subgraph size (% of edges) -------------------------------
         plot_quality_grid(grp, res_dir, instance, num_phases, lambdas)
         plot_makespan_grid(grp, res_dir, instance, num_phases, lambdas)
         plot_heatmap(grp, res_dir, instance, num_phases, lambdas)
         plot_makespan_heatmap(grp, res_dir, instance, num_phases, lambdas)
         plot_min_k(grp, res_dir, instance, num_phases, lambdas)
         plot_k_vs_subgraph(grp, res_dir, instance, num_phases)
+
+        # --- same families, but with raw k on the x-axis -----------------
+        plot_grid_by_k(
+            grp,
+            res_dir,
+            instance,
+            num_phases,
+            lambdas,
+            field="obj_vs_full_pct",
+            fname_key="lambda_sweep_quality_byk",
+            suptitle="Solution quality vs. k across λ",
+            ylabel="Objective gap to full MIP [%]",
+            hline=0.0,
+        )
+        plot_grid_by_k(
+            grp,
+            res_dir,
+            instance,
+            num_phases,
+            lambdas,
+            field="alpha_abs",
+            fname_key="lambda_sweep_makespan_byk",
+            suptitle="Max phase time (α) vs. k across λ"
+            "   (α≠objective at λ<1; read with quality figure)",
+            ylabel="Max phase time α [s]",
+            sharey=False,
+            full_ref=_full_alpha,
+        )
+        _heatmap(
+            grp,
+            res_dir,
+            instance,
+            num_phases,
+            lambdas,
+            field="obj_vs_full_pct",
+            clabel="Objective gap to full MIP [%]",
+            suptitle="Objective deviation over λ × k",
+            key="obj_byk",
+            diverging=False,
+            xmode="k",
+        )
+        _heatmap(
+            grp,
+            res_dir,
+            instance,
+            num_phases,
+            lambdas,
+            field="vs_full_pct",
+            clabel="Max phase time gap to full MIP [%]",
+            suptitle="Max phase time (α) deviation over λ × k",
+            key="makespan_byk",
+            diverging=True,
+            xmode="k",
+        )
+
+        # --- timing: build + solve cost of the subgraph strategies -------
+        plot_grid_by_k(
+            grp,
+            res_dir,
+            instance,
+            num_phases,
+            lambdas,
+            field="elapsed_s",
+            fname_key="lambda_sweep_timing_byk",
+            suptitle="Runtime (build + solve) vs. k across λ"
+            "   (dashed = full-MIP solve)",
+            ylabel="Elapsed: build + solve [s]",
+            logy=True,
+            full_ref=_full_solve_s,
+        )
+        _heatmap(
+            grp,
+            res_dir,
+            instance,
+            num_phases,
+            lambdas,
+            field="elapsed_s",
+            clabel="Elapsed: build + solve [s]",
+            suptitle="Runtime over λ × k",
+            key="time_byk",
+            diverging=False,
+            xmode="k",
+            vmax_cap=None,  # seconds, not a %, so auto-fit the colour scale
+        )
