@@ -25,6 +25,7 @@ from pycaalp.run import create_assembly_digraph, optimize
 from pycaalp.time_balancing.path_mip import solve_by_path_mip
 from pycaalp.time_balancing.subgraph_mip import (
     build_blended_union_subgraph,
+    build_diverse_subgraph,
     build_kpath_subgraph,
     solve_by_subgraph_mip,
 )
@@ -53,6 +54,11 @@ K_VALUES = [1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000]
 # reproduces the edge_weight ranking, blend=1 is the continuous balance ranking,
 # the middle catches compromise paths. λ-agnostic (the MIP still solves at λ).
 BLEND_GRID = [0.0, 0.5, 1.0]
+
+# Diverse strategy: penalised re-routing on the blended weight at the true λ
+# (idea #4). PENALTY trades coverage for cost; ~0.5 already saturates to near
+# edge-disjoint enumeration on these normalised weights.
+PENALTY = 0.5
 
 RESULTS_FILE = "experiments/strategy_comparison/strategy_comparison.csv"
 
@@ -276,17 +282,20 @@ if __name__ == "__main__":
         )
         sg_bl, tb_bl = _timed(build_kpath_subgraph, ad, k, weight_attr="blended_weight")
         sg_bu, tb_bu = _timed(build_blended_union_subgraph, ad, k, BLEND_GRID)
+        sg_dv, tb_dv = _timed(build_diverse_subgraph, ad, k, W_BALANCED, PENALTY)
         sg_ew_edges = sg_ew.number_of_edges()
         sg_bw_edges = sg_bw.number_of_edges()
         sg_cw_edges = sg_cw.number_of_edges()
         sg_bl_edges = sg_bl.number_of_edges()
         sg_bu_edges = sg_bu.number_of_edges()
+        sg_dv_edges = sg_dv.number_of_edges()
         print(
             f"  Subgraph edges — edge_w: {sg_ew_edges} ({sg_ew_edges/n_edges*100:.1f}%)  "
             f"bal_w: {sg_bw_edges} ({sg_bw_edges/n_edges*100:.1f}%)  "
             f"combined: {sg_cw_edges} ({sg_cw_edges/n_edges*100:.1f}%)  "
             f"blended: {sg_bl_edges} ({sg_bl_edges/n_edges*100:.1f}%)  "
-            f"blended_union: {sg_bu_edges} ({sg_bu_edges/n_edges*100:.1f}%)"
+            f"blended_union: {sg_bu_edges} ({sg_bu_edges/n_edges*100:.1f}%)  "
+            f"diverse: {sg_dv_edges} ({sg_dv_edges/n_edges*100:.1f}%)"
         )
 
         # # 2a: Path-Enum MIP — edge_weight
@@ -488,6 +497,35 @@ if __name__ == "__main__":
         print(
             f"      obj={r3e['objective']:.3f} (vs_full={r3e['obj_vs_full_pct']:+.2f}%)  "
             f"alpha={r3e['alpha_abs']:.1f}s  build={tb_bu:.3f}s solve={t3e:.3f}s  vs_full={r3e['vs_full_pct']:+.2f}%"
+        )
+
+        # 3f: Subgraph MIP — diverse (penalised re-routing on blended weight @ λ)
+        print(f"  [3f] Subgraph / diverse  k={k} …")
+        (results3f, ops3f), t3f = _timed(
+            solve_by_subgraph_mip,
+            assembly_digraph_obj=ad,
+            k=k,
+            num_phases=NUM_PHASES,
+            w_balanced=W_BALANCED,
+            hide_output=True,
+            full_result_output=True,
+            subgraph=sg_dv,
+        )
+        r3f = _record(
+            ctx,
+            "subgraph_mip",
+            "diverse",
+            k,
+            tb_dv,
+            t3f,
+            results3f,
+            ops3f,
+            sg_dv_edges,
+        )
+        records.append(r3f)
+        print(
+            f"      obj={r3f['objective']:.3f} (vs_full={r3f['obj_vs_full_pct']:+.2f}%)  "
+            f"alpha={r3f['alpha_abs']:.1f}s  build={tb_dv:.3f}s solve={t3f:.3f}s  vs_full={r3f['vs_full_pct']:+.2f}%"
         )
 
     # ------------------------------------------------------------------

@@ -20,7 +20,7 @@ from dataclasses import dataclass
 
 import networkx as nx
 
-from pycaalp.gapp.paths import k_shortest_paths
+from pycaalp.gapp.paths import diverse_shortest_paths, k_shortest_paths
 from pycaalp.time_balancing.model import run_mip
 
 
@@ -104,6 +104,48 @@ def build_blended_union_subgraph(
         for path_nodes in paths:
             for i in range(len(path_nodes) - 1):
                 edge_set.add((path_nodes[i], path_nodes[i + 1]))
+
+    return digraph.edge_subgraph(edge_set).copy()
+
+
+def build_diverse_subgraph(
+    assembly_digraph_obj,
+    k: int,
+    lam: float,
+    penalty: float = 0.5,
+    base_attr: str = "_diverse_base",
+) -> nx.DiGraph:
+    """Subgraph from k *diverse* paths enumerated by the blended weight at λ.
+
+    The blended-union strategy unions Yen k-shortest paths at several blends; its
+    coverage saturates (near-duplicate paths) so the objective plateaus above the
+    optimum in the hard high-λ regime. This enumerates by penalised re-routing
+    (``diverse_shortest_paths``) on the single blended weight at the true λ — the
+    exact quantity the MIP minimises — so the paths spread across the compromise
+    region instead of clustering. Cheaper too: k linear DAG shortest paths rather
+    than Yen.
+
+    ``penalty`` controls the diversity/coverage trade-off (see
+    ``diverse_shortest_paths``).
+    """
+    digraph = assembly_digraph_obj.assembly_digraph
+    num_joints = assembly_digraph_obj.graph.number_of_edges()
+
+    # Write the blended weight for this λ onto its own attribute, then diversify.
+    assembly_digraph_obj.set_blended_weights(lam, out_attr=base_attr)
+    paths = diverse_shortest_paths(
+        digraph,
+        source="0_1",
+        target=f"{num_joints}_1",
+        k=k,
+        weight=base_attr,
+        penalty=penalty,
+    )
+
+    edge_set = set()
+    for path_nodes in paths:
+        for i in range(len(path_nodes) - 1):
+            edge_set.add((path_nodes[i], path_nodes[i + 1]))
 
     return digraph.edge_subgraph(edge_set).copy()
 

@@ -45,6 +45,7 @@ import time
 from pycaalp.run import create_assembly_digraph, optimize
 from pycaalp.time_balancing.subgraph_mip import (
     build_blended_union_subgraph,
+    build_diverse_subgraph,
     solve_by_subgraph_mip,
 )
 
@@ -54,8 +55,11 @@ from pycaalp.time_balancing.subgraph_mip import (
 
 # Default target: assembly 2 (the reason this experiment exists). Override the
 # instance by editing these two lines; everything else is config-driven.
-FILE_NAME = "data/assembly_2/assembly_2_parts.json"
-DFM_FILE_NAME = "data/assembly_2/assembly_2_dfm.json"
+# FILE_NAME = "data/assembly_2/assembly_2_parts.json"
+# DFM_FILE_NAME = "data/assembly_2/assembly_2_dfm.json"
+
+FILE_NAME = "data/assembly_1/assembly_1_parts.json"
+DFM_FILE_NAME = ""
 
 INSTANCE = os.path.basename(os.path.dirname(FILE_NAME))
 
@@ -66,14 +70,41 @@ W_BALANCED = 0.5
 # edges) is well sampled where the action is, then geometric. A SAFETY CAP: the
 # stop criterion normally halts before the last value.
 K_VALUES = [
-    1, 2, 3, 4, 6, 8, 12, 16, 24, 32, 48, 64, 96, 128, 192, 256, 384, 512,
-    768, 1024, 1536, 2048,
+    1,
+    2,
+    3,
+    4,
+    6,
+    8,
+    12,
+    16,
+    24,
+    32,
+    48,
+    64,
+    96,
+    128,
+    192,
+    256,
+    384,
+    512,
+    768,
+    1024,
+    1536,
+    2048,
 ]
 
 # Blend values unioned by the bl-union strategy (frontier union). blend=0 is the
 # pure edge_weight ranking, blend=1 the continuous balance ranking, the middle
 # catches compromise paths. λ-agnostic (the MIP still solves at the true λ).
 BLEND_GRID = [0.0, 0.5, 1.0]
+
+# Subgraph strategies compared per k. "diverse" (idea #4) enumerates by penalised
+# re-routing on the blended weight at the true λ — it targets the residual gap
+# bl-union plateaus at in the high-λ regime, and enumerates cheaper (linear DAG
+# shortest paths, not Yen).
+METHODS_DEFAULT = "bl_union,diverse"
+PENALTY = 0.5  # diverse re-routing penalty (see diverse_shortest_paths)
 
 # Stop criterion. Two useful ones (see --stop):
 #   edge_saturation — grow until the subgraph genuinely stops expanding. Oracle-
@@ -102,6 +133,7 @@ CSV_FIELDS = [
     "instance",
     "num_phases",
     "w_balanced",
+    "method",  # subgraph strategy: bl_union | diverse | full_ref
     "k",
     # Problem size
     "digraph_nodes",
@@ -201,6 +233,7 @@ def solve_full_ref_cached(ad, instance, num_phases, w_balanced, cache_dir, refre
 
 def _record(
     ctx,
+    method,
     k,
     build_s,
     solve_s,
@@ -245,6 +278,7 @@ def _record(
         "instance": ctx["instance"],
         "num_phases": num_phases,
         "w_balanced": ctx["w_balanced"],
+        "method": method,
         "k": k if k is not None else "",
         "digraph_nodes": ctx["digraph_nodes"],
         "digraph_edges": digraph_edges,
@@ -302,6 +336,18 @@ if __name__ == "__main__":
         "(characterisation stop; uses the cached full-MIP reference)",
     )
     parser.add_argument(
+        "--methods",
+        default=METHODS_DEFAULT,
+        help="comma list of subgraph strategies to sweep: bl_union, diverse "
+        "(default: %(default)s)",
+    )
+    parser.add_argument(
+        "--penalty",
+        type=float,
+        default=PENALTY,
+        help="diverse re-routing penalty (default: %(default)s)",
+    )
+    parser.add_argument(
         "--k-max",
         type=int,
         default=None,
@@ -320,6 +366,8 @@ if __name__ == "__main__":
     RESULTS_FILE = args.out
     STOP = args.stop
     GAP_TARGET = args.gap_target
+    PENALTY = args.penalty
+    METHODS = [m.strip() for m in args.methods.split(",") if m.strip()]
     if args.k_max is not None:
         K_VALUES = [k for k in K_VALUES if k <= args.k_max]
 
@@ -383,105 +431,136 @@ if __name__ == "__main__":
     }
 
     r_full = _record(
-        ctx, None, 0.0, t_full, results_full, ops_full, n_edges, None, None, "full_ref"
+        ctx,
+        "full_ref",
+        None,
+        0.0,
+        t_full,
+        results_full,
+        ops_full,
+        n_edges,
+        None,
+        None,
+        "full_ref",
     )
     _emit(r_full)
     print(f"  obj={full_obj:.4f}  alpha={full_alpha:.1f}s  time={t_full:.2f}s")
 
     # ------------------------------------------------------------------
-    # bl-union over the geometric k grid, with automatic early stop
+    # Subgraph-growth k-sweep, once per method, with automatic stop
     # ------------------------------------------------------------------
-    prev_obj = None
-    prev_edges = 0
-    plateau_streak = 0
-    sat_streak = 0
+    def _build(method, k):
+        """Build the k-subgraph for one method (timed by the caller)."""
+        if method == "bl_union":
+            return build_blended_union_subgraph(ad, k, BLEND_GRID)
+        if method == "diverse":
+            return build_diverse_subgraph(ad, k, W_BALANCED, penalty=PENALTY)
+        raise ValueError(f"unknown method: {method}")
 
-    print(f"\nbl-union k-sweep (stop: {STOP}"
-          + (f", gap_target={GAP_TARGET}%" if GAP_TARGET is not None else "")
-          + "):")
-    for k in K_VALUES:
-        sg, build_s = _timed(build_blended_union_subgraph, ad, k, BLEND_GRID)
-        sg_edges = sg.number_of_edges()
-        d_edges = sg_edges - prev_edges
+    def run_method(method):
+        prev_obj = None
+        prev_edges = 0
+        plateau_streak = 0
+        sat_streak = 0
 
-        (results_k, ops_k), solve_s = _timed(
-            solve_by_subgraph_mip,
-            assembly_digraph_obj=ad,
-            k=k,
-            num_phases=NUM_PHASES,
-            w_balanced=W_BALANCED,
-            hide_output=True,
-            full_result_output=True,
-            subgraph=sg,
-        )
-        obj_k = results_k["objective"]
-
-        # Relative objective improvement vs previous k (monotone, ≥0).
-        d_obj_pct = None
-        if prev_obj is not None and prev_obj:
-            d_obj_pct = (prev_obj - obj_k) / abs(prev_obj) * 100
-
-        # Update streaks.
-        if d_obj_pct is not None and d_obj_pct < OBJ_EPS:
-            plateau_streak += 1
-        else:
-            plateau_streak = 0
-        if d_edges == 0:
-            sat_streak += 1
-        else:
-            sat_streak = 0
-
-        # gap to the full-MIP optimum for this k (None only if full_obj is 0).
-        gap_pct = (
-            (obj_k / full_obj - 1) * 100 if full_obj else None
-        )
-
-        # Stop decision. gap_target (characterisation) takes priority; otherwise
-        # the selected oracle-free criterion.
-        stop_reason = ""
-        if GAP_TARGET is not None and gap_pct is not None and gap_pct <= GAP_TARGET:
-            stop_reason = "gap_target"
-        elif STOP == "edge_saturation" and sat_streak >= PATIENCE:
-            stop_reason = "edge_saturation"
-        elif STOP == "obj_plateau" and plateau_streak >= PATIENCE:
-            stop_reason = "obj_plateau"
-
-        row = _record(
-            ctx,
-            k,
-            build_s,
-            solve_s,
-            results_k,
-            ops_k,
-            sg_edges,
-            d_edges,
-            d_obj_pct,
-            stop_reason,
-        )
-        _emit(row)
-
-        gap = row["obj_vs_full_pct"]
-        pct = row["subgraph_pct"]
-        dobj = f"{d_obj_pct:+.3f}%" if d_obj_pct is not None else "   —   "
         print(
-            f"  k={k:>5}  edges={sg_edges:>4} ({pct:>5}%)  Δe={d_edges:>4}  "
-            f"obj={obj_k:.4f}  gap={gap:+.2f}%  Δobj={dobj}  "
-            f"build={build_s:.2f}s solve={solve_s:.2f}s"
+            f"\n[{method}] k-sweep (stop: {STOP}"
+            + (f", gap_target={GAP_TARGET}%" if GAP_TARGET is not None else "")
+            + "):"
         )
+        for k in K_VALUES:
+            sg, build_s = _timed(_build, method, k)
+            sg_edges = sg.number_of_edges()
+            d_edges = sg_edges - prev_edges
 
-        # Carry state to the next k so the deltas / stop streaks are computed
-        # against the previous step (not against the initial 0 / None).
-        prev_obj = obj_k
-        prev_edges = sg_edges
-
-        if stop_reason:
-            detail = (
-                f"gap {gap_pct:+.2f}% ≤ {GAP_TARGET}%"
-                if stop_reason == "gap_target"
-                else f"after {PATIENCE} consecutive steps"
+            (results_k, ops_k), solve_s = _timed(
+                solve_by_subgraph_mip,
+                assembly_digraph_obj=ad,
+                k=k,
+                num_phases=NUM_PHASES,
+                w_balanced=W_BALANCED,
+                hide_output=True,
+                full_result_output=True,
+                subgraph=sg,
             )
-            print(f"  → stop: {stop_reason} ({detail})")
-            break
+            obj_k = results_k["objective"]
+
+            # Relative objective improvement vs previous k (monotone, ≥0).
+            d_obj_pct = None
+            if prev_obj is not None and prev_obj:
+                d_obj_pct = (prev_obj - obj_k) / abs(prev_obj) * 100
+
+            if d_obj_pct is not None and d_obj_pct < OBJ_EPS:
+                plateau_streak += 1
+            else:
+                plateau_streak = 0
+            if d_edges == 0:
+                sat_streak += 1
+            else:
+                sat_streak = 0
+
+            gap_pct = (obj_k / full_obj - 1) * 100 if full_obj else None
+
+            # A subgraph is a subset of the full digraph, so its optimum can
+            # NEVER beat the full-MIP optimum. gap_pct < 0 (beyond numerical
+            # noise) therefore proves the cached full-MIP reference is stale /
+            # corrupt — loudly flag it so the negative "gaps" are not mistaken
+            # for a real result. Re-run with --refresh-cache to fix.
+            if gap_pct is not None and gap_pct < -1e-3:
+                print(
+                    f"  !! STALE REFERENCE: subgraph obj {obj_k:.4f} beats cached "
+                    f"full ref {full_obj:.4f} (gap {gap_pct:+.2f}%) at k={k}. "
+                    f"The full_ref for λ={W_BALANCED} is corrupt — re-run with "
+                    f"--refresh-cache."
+                )
+
+            # gap_target (characterisation) takes priority; else oracle-free stop.
+            stop_reason = ""
+            if GAP_TARGET is not None and gap_pct is not None and gap_pct <= GAP_TARGET:
+                stop_reason = "gap_target"
+            elif STOP == "edge_saturation" and sat_streak >= PATIENCE:
+                stop_reason = "edge_saturation"
+            elif STOP == "obj_plateau" and plateau_streak >= PATIENCE:
+                stop_reason = "obj_plateau"
+
+            row = _record(
+                ctx,
+                method,
+                k,
+                build_s,
+                solve_s,
+                results_k,
+                ops_k,
+                sg_edges,
+                d_edges,
+                d_obj_pct,
+                stop_reason,
+            )
+            _emit(row)
+
+            gap = row["obj_vs_full_pct"]
+            pct = row["subgraph_pct"]
+            dobj = f"{d_obj_pct:+.3f}%" if d_obj_pct is not None else "   —   "
+            print(
+                f"  k={k:>5}  edges={sg_edges:>4} ({pct:>5}%)  Δe={d_edges:>4}  "
+                f"obj={obj_k:.4f}  gap={gap:+.2f}%  Δobj={dobj}  "
+                f"build={build_s:.2f}s solve={solve_s:.2f}s"
+            )
+
+            prev_obj = obj_k
+            prev_edges = sg_edges
+
+            if stop_reason:
+                detail = (
+                    f"gap {gap_pct:+.2f}% ≤ {GAP_TARGET}%"
+                    if stop_reason == "gap_target"
+                    else f"after {PATIENCE} consecutive steps"
+                )
+                print(f"  → stop: {stop_reason} ({detail})")
+                break
+
+    for method in METHODS:
+        run_method(method)
 
     csv_file.close()
     print(f"\nResults saved to {RESULTS_FILE}")

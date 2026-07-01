@@ -45,12 +45,29 @@ def group_by_config(rows):
     return configs
 
 
-def _by_lambda(cfg_rows):
-    """Sub-group a config's rows by λ, returning a dict {λ_float: [k-rows]} with
-    only the swept k rows (the full_ref row, which has no k, is dropped)."""
+def _methods(cfg_rows):
+    """Subgraph methods present in the config, excluding the full_ref row.
+
+    Falls back to a single 'bl_union' bucket for CSVs written before the method
+    column existed (row.get returns None → treated as the sole method)."""
+    ms = []
+    for row in cfg_rows:
+        if not row["k"]:
+            continue
+        m = row.get("method") or "bl_union"
+        if m not in ms:
+            ms.append(m)
+    return ms
+
+
+def _by_lambda(cfg_rows, method=None):
+    """Sub-group a config's swept-k rows by λ (optionally filtered to one
+    method). The full_ref row (no k) is dropped."""
     out = {}
     for row in cfg_rows:
         if not row["k"]:
+            continue
+        if method is not None and (row.get("method") or "bl_union") != method:
             continue
         out.setdefault(float(row["w_balanced"]), []).append(row)
     for lam in out:
@@ -83,7 +100,7 @@ def _lambda_colors(lambdas):
     return {lam: cm.viridis(norm(lam)) for lam in lambdas}
 
 
-def _plot(cfg, by_lam, res_dir, xfield, xlabel, xlog, yfield, ylabel, fname_stem):
+def _plot(cfg, by_lam, res_dir, xfield, xlabel, xlog, yfield, ylabel, fname_stem, method):
     fig, ax = plt.subplots()
     lambdas = sorted(by_lam)
     colors = _lambda_colors(lambdas)
@@ -115,14 +132,73 @@ def _plot(cfg, by_lam, res_dir, xfield, xlabel, xlog, yfield, ylabel, fname_stem
     ax.set_ylabel(ylabel, fontname="Liberation Serif", fontsize=11)
     instance, num_phases = cfg
     ax.set_title(
-        f"bl-union convergence  —  {instance}  P={num_phases}",
+        f"{method} convergence  —  {instance}  P={num_phases}",
         fontname="Liberation Serif",
         fontsize=13,
     )
     ax.grid(True, linewidth=0.3, color="gray", alpha=0.4)
     ax.legend(title="λ (★ = auto-stop)", fontsize=8, ncol=2)
 
-    fname = os.path.join(res_dir, f"{fname_stem}_{instance}_P{num_phases}.{FORMAT}")
+    fname = os.path.join(
+        res_dir, f"{fname_stem}_{method}_{instance}_P{num_phases}.{FORMAT}"
+    )
+    plt.savefig(fname, format=FORMAT, dpi=1200)
+    print(f"Saved {fname}")
+    plt.close(fig)
+
+
+# Fixed colours/markers per method for the head-to-head figure (TUM palette).
+METHOD_STYLE = {
+    "bl_union": ((0 / 255, 101 / 255, 189 / 255), "o", "bl-union"),
+    "diverse": ((159 / 255, 186 / 255, 54 / 255), "s", "diverse"),
+}
+
+
+def plot_best_gap_vs_lambda(cfg, cfg_rows, res_dir):
+    """Head-to-head: best objective gap each method reaches vs λ.
+
+    For every (method, λ) take the minimum obj gap over the k-sweep (the growth
+    is monotone, so this is the converged value). This is the idea-#4 figure:
+    it shows whether diverse enumeration closes the high-λ gap where bl-union
+    plateaus."""
+    fig, ax = plt.subplots()
+    for method in _methods(cfg_rows):
+        by_lam = _by_lambda(cfg_rows, method=method)
+        xs, ys = [], []
+        for lam in sorted(by_lam):
+            gaps = [
+                float(r["obj_vs_full_pct"])
+                for r in by_lam[lam]
+                if r["obj_vs_full_pct"] != ""
+            ]
+            if gaps:
+                xs.append(lam)
+                ys.append(min(gaps))
+        if not xs:
+            continue
+        color, marker, label = METHOD_STYLE.get(
+            method, ((0.4, 0.4, 0.4), "^", method)
+        )
+        ax.plot(xs, ys, "-", color=color, linewidth=1.2, marker=marker, ms=6, label=label)
+
+    ax.axhline(0.0, color="black", linestyle="--", linewidth=1.0, label="full MIP")
+    ax.axhline(1.0, color="gray", linestyle=":", linewidth=1.0, label="1% target")
+    ax.set_xlabel("λ (w_balanced)", fontname="Liberation Serif", fontsize=11)
+    ax.set_ylabel(
+        "Best objective gap to full MIP [%]", fontname="Liberation Serif", fontsize=11
+    )
+    instance, num_phases = cfg
+    ax.set_title(
+        f"Method comparison  —  {instance}  P={num_phases}",
+        fontname="Liberation Serif",
+        fontsize=13,
+    )
+    ax.grid(True, linewidth=0.3, color="gray", alpha=0.4)
+    ax.legend(fontsize=9)
+
+    fname = os.path.join(
+        res_dir, f"method_best_gap_vs_lambda_{instance}_P{num_phases}.{FORMAT}"
+    )
     plt.savefig(fname, format=FORMAT, dpi=1200)
     print(f"Saved {fname}")
     plt.close(fig)
@@ -133,35 +209,35 @@ if __name__ == "__main__":
     rows = read_rows(csv_fname)
     res_dir = os.path.dirname(csv_fname) or "."
     for cfg, cfg_rows in group_by_config(rows).items():
-        by_lam = _by_lambda(cfg_rows)
-        if not by_lam:
+        methods = _methods(cfg_rows)
+        if not methods:
             continue
-        # Growth curves vs subgraph size (% of full-graph edges): objective gap
-        # and makespan (alpha) gap. Plus the objective vs k for reference.
-        _plot(
-            cfg, by_lam, res_dir,
-            xfield="subgraph_pct",
-            xlabel="Subgraph size [% of full-graph edges]",
-            xlog=True,
-            yfield="obj_vs_full_pct",
-            ylabel="Objective gap to full MIP [%]",
-            fname_stem="convergence_obj_vs_pct",
-        )
-        _plot(
-            cfg, by_lam, res_dir,
-            xfield="subgraph_pct",
-            xlabel="Subgraph size [% of full-graph edges]",
-            xlog=True,
-            yfield="vs_full_pct",
-            ylabel="Makespan (α) gap to full MIP [%]",
-            fname_stem="convergence_alpha_vs_pct",
-        )
-        _plot(
-            cfg, by_lam, res_dir,
-            xfield="k",
-            xlabel="k (shortest paths)",
-            xlog=True,
-            yfield="obj_vs_full_pct",
-            ylabel="Objective gap to full MIP [%]",
-            fname_stem="convergence_obj_vs_k",
-        )
+
+        # Per-method growth curves: objective gap and makespan (α) gap vs %edges,
+        # plus objective vs k for reference.
+        for method in methods:
+            by_lam = _by_lambda(cfg_rows, method=method)
+            if not by_lam:
+                continue
+            _plot(
+                cfg, by_lam, res_dir, xfield="subgraph_pct",
+                xlabel="Subgraph size [% of full-graph edges]", xlog=True,
+                yfield="obj_vs_full_pct", ylabel="Objective gap to full MIP [%]",
+                fname_stem="convergence_obj_vs_pct", method=method,
+            )
+            _plot(
+                cfg, by_lam, res_dir, xfield="subgraph_pct",
+                xlabel="Subgraph size [% of full-graph edges]", xlog=True,
+                yfield="vs_full_pct", ylabel="Makespan (α) gap to full MIP [%]",
+                fname_stem="convergence_alpha_vs_pct", method=method,
+            )
+            _plot(
+                cfg, by_lam, res_dir, xfield="k",
+                xlabel="k (shortest paths)", xlog=True,
+                yfield="obj_vs_full_pct", ylabel="Objective gap to full MIP [%]",
+                fname_stem="convergence_obj_vs_k", method=method,
+            )
+
+        # Head-to-head comparison (only meaningful with ≥2 methods, but harmless
+        # with one).
+        plot_best_gap_vs_lambda(cfg, cfg_rows, res_dir)

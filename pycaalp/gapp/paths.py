@@ -45,6 +45,44 @@ def k_shortest_paths(G, source, target, k, weight=None):
     return list(islice(nx.shortest_simple_paths(G, source, target, weight=weight), k))
 
 
+def diverse_shortest_paths(
+    G, source, target, k, weight, penalty=0.5, tmp_attr="_diverse_tmp"
+):
+    """Enumerate k *diverse* source→target paths by penalized re-routing.
+
+    Yen's k-shortest paths (``k_shortest_paths``) return near-duplicates: the
+    500th path typically differs from the 1st by a couple of edges, so the union
+    subgraph saturates in coverage while the objective plateaus. This instead
+    repeatedly takes the shortest path by ``weight`` and then *adds* ``penalty``
+    to every edge it used, so each subsequent path is pushed onto fresh edges.
+    The result spans the compromise region with far fewer paths.
+
+    Deterministic and reproducible (no RNG). Because the assembly digraph is a
+    DAG, each call is a single linear-time shortest path — much cheaper than
+    Yen at large k. ``penalty`` trades coverage for cost: 0 reproduces the plain
+    shortest path every time (no diversity), larger values spread more
+    aggressively. ``weight`` is a per-edge attribute already on ``G`` (e.g. the
+    blended weight at the target λ), normalised to ~[0, 1], so an additive
+    penalty is on-scale and — unlike a multiplicative one — still moves
+    zero-weight edges.
+
+    The penalties live on a private ``tmp_attr`` and do not mutate ``weight``.
+    """
+    for u, v, data in G.edges(data=True):
+        data[tmp_attr] = data[weight]
+
+    paths = []
+    for _ in range(k):
+        try:
+            p = nx.shortest_path(G, source, target, weight=tmp_attr)
+        except nx.NetworkXNoPath:
+            break
+        paths.append(p)
+        for i in range(len(p) - 1):
+            G[p[i]][p[i + 1]][tmp_attr] += penalty
+    return paths
+
+
 def set_blended_weights(
     digraph,
     time_weights,

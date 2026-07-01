@@ -36,6 +36,7 @@ WEIGHT_STYLE = [
     ("combined", "combined", 2, "v"),
     ("blended", "blended", 4, "D"),
     ("blended_union", "bl-union", 5, "X"),
+    ("diverse", "diverse", 0, "P"),
 ]
 
 

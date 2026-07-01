@@ -29,7 +29,7 @@ MODULE="experiments.bl_union_convergence.bl_union_convergence"
 if [ "$#" -gt 0 ]; then
     LAMBDAS=("$@")
 else
-    LAMBDAS=(0.0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.85)
+    LAMBDAS=(0.0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0)
 fi
 
 # Pull config from the experiment module so the folder name and log stay a
@@ -42,7 +42,9 @@ BLENDS=$(python -c "import ${MODULE} as t; print(t.BLEND_GRID)")
 FILE_NAME=$(python -c "import ${MODULE} as t; print(t.FILE_NAME)")
 DFM_FILE=$(python -c "import ${MODULE} as t; print(t.DFM_FILE_NAME)")
 
-RUNDIR="experiments/bl_union_convergence/${INSTANCE}_np_${P}"
+# RUN_TAG (env) appends a suffix so a variant run (e.g. diverse-only, high
+# penalty) lands in its own folder instead of overwriting the main comparison.
+RUNDIR="experiments/bl_union_convergence/${INSTANCE}_np_${P}${RUN_TAG:+_${RUN_TAG}}"
 mkdir -p "$RUNDIR"
 LOG="${RUNDIR}/run.log"
 
@@ -70,18 +72,27 @@ if [ "$JOBS" -gt "${#LAMBDAS[@]}" ]; then JOBS="${#LAMBDAS[@]}"; fi
     echo "==========================================================="
 } | tee "$LOG"
 
-PHASE_ARG="--num-phases ${P}"
+# Optional pass-through knobs (env): STOP, K_MAX, GAP_TARGET, METHODS, PENALTY,
+# REFRESH_CACHE.
+EXTRA_ARGS="--num-phases ${P}"
+[ -n "${STOP:-}" ]        && EXTRA_ARGS="${EXTRA_ARGS} --stop ${STOP}"
+[ -n "${K_MAX:-}" ]       && EXTRA_ARGS="${EXTRA_ARGS} --k-max ${K_MAX}"
+[ -n "${GAP_TARGET:-}" ]  && EXTRA_ARGS="${EXTRA_ARGS} --gap-target ${GAP_TARGET}"
+[ -n "${METHODS:-}" ]     && EXTRA_ARGS="${EXTRA_ARGS} --methods ${METHODS}"
+[ -n "${PENALTY:-}" ]     && EXTRA_ARGS="${EXTRA_ARGS} --penalty ${PENALTY}"
+[ -n "${REFRESH_CACHE:-}" ] && EXTRA_ARGS="${EXTRA_ARGS} --refresh-cache"
+echo "extra args   : ${EXTRA_ARGS}" | tee -a "$LOG"
 
 echo "Running ${#LAMBDAS[@]} λ configs, up to ${JOBS} at a time → ${RUNDIR}/"
 
 # -P runs JOBS at once; each task is fully independent (own digraph + own solves).
 # Each task's stdout is captured to its own log so parallel output is not interleaved.
 printf '%s\n' "${LAMBDAS[@]}" | xargs -P "$JOBS" -I {} bash -c '
-    lam="$1"; rundir="$2"; phase_arg="$3"; module="$4"
-    python -m "$module" --w-balanced "$lam" $phase_arg \
+    lam="$1"; rundir="$2"; extra="$3"; module="$4"
+    python -m "$module" --w-balanced "$lam" $extra \
         --out "${rundir}/bl_union_convergence_lambda_${lam}.csv" \
         > "${rundir}/task_lambda_${lam}.log" 2>&1
-' _ {} "$RUNDIR" "$PHASE_ARG" "$MODULE"
+' _ {} "$RUNDIR" "$EXTRA_ARGS" "$MODULE"
 
 # Fold each task log into the run log, then drop the per-task logs.
 for lam in "${LAMBDAS[@]}"; do
@@ -109,7 +120,8 @@ for f in "${RUNDIR}"/bl_union_convergence_lambda_*.csv; do
 done
 echo "Combined CSV → ${COMBINED}" | tee -a "$LOG"
 
-# Plot into the same folder (plotter writes next to the CSV it is given).
+# Plot into the same folder (plotters write next to the CSV they are given).
 python -m experiments.bl_union_convergence.plot_convergence "$COMBINED" | tee -a "$LOG"
+python -m experiments.bl_union_convergence.plot_metrics_grid "$COMBINED" | tee -a "$LOG"
 
 echo "Done. Results + plots + log in ${RUNDIR}/"
