@@ -67,11 +67,11 @@ def _xy(k_rows, xfield, yfield):
     return xs, ys
 
 
-def _stop_point(k_rows, xfield):
-    """(x, gap) of the auto-stop row for this λ, or None."""
+def _stop_point(k_rows, xfield, yfield):
+    """(x, y) of the auto-stop row for this λ, or None."""
     for r in k_rows:
-        if r["stop_reason"] and r["stop_reason"] != "full_ref" and r[xfield]:
-            return float(r[xfield]), float(r["obj_vs_full_pct"])
+        if r["stop_reason"] and r["stop_reason"] != "full_ref" and r[xfield] and r[yfield] != "":
+            return float(r[xfield]), float(r[yfield])
     return None
 
 
@@ -83,14 +83,14 @@ def _lambda_colors(lambdas):
     return {lam: cm.viridis(norm(lam)) for lam in lambdas}
 
 
-def _plot(cfg, by_lam, res_dir, xfield, xlabel, xlog, fname_stem):
+def _plot(cfg, by_lam, res_dir, xfield, xlabel, xlog, yfield, ylabel, fname_stem):
     fig, ax = plt.subplots()
     lambdas = sorted(by_lam)
     colors = _lambda_colors(lambdas)
 
     for i, lam in enumerate(lambdas):
         k_rows = by_lam[lam]
-        xs, ys = _xy(k_rows, xfield, "obj_vs_full_pct")
+        xs, ys = _xy(k_rows, xfield, yfield)
         if not xs:
             continue
         ax.plot(
@@ -104,7 +104,7 @@ def _plot(cfg, by_lam, res_dir, xfield, xlabel, xlog, fname_stem):
             mfc=colors[lam],
             label=f"λ={lam:g}",
         )
-        sp = _stop_point(k_rows, xfield)
+        sp = _stop_point(k_rows, xfield, yfield)
         if sp:
             ax.plot(sp[0], sp[1], marker="*", ms=13, color=colors[lam], mec="black", mew=0.6)
 
@@ -112,7 +112,7 @@ def _plot(cfg, by_lam, res_dir, xfield, xlabel, xlog, fname_stem):
     if xlog:
         ax.set_xscale("log")
     ax.set_xlabel(xlabel, fontname="Liberation Serif", fontsize=11)
-    ax.set_ylabel("Objective gap to full MIP [%]", fontname="Liberation Serif", fontsize=11)
+    ax.set_ylabel(ylabel, fontname="Liberation Serif", fontsize=11)
     instance, num_phases = cfg
     ax.set_title(
         f"bl-union convergence  —  {instance}  P={num_phases}",
@@ -136,17 +136,32 @@ if __name__ == "__main__":
         by_lam = _by_lambda(cfg_rows)
         if not by_lam:
             continue
+        # Growth curves vs subgraph size (% of full-graph edges): objective gap
+        # and makespan (alpha) gap. Plus the objective vs k for reference.
         _plot(
             cfg, by_lam, res_dir,
             xfield="subgraph_pct",
             xlabel="Subgraph size [% of full-graph edges]",
             xlog=True,
+            yfield="obj_vs_full_pct",
+            ylabel="Objective gap to full MIP [%]",
             fname_stem="convergence_obj_vs_pct",
+        )
+        _plot(
+            cfg, by_lam, res_dir,
+            xfield="subgraph_pct",
+            xlabel="Subgraph size [% of full-graph edges]",
+            xlog=True,
+            yfield="vs_full_pct",
+            ylabel="Makespan (α) gap to full MIP [%]",
+            fname_stem="convergence_alpha_vs_pct",
         )
         _plot(
             cfg, by_lam, res_dir,
             xfield="k",
             xlabel="k (shortest paths)",
             xlog=True,
+            yfield="obj_vs_full_pct",
+            ylabel="Objective gap to full MIP [%]",
             fname_stem="convergence_obj_vs_k",
         )
