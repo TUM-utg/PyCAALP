@@ -44,6 +44,7 @@ import time
 
 from pycaalp.run import create_assembly_digraph, optimize
 from pycaalp.time_balancing.subgraph_mip import (
+    build_adaptive_subgraph,
     build_blended_union_subgraph,
     build_diverse_subgraph,
     solve_by_subgraph_mip,
@@ -455,6 +456,10 @@ if __name__ == "__main__":
             return build_blended_union_subgraph(ad, k, BLEND_GRID)
         if method == "diverse":
             return build_diverse_subgraph(ad, k, W_BALANCED, penalty=PENALTY)
+        if method == "adaptive":
+            return build_adaptive_subgraph(
+                ad, k, BLEND_GRID, W_BALANCED, penalty=PENALTY
+            )
         raise ValueError(f"unknown method: {method}")
 
     def run_method(method):

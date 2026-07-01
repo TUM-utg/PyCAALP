@@ -150,6 +150,87 @@ def build_diverse_subgraph(
     return digraph.edge_subgraph(edge_set).copy()
 
 
+def build_adaptive_subgraph(
+    assembly_digraph_obj,
+    k: int,
+    blends,
+    lam: float,
+    penalty: float = 0.5,
+    sat_window: int = 6,
+    base_attr: str = "_adapt",
+) -> nx.DiGraph:
+    """bl-union until its edge growth stalls, then switch to diverse re-routing.
+
+    Draws up to ``k`` paths total, growing one edge set:
+
+    * **Phase 1 (bl-union):** pull Yen k-shortest paths round-robin across the
+      ``blends`` (each on its own blended weight). This is cheap and, via the
+      blend=0 corner, captures the engineering-optimal path early — so at low/mid
+      λ the objective is nailed within a tiny edge set.
+    * **switch:** when the last ``sat_window`` Yen paths add fewer than
+      ``sat_window`` new edges in total (i.e. <1 new edge per path — diminishing
+      returns), bl-union's near-duplicate paths have stopped paying their way.
+      A rate test, not strict-zero: Yen keeps trickling the odd new edge, so a
+      "no new edge at all" rule would essentially never fire.
+    * **Phase 2 (diverse):** spend the remaining budget on penalised re-routing
+      on the blended weight at the true λ, unioned with the Phase-1 edges. The
+      diverse pass starts unbanned (the optimum-carrying path usually overlaps
+      bl-union's edges, so banning them would hide it); the re-routing penalty
+      then spreads onto fresh edges — escaping the plateau that traps bl-union in
+      the high-λ regime.
+
+    For k below the switch point this is exactly bl-union; past it, the extra
+    paths come from the penalty approach. Deterministic.
+    """
+    from collections import deque
+
+    digraph = assembly_digraph_obj.assembly_digraph
+    src, tgt = "0_1", f"{assembly_digraph_obj.graph.number_of_edges()}_1"
+
+    # Phase 1: one Yen generator per blend, each on its own weight attribute.
+    gens = []
+    for i, b in enumerate(blends):
+        attr = f"{base_attr}_blend_{i}"
+        assembly_digraph_obj.set_blended_weights(b, out_attr=attr)
+        gens.append(nx.shortest_simple_paths(digraph, src, tgt, weight=attr))
+
+    edge_set = set()
+    drawn = 0
+    recent_new = deque(maxlen=sat_window)  # new-edge count of the last paths
+    active = list(range(len(gens)))
+    stalled = False
+    while drawn < k and active and not stalled:
+        for gi in list(active):
+            if drawn >= k:
+                break
+            try:
+                path = next(gens[gi])
+            except StopIteration:
+                active.remove(gi)
+                continue
+            before = len(edge_set)
+            edge_set.update(zip(path, path[1:]))
+            drawn += 1
+            recent_new.append(len(edge_set) - before)
+            if len(recent_new) == sat_window and sum(recent_new) < sat_window:
+                stalled = True
+                break
+
+    # Phase 2: diverse re-routing on the blended weight at the true λ, unioned
+    # with the Phase-1 edges. Not pre-banned: the optimum-carrying path usually
+    # overlaps bl-union's edges, so banning them would hide it — the diverse pass
+    # must be free to (re)find it, then spread onto fresh edges from there.
+    if drawn < k:
+        wattr = f"{base_attr}_lam"
+        assembly_digraph_obj.set_blended_weights(lam, out_attr=wattr)
+        for path in diverse_shortest_paths(
+            digraph, src, tgt, k - drawn, wattr, penalty=penalty
+        ):
+            edge_set.update(zip(path, path[1:]))
+
+    return digraph.edge_subgraph(edge_set).copy()
+
+
 def solve_by_subgraph_mip(
     assembly_digraph_obj,
     k: int = 500,

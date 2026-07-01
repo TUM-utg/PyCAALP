@@ -8,3 +8,5 @@ coverage.*
 *.csv
 *.out
 *.log
+*.svg
+*.png
