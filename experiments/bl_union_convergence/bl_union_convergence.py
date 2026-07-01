@@ -39,6 +39,7 @@ import argparse
 import csv
 import json
 import os
+import pickle
 import time
 
 from pycaalp.run import create_assembly_digraph, optimize
@@ -61,18 +62,38 @@ INSTANCE = os.path.basename(os.path.dirname(FILE_NAME))
 NUM_PHASES = 3
 W_BALANCED = 0.5
 
-# Geometric (×2) k grid — clean log-x convergence. This is a SAFETY CAP: the
-# automatic stop normally halts well before the last value.
-K_VALUES = [1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192]
+# k grid — denser at the low end so the subgraph-growth curve (obj/alpha vs %
+# edges) is well sampled where the action is, then geometric. A SAFETY CAP: the
+# stop criterion normally halts before the last value.
+K_VALUES = [
+    1, 2, 3, 4, 6, 8, 12, 16, 24, 32, 48, 64, 96, 128, 192, 256, 384, 512,
+    768, 1024, 1536, 2048,
+]
 
 # Blend values unioned by the bl-union strategy (frontier union). blend=0 is the
 # pure edge_weight ranking, blend=1 the continuous balance ranking, the middle
 # catches compromise paths. λ-agnostic (the MIP still solves at the true λ).
 BLEND_GRID = [0.0, 0.5, 1.0]
 
-# Automatic stop criterion.
+# Stop criterion. Two useful ones (see --stop):
+#   edge_saturation — grow until the subgraph genuinely stops expanding. Oracle-
+#       free, so it is the honest "we cannot cover more of the graph" stop. This
+#       is the DEFAULT for tracing the growth curve, because obj_plateau is too
+#       eager: at high λ bl-union's objective flatlines while still >1% from the
+#       optimum, so an objective plateau cannot tell "converged to the optimum"
+#       from "stuck below it".
+#   obj_plateau — relative objective improvement < OBJ_EPS. Cheap; fine at low λ
+#       where bl-union really does hit the optimum, misleading at high λ.
+#   none — run the whole k grid (full trajectory).
+# Independently, --gap-target X stops as soon as the gap to the (cached) full-MIP
+# objective is ≤ X% — the characterisation stop: "how little graph for <X%".
+STOP_DEFAULT = "edge_saturation"
 OBJ_EPS = 0.5  # %: relative objective improvement below this counts as a plateau
 PATIENCE = 2  # consecutive plateau / saturation steps required to stop
+
+# Where per-(instance, P, λ) full-MIP references are cached (they cost 2–5 h each
+# on assembly_2). Keyed so any run/experiment folder reuses the same solve.
+CACHE_DIR = "experiments/bl_union_convergence/full_mip_cache"
 
 RESULTS_FILE = "experiments/bl_union_convergence/bl_union_convergence.csv"
 
@@ -122,6 +143,60 @@ def _timed(fn, *args, **kwargs):
     t0 = time.perf_counter()
     result = fn(*args, **kwargs)
     return result, time.perf_counter() - t0
+
+
+def _cache_path(cache_dir, instance, num_phases, w_balanced):
+    return os.path.join(
+        cache_dir, f"full_ref_{instance}_P{num_phases}_lam{w_balanced}.pkl"
+    )
+
+
+def solve_full_ref_cached(ad, instance, num_phases, w_balanced, cache_dir, refresh):
+    """Return (results, ops, solve_s) for the full MIP, from cache if available.
+
+    The full-MIP reference is the same for a given (instance, P, λ) and costs
+    hours on assembly_2, so we pickle it and reload on subsequent runs. The cache
+    is validated against the current digraph size (nodes/edges) so a changed
+    model (μ weights, DFM, geometry) is detected and re-solved rather than
+    silently reused. Set ``refresh=True`` to force a re-solve.
+    """
+    n_nodes = ad.assembly_digraph.number_of_nodes()
+    n_edges = ad.assembly_digraph.number_of_edges()
+    path = _cache_path(cache_dir, instance, num_phases, w_balanced)
+
+    if not refresh and os.path.exists(path):
+        with open(path, "rb") as fh:
+            c = pickle.load(fh)
+        if c.get("n_nodes") == n_nodes and c.get("n_edges") == n_edges:
+            print(f"  [cache hit] {path}  (solve was {c['solve_s']:.1f}s)")
+            return c["results"], c["ops"], c["solve_s"], True
+        print(f"  [cache stale] {path} — digraph size changed, re-solving")
+
+    (results, ops), solve_s = _timed(
+        optimize,
+        assembly_digraph=ad,
+        num_phases=num_phases,
+        w_balanced=w_balanced,
+        hide_output=True,
+        full_result_output=True,
+    )
+    os.makedirs(cache_dir, exist_ok=True)
+    with open(path, "wb") as fh:
+        pickle.dump(
+            {
+                "instance": instance,
+                "num_phases": num_phases,
+                "w_balanced": w_balanced,
+                "n_nodes": n_nodes,
+                "n_edges": n_edges,
+                "results": results,
+                "ops": ops,
+                "solve_s": solve_s,
+            },
+            fh,
+        )
+    print(f"  [cache save] {path}")
+    return results, ops, solve_s, False
 
 
 def _record(
@@ -213,10 +288,40 @@ if __name__ == "__main__":
         default=RESULTS_FILE,
         help="output CSV path (give each parallel task its own file)",
     )
+    parser.add_argument(
+        "--stop",
+        choices=["edge_saturation", "obj_plateau", "none"],
+        default=STOP_DEFAULT,
+        help="k-sweep stop criterion (default: %(default)s)",
+    )
+    parser.add_argument(
+        "--gap-target",
+        type=float,
+        default=None,
+        help="also stop once the gap to the full-MIP objective is ≤ this %% "
+        "(characterisation stop; uses the cached full-MIP reference)",
+    )
+    parser.add_argument(
+        "--k-max",
+        type=int,
+        default=None,
+        help="cap the k grid (bounds Yen enumeration cost; the growth curve's "
+        "interesting range on assembly_2 is small k)",
+    )
+    parser.add_argument("--cache-dir", default=CACHE_DIR)
+    parser.add_argument(
+        "--refresh-cache",
+        action="store_true",
+        help="ignore any cached full-MIP reference and re-solve it",
+    )
     args = parser.parse_args()
     W_BALANCED = args.w_balanced
     NUM_PHASES = args.num_phases
     RESULTS_FILE = args.out
+    STOP = args.stop
+    GAP_TARGET = args.gap_target
+    if args.k_max is not None:
+        K_VALUES = [k for k in K_VALUES if k <= args.k_max]
 
     print("=" * 72)
     print(f"bl-union convergence — {INSTANCE}  P={NUM_PHASES}  λ={W_BALANCED}")
@@ -259,13 +364,8 @@ if __name__ == "__main__":
     # Full-MIP reference (single solve, no k)
     # ------------------------------------------------------------------
     print(f"\n[ref] Full MIP  P={NUM_PHASES}  λ={W_BALANCED} …")
-    (results_full, ops_full), t_full = _timed(
-        optimize,
-        assembly_digraph=ad,
-        num_phases=NUM_PHASES,
-        w_balanced=W_BALANCED,
-        hide_output=True,
-        full_result_output=True,
+    results_full, ops_full, t_full, cached = solve_full_ref_cached(
+        ad, INSTANCE, NUM_PHASES, W_BALANCED, args.cache_dir, args.refresh_cache
     )
     full_alpha = max(results_full["absolute_time_per_phase"].values())
     full_obj = results_full["objective"]
@@ -296,7 +396,9 @@ if __name__ == "__main__":
     plateau_streak = 0
     sat_streak = 0
 
-    print("\nbl-union k-sweep (auto-stop on plateau / edge saturation):")
+    print(f"\nbl-union k-sweep (stop: {STOP}"
+          + (f", gap_target={GAP_TARGET}%" if GAP_TARGET is not None else "")
+          + "):")
     for k in K_VALUES:
         sg, build_s = _timed(build_blended_union_subgraph, ad, k, BLEND_GRID)
         sg_edges = sg.number_of_edges()
@@ -329,11 +431,20 @@ if __name__ == "__main__":
         else:
             sat_streak = 0
 
+        # gap to the full-MIP optimum for this k (None only if full_obj is 0).
+        gap_pct = (
+            (obj_k / full_obj - 1) * 100 if full_obj else None
+        )
+
+        # Stop decision. gap_target (characterisation) takes priority; otherwise
+        # the selected oracle-free criterion.
         stop_reason = ""
-        if plateau_streak >= PATIENCE:
-            stop_reason = "obj_plateau"
-        elif sat_streak >= PATIENCE:
+        if GAP_TARGET is not None and gap_pct is not None and gap_pct <= GAP_TARGET:
+            stop_reason = "gap_target"
+        elif STOP == "edge_saturation" and sat_streak >= PATIENCE:
             stop_reason = "edge_saturation"
+        elif STOP == "obj_plateau" and plateau_streak >= PATIENCE:
+            stop_reason = "obj_plateau"
 
         row = _record(
             ctx,
@@ -364,7 +475,12 @@ if __name__ == "__main__":
         prev_edges = sg_edges
 
         if stop_reason:
-            print(f"  → stop: {stop_reason} (after {PATIENCE} consecutive steps)")
+            detail = (
+                f"gap {gap_pct:+.2f}% ≤ {GAP_TARGET}%"
+                if stop_reason == "gap_target"
+                else f"after {PATIENCE} consecutive steps"
+            )
+            print(f"  → stop: {stop_reason} ({detail})")
             break
 
     csv_file.close()
