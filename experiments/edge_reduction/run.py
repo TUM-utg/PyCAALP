@@ -15,6 +15,7 @@ from experiments.edge_reduction.scripts.combination_runs import (
 from experiments.edge_reduction.scripts.plots import (
     plot_objective_value,
     plot_total_time,
+    plot_wall_time,
     plot_speedup,
     plot_average_max_time,
     plot_speedup_vs_qual_lost,
@@ -107,6 +108,29 @@ if __name__ == "__main__":
         required=False,
         help="Whether to run plots code only",
     )
+    # Overrides so one base config can drive a parallel λ / P sweep
+    # (see run_sweep.sh) without hand-copying a config file per point.
+    parser.add_argument(
+        "--w-balanced",
+        dest="w_balanced",
+        type=float,
+        default=None,
+        help="Override config's w_balanced (λ)",
+    )
+    parser.add_argument(
+        "--num-phases",
+        dest="num_phases",
+        type=int,
+        default=None,
+        help="Override config's num_phases",
+    )
+    parser.add_argument(
+        "--res-fname",
+        dest="res_fname",
+        type=str,
+        default=None,
+        help="Override config's res_fname (plots land next to it)",
+    )
     CONFIG_DIR = "edge_reduction/config.py"
     args = parser.parse_args()
     if args.config:
@@ -158,6 +182,14 @@ if __name__ == "__main__":
             case _:
                 raise AttributeError(f"{key} is not a valid config attribute")
 
+    # CLI overrides win over the config so the sweep can reuse one base config
+    if args.w_balanced is not None:
+        W_BALANCED = args.w_balanced
+    if args.num_phases is not None:
+        NUM_PHASES = args.num_phases
+    if args.res_fname is not None:
+        RES_FNAME = args.res_fname
+
     logger.info(f"Running {__file__}")
     logger.info(f"{ASSEMBLY_FNAME=}")
     if DFM_FNAME:
@@ -183,8 +215,13 @@ if __name__ == "__main__":
     else:
         logger.info("Skipped multiple_reduction_runs")
 
-    # 2. Plots
-    PLOT_DIR = os.path.join(os.path.dirname(CONFIG_DIR), "plots")
+    # 2. Plots — land next to the results (so each sweep point is self-contained
+    # when --res-fname is overridden; identical to the old location otherwise,
+    # since existing configs keep res.pkl in the config's own folder).
+    if args.res_fname is not None:
+        PLOT_DIR = os.path.join(os.path.dirname(RES_FNAME), "plots")
+    else:
+        PLOT_DIR = os.path.join(os.path.dirname(CONFIG_DIR), "plots")
     if not os.path.exists(PLOT_DIR):
         os.makedirs(PLOT_DIR)
 
@@ -202,6 +239,9 @@ if __name__ == "__main__":
             case "total_time":
                 logger.info("Running plot_total_time")
                 plot_total_time(RES_FNAME, PLOT_DIR, NUM_PHASES)
+            case "wall_time":
+                logger.info("Running plot_wall_time")
+                plot_wall_time(RES_FNAME, PLOT_DIR, NUM_PHASES)
             case "speedup":
                 # logger.info("Running plot_speedup")
                 # plot_speedup(RES_FNAME, PLOT_DIR, NUM_PHASES)

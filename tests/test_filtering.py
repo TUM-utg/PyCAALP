@@ -9,11 +9,14 @@ from pycaalp.gapp.filtering import (
     normalize_attributes,
     filter_assembly_digraph_edges,
     find_unique_nodes_from_short_path,
+    find_adaptive_protected_edges,
+    edges_from_protected_nodes,
 )
 from pycaalp.gapp.read_write import read_graph_from_json
 
 
 EXAMPLE_JSON = "data/example/example_parts.json"
+ASSEMBLY_1_JSON = "data/assembly_1/assembly_1_2_tech_parts.json"
 
 
 # ---------------------------------------------------------------------------
@@ -39,10 +42,12 @@ def test_pick_random_percentage_all():
 
 
 def test_pick_random_percentage_protected():
-    lst = [("protected_node", "b"), ("other", "c"), ("other2", "d")]
-    result = pick_random_percentage(lst[:], 100, protected_elements=["protected_node"])
-    # protected element's edge must not be picked
-    assert all(e[0] != "protected_node" for e in result)
+    lst = [("protected_tail", "b"), ("other", "c"), ("other2", "d")]
+    protected = {("protected_tail", "b")}
+    result = pick_random_percentage(lst[:], 100, protected_elements=protected)
+    # the protected edge must never be picked
+    assert ("protected_tail", "b") not in result
+    assert len(result) == 2
 
 
 def test_pick_random_percentage_invalid():
@@ -206,3 +211,85 @@ def test_filter_layer_1_edges_are_processed():
     ]
     # Some layer-1 edges should have been removed (were previously untouched)
     assert len(layer1_edges_after) <= len(layer1_edges_before)
+
+
+def test_filter_protected_edges_survive():
+    """Edges in protected_edges must survive any reduction percentage."""
+    num_joints = 4
+    num_layers = num_joints + 1
+    dg = _make_multi_path_digraph(num_joints)
+    # Protect the 0_1 → 1_1 → ... → 4_1 chain
+    protected = {(f"{l}_1", f"{l+1}_1") for l in range(num_joints)}
+
+    filtered = filter_assembly_digraph_edges(dg, 98, num_layers, protected)
+
+    for u, v in protected:
+        assert filtered.has_edge(u, v)
+    # The protected chain keeps the digraph source→sink connected
+    assert nx.has_path(filtered, "0_1", f"{num_joints}_1")
+
+
+# ---------------------------------------------------------------------------
+# edges_from_protected_nodes — legacy node protection as an edge set
+# ---------------------------------------------------------------------------
+
+def test_edges_from_protected_nodes_takes_all_out_edges():
+    dg = _make_multi_path_digraph(3)
+    unique_nodes_dict = {1: ["1_1"], 2: []}
+    protected = edges_from_protected_nodes(dg, unique_nodes_dict)
+    # Exactly the out-edges of 1_1 (old semantics protected the whole fan-out)
+    assert protected == {("1_1", "2_1"), ("1_1", "2_2")}
+
+
+def test_edges_from_protected_nodes_skips_missing_nodes():
+    dg = _make_multi_path_digraph(3)
+    protected = edges_from_protected_nodes(dg, {1: ["1_1", "99_9"]})
+    assert protected == {("1_1", "2_1"), ("1_1", "2_2")}
+
+
+# ---------------------------------------------------------------------------
+# find_adaptive_protected_edges
+# ---------------------------------------------------------------------------
+
+@pytest.fixture(scope="module")
+def assembly1_digraph():
+    from pycaalp.gapp.assembly_digraph import AssemblyDigraph
+
+    ad = AssemblyDigraph(
+        file_name=ASSEMBLY_1_JSON,
+        w_tech=1.0,
+        w_hand=0.0,
+        w_tol=0.0,
+        w_mass=0.0,
+    )
+    ad.compute_assembly_digraph_complete()
+    return ad
+
+
+def test_find_adaptive_protected_edges_reaches_target(assembly1_digraph):
+    ad = assembly1_digraph
+    num_edges = ad.assembly_digraph.number_of_edges()
+    num_joints = ad.graph.number_of_edges()
+
+    protected = find_adaptive_protected_edges(ad, stop_perc_graph=10.0)
+
+    # Every protected edge exists in the digraph
+    assert all(ad.assembly_digraph.has_edge(u, v) for u, v in protected)
+    # The 10% target was reached (assembly 1 saturates far above 10%)
+    assert len(protected) >= 0.10 * num_edges
+    # The protected edges alone contain a full source→sink path
+    sub = ad.assembly_digraph.edge_subgraph(protected)
+    assert nx.has_path(sub, "0_1", f"{num_joints}_1")
+
+
+def test_find_adaptive_protected_edges_survive_filtering(assembly1_digraph):
+    ad = assembly1_digraph
+    num_joints = ad.graph.number_of_edges()
+    protected = find_adaptive_protected_edges(ad, stop_perc_graph=10.0)
+
+    filtered = filter_assembly_digraph_edges(
+        ad.assembly_digraph.copy(), 70, ad.get_num_layers, protected
+    )
+
+    assert all(filtered.has_edge(u, v) for u, v in protected)
+    assert nx.has_path(filtered, "0_1", f"{num_joints}_1")

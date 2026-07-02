@@ -26,7 +26,7 @@ from pycaalp.gapp.paths import calculate_num_simple_paths
 
 from pycaalp.gapp.filtering import (
     normalize_attributes,
-    find_all_shortest_paths,
+    find_adaptive_protected_edges,
     filter_assembly_digraph_edges,
 )
 
@@ -398,17 +398,18 @@ class AssemblyDigraph:
 
         assert self.assembly_digraph is not None
 
-        # Reduce the graph
+        # Reduce the graph, protecting the adaptive subgraph's edges (bl-union
+        # + diverse re-routing up to 10% of the digraph) so the reduction
+        # cannot destroy the near-optimal paths
         if self.reduction_percentage:
-            unique_nodes_dict = find_all_shortest_paths(
-                self.assembly_digraph, self.graph.number_of_edges()
+            protected_edges = find_adaptive_protected_edges(
+                self, lam=self.lambda_balance
             )
-            logger.debug(f"Unique nodes from all_shortest_path {unique_nodes_dict}")
             self.assembly_digraph = filter_assembly_digraph_edges(
                 self.assembly_digraph,
                 self.reduction_percentage,
                 self.get_num_layers,
-                unique_nodes_dict,
+                protected_edges,
             )
 
         # Independent calculation, i.e., run shortest path again

@@ -253,6 +253,8 @@ def plot_objective_value(res_pkl_fname: str, res_dir: str, num_phases: int):
 
 
 def plot_total_time(res_pkl_fname: str, res_dir: str, num_phases: int):
+    """Pure MIP solve time (getSolvingTime) vs reduction %. See plot_wall_time
+    for the honest build+solve total."""
     set_cols()
     res = load_pkl(res_pkl_fname)
     print(res)
@@ -266,10 +268,38 @@ def plot_total_time(res_pkl_fname: str, res_dir: str, num_phases: int):
         val=val,
         res_dir=res_dir,
         num_phases=num_phases,
-        plot_type="Total time",
+        plot_type="MIP solve time",
         title="MIP solving time",
         std=std,
-        y_label="Total time [min]",
+        y_label="MIP solve time [min]",
+    )
+
+
+def plot_wall_time(res_pkl_fname: str, res_dir: str, num_phases: int):
+    """Total wall time = digraph build (incl. adaptive protection + reduction)
+    + MIP construction + solve, vs reduction %. The honest cost of a run: unlike
+    MIP solve time it captures the build overhead reduction adds."""
+    set_cols()
+    res = load_pkl(res_pkl_fname)
+    val = {}
+    std = {}
+    for key, v in res.items():
+        if len(v) < 10:
+            raise ValueError(
+                "This result pkl predates total-time tracking (6-tuple); "
+                "re-run the experiment to plot wall time."
+            )
+        val[key] = float(v[6] / 60)
+        std[key] = float(v[7] / 60)
+
+    plot_edge_reduction(
+        val=val,
+        res_dir=res_dir,
+        num_phases=num_phases,
+        plot_type="Total wall time",
+        title="Total wall time (build + solve)",
+        std=std,
+        y_label="Total wall time [min]",
     )
 
 
