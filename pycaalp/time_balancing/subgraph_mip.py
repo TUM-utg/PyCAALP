@@ -156,7 +156,7 @@ def build_adaptive_subgraph(
     blends,
     lam: float,
     penalty: float = 0.5,
-    sat_window: int = 4,
+    stall_rounds: int = 2,
     base_attr: str = "_adapt",
 ) -> nx.DiGraph:
     """bl-union until its edge growth stalls, then switch to diverse re-routing.
@@ -167,11 +167,13 @@ def build_adaptive_subgraph(
       pulls the next Yen path from every blend generator, so after ``r`` rounds
       the edge set is **exactly** ``build_blended_union_subgraph(ad, r, blends)``.
       adaptive therefore lies *on* the bl-union curve until it switches.
-    * **switch:** when the last ``sat_window`` rounds add fewer than
-      ``sat_window`` new edges in total (<1 new edge per round — diminishing
-      returns), bl-union's near-duplicate paths have stopped paying their way.
-      A rate test, not strict-zero: Yen keeps trickling the odd new edge, so a
-      "no new edge at all" rule would essentially never fire.
+    * **switch:** after ``stall_rounds`` consecutive *duplicate rounds* — rounds
+      that add **no** new edge, i.e. every path bl-union just drew is already in
+      the subgraph. That is the crisp "bl-union has nothing new to contribute"
+      signal (no arbitrary rate threshold). ``stall_rounds`` (default 2) requires
+      it to persist because Yen's growth is bursty — a lone zero-edge round can
+      be a fluke while the next path still introduces an edge; ``stall_rounds=1``
+      switches on the very first duplicate round.
     * **Phase 2 (diverse):** spend the remaining budget on penalised re-routing
       on the blended weight at the true λ, unioned with the Phase-1 edges. The
       diverse pass starts unbanned (the optimum-carrying path usually overlaps
@@ -182,8 +184,6 @@ def build_adaptive_subgraph(
     For k below the switch point this is exactly bl-union; past it, the extra
     paths come from the penalty approach. Deterministic.
     """
-    from collections import deque
-
     digraph = assembly_digraph_obj.assembly_digraph
     src, tgt = "0_1", f"{assembly_digraph_obj.graph.number_of_edges()}_1"
 
@@ -196,7 +196,7 @@ def build_adaptive_subgraph(
 
     edge_set = set()
     rounds = 0
-    recent_new = deque(maxlen=sat_window)  # new-edge count of the last rounds
+    zero_streak = 0  # consecutive rounds that added no new edge (duplicate rounds)
     active = list(range(len(gens)))
     while rounds < k and active:
         before = len(edge_set)
@@ -208,9 +208,12 @@ def build_adaptive_subgraph(
                 continue
             edge_set.update(zip(path, path[1:]))
         rounds += 1
-        recent_new.append(len(edge_set) - before)
-        if len(recent_new) == sat_window and sum(recent_new) < sat_window:
-            break  # bl-union edge growth has stalled
+        if len(edge_set) == before:  # duplicate round: nothing new
+            zero_streak += 1
+            if zero_streak >= stall_rounds:
+                break  # bl-union has stalled — only duplicate paths left
+        else:
+            zero_streak = 0
 
     # Phase 2: diverse re-routing on the blended weight at the true λ, unioned
     # with the Phase-1 edges. Not pre-banned: the optimum-carrying path usually
