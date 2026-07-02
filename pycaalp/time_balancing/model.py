@@ -495,6 +495,12 @@ def run_mip(
 
     results = results_in_ascending_order(results)
     results["objective"] = model.getObjVal()
+    # Solver termination: "optimal" means proven to optimality; anything else
+    # (gaplimit/timelimit/…) means the objective is only an incumbent, so it may
+    # be *beaten* by an exactly-solved subgraph. Callers that use this value as a
+    # reference must check it.
+    results["scip_status"] = model.getStatus()
+    results["scip_gap"] = model.getGap()
 
     if write_milp_res:
         # Create balancing results dir

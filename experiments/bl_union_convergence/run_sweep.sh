@@ -81,6 +81,7 @@ EXTRA_ARGS="--num-phases ${P}"
 [ -n "${METHODS:-}" ]     && EXTRA_ARGS="${EXTRA_ARGS} --methods ${METHODS}"
 [ -n "${PENALTY:-}" ]     && EXTRA_ARGS="${EXTRA_ARGS} --penalty ${PENALTY}"
 [ -n "${REFRESH_CACHE:-}" ] && EXTRA_ARGS="${EXTRA_ARGS} --refresh-cache"
+[ -n "${NO_CACHE:-}" ]      && EXTRA_ARGS="${EXTRA_ARGS} --no-cache"
 echo "extra args   : ${EXTRA_ARGS}" | tee -a "$LOG"
 
 echo "Running ${#LAMBDAS[@]} λ configs, up to ${JOBS} at a time → ${RUNDIR}/"

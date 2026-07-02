@@ -184,27 +184,7 @@ def _cache_path(cache_dir, instance, num_phases, w_balanced):
     )
 
 
-def solve_full_ref_cached(ad, instance, num_phases, w_balanced, cache_dir, refresh):
-    """Return (results, ops, solve_s) for the full MIP, from cache if available.
-
-    The full-MIP reference is the same for a given (instance, P, λ) and costs
-    hours on assembly_2, so we pickle it and reload on subsequent runs. The cache
-    is validated against the current digraph size (nodes/edges) so a changed
-    model (μ weights, DFM, geometry) is detected and re-solved rather than
-    silently reused. Set ``refresh=True`` to force a re-solve.
-    """
-    n_nodes = ad.assembly_digraph.number_of_nodes()
-    n_edges = ad.assembly_digraph.number_of_edges()
-    path = _cache_path(cache_dir, instance, num_phases, w_balanced)
-
-    if not refresh and os.path.exists(path):
-        with open(path, "rb") as fh:
-            c = pickle.load(fh)
-        if c.get("n_nodes") == n_nodes and c.get("n_edges") == n_edges:
-            print(f"  [cache hit] {path}  (solve was {c['solve_s']:.1f}s)")
-            return c["results"], c["ops"], c["solve_s"], True
-        print(f"  [cache stale] {path} — digraph size changed, re-solving")
-
+def _solve_full(ad, num_phases, w_balanced):
     (results, ops), solve_s = _timed(
         optimize,
         assembly_digraph=ad,
@@ -213,6 +193,70 @@ def solve_full_ref_cached(ad, instance, num_phases, w_balanced, cache_dir, refre
         hide_output=True,
         full_result_output=True,
     )
+    status = results.get("scip_status", "unknown")
+    if status != "optimal":
+        # Not proven optimal → this objective is only an incumbent and can be
+        # BEATEN by an exactly-solved subgraph (negative "gaps"). Do not treat it
+        # as the optimum.
+        print(
+            f"  !! FULL MIP NOT OPTIMAL (status={status}, gap={results.get('scip_gap')}) "
+            f"— reference obj {results['objective']:.4f} is an incumbent, not the optimum"
+        )
+    return results, ops, solve_s, status
+
+
+def solve_full_ref_cached(
+    ad, instance, num_phases, w_balanced, cache_dir, refresh, no_cache=False
+):
+    """Return (results, ops, solve_s, cached) for the full MIP.
+
+    Robustness (this reference must never be silently wrong):
+    * ``no_cache`` — always solve fresh, no read/write.
+    * cache entries are validated on digraph size (nodes/edges);
+    * a cached entry that was NOT proven optimal is distrusted and re-solved;
+    * **monotone-safe write:** the cache keeps the *lowest-objective* full solve
+      ever seen (the true optimum is the min over all valid full solves), so a
+      worse/early-stopped solve can never overwrite a better one. This is what
+      prevents the poisoning that made a subgraph appear to beat the full MIP.
+    """
+    n_nodes = ad.assembly_digraph.number_of_nodes()
+    n_edges = ad.assembly_digraph.number_of_edges()
+    path = _cache_path(cache_dir, instance, num_phases, w_balanced)
+
+    def _load_valid():
+        if not os.path.exists(path):
+            return None
+        with open(path, "rb") as fh:
+            c = pickle.load(fh)
+        if c.get("n_nodes") != n_nodes or c.get("n_edges") != n_edges:
+            print(f"  [cache stale] {path} — digraph size changed")
+            return None
+        return c
+
+    if no_cache:
+        results, ops, solve_s, _ = _solve_full(ad, num_phases, w_balanced)
+        return results, ops, solve_s, False
+
+    if not refresh:
+        c = _load_valid()
+        if c is not None:
+            status = c["results"].get("scip_status", "unknown")
+            if status == "optimal" or status == "unknown":  # unknown = pre-status cache
+                print(f"  [cache hit] {path}  (solve was {c['solve_s']:.1f}s, status={status})")
+                return c["results"], c["ops"], c["solve_s"], True
+            print(f"  [cache distrust] {path} status={status} (not optimal) — re-solving")
+
+    results, ops, solve_s, status = _solve_full(ad, num_phases, w_balanced)
+
+    # Monotone-safe write: keep whichever full solve has the lower objective.
+    existing = _load_valid()
+    if existing is not None and existing["results"]["objective"] <= results["objective"]:
+        print(
+            f"  [cache keep] existing obj {existing['results']['objective']:.4f} "
+            f"≤ new {results['objective']:.4f} — not overwriting"
+        )
+        return existing["results"], existing["ops"], existing["solve_s"], True
+
     os.makedirs(cache_dir, exist_ok=True)
     with open(path, "wb") as fh:
         pickle.dump(
@@ -228,7 +272,7 @@ def solve_full_ref_cached(ad, instance, num_phases, w_balanced, cache_dir, refre
             },
             fh,
         )
-    print(f"  [cache save] {path}")
+    print(f"  [cache save] {path}  (status={status})")
     return results, ops, solve_s, False
 
 
@@ -359,7 +403,13 @@ if __name__ == "__main__":
     parser.add_argument(
         "--refresh-cache",
         action="store_true",
-        help="ignore any cached full-MIP reference and re-solve it",
+        help="ignore any cached full-MIP reference and re-solve it (still writes "
+        "monotone-safe: keeps the better of old/new)",
+    )
+    parser.add_argument(
+        "--no-cache",
+        action="store_true",
+        help="never read or write the full-MIP cache — always solve fresh",
     )
     args = parser.parse_args()
     W_BALANCED = args.w_balanced
@@ -414,7 +464,8 @@ if __name__ == "__main__":
     # ------------------------------------------------------------------
     print(f"\n[ref] Full MIP  P={NUM_PHASES}  λ={W_BALANCED} …")
     results_full, ops_full, t_full, cached = solve_full_ref_cached(
-        ad, INSTANCE, NUM_PHASES, W_BALANCED, args.cache_dir, args.refresh_cache
+        ad, INSTANCE, NUM_PHASES, W_BALANCED, args.cache_dir, args.refresh_cache,
+        no_cache=args.no_cache,
     )
     full_alpha = max(results_full["absolute_time_per_phase"].values())
     full_obj = results_full["objective"]
