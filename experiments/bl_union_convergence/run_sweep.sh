@@ -40,6 +40,11 @@ DFM_FILE=$(python -c "import ${MODULE} as t; print(t.DFM_FILE_NAME)")
 # RUN_TAG (env) appends a suffix so a variant run (e.g. diverse-only, high
 # penalty) lands in its own folder instead of overwriting the main comparison.
 RUNDIR="experiments/bl_union_convergence/${INSTANCE}_np_${P}${RUN_TAG:+_${RUN_TAG}}"
+# Start clean: a reused folder can mix stale per-λ CSVs / task logs from a
+# previous (possibly killed) run into the combined CSV and run.log. The guard
+# keeps rm -rf pinned to the experiment tree. (The full-MIP cache lives in a
+# separate CACHE_DIR and is untouched.)
+case "$RUNDIR" in experiments/bl_union_convergence/*) rm -rf "$RUNDIR" ;; esac
 mkdir -p "$RUNDIR"
 LOG="${RUNDIR}/run.log"
 

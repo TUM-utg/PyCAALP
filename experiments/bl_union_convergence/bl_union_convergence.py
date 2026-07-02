@@ -100,11 +100,7 @@ K_VALUES = [
 # catches compromise paths. λ-agnostic (the MIP still solves at the true λ).
 BLEND_GRID = [0.0, 0.5, 1.0]
 
-# Subgraph strategies compared per k. "diverse" (idea #4) enumerates by penalised
-# re-routing on the blended weight at the true λ — it targets the residual gap
-# bl-union plateaus at in the high-λ regime, and enumerates cheaper (linear DAG
-# shortest paths, not Yen).
-METHODS_DEFAULT = "bl_union,diverse"
+METHODS_DEFAULT = "bl_union,diverse, adaptive"
 PENALTY = 0.5  # diverse re-routing penalty (see diverse_shortest_paths)
 
 # Stop criterion. Two useful ones (see --stop):
@@ -118,7 +114,7 @@ PENALTY = 0.5  # diverse re-routing penalty (see diverse_shortest_paths)
 #       where bl-union really does hit the optimum, misleading at high λ.
 #   none — run the whole k grid (full trajectory).
 # Independently, --gap-target X stops as soon as the gap to the (cached) full-MIP
-# objective is ≤ X% — the characterisation stop: "how little graph for <X%".
+# objective is ≤ X% — the characterization stop: "how little graph for <X%".
 STOP_DEFAULT = "edge_saturation"
 OBJ_EPS = 0.5  # %: relative objective improvement below this counts as a plateau
 PATIENCE = 2  # consecutive plateau / saturation steps required to stop
@@ -242,15 +238,22 @@ def solve_full_ref_cached(
         if c is not None:
             status = c["results"].get("scip_status", "unknown")
             if status == "optimal" or status == "unknown":  # unknown = pre-status cache
-                print(f"  [cache hit] {path}  (solve was {c['solve_s']:.1f}s, status={status})")
+                print(
+                    f"  [cache hit] {path}  (solve was {c['solve_s']:.1f}s, status={status})"
+                )
                 return c["results"], c["ops"], c["solve_s"], True
-            print(f"  [cache distrust] {path} status={status} (not optimal) — re-solving")
+            print(
+                f"  [cache distrust] {path} status={status} (not optimal) — re-solving"
+            )
 
     results, ops, solve_s, status = _solve_full(ad, num_phases, w_balanced)
 
     # Monotone-safe write: keep whichever full solve has the lower objective.
     existing = _load_valid()
-    if existing is not None and existing["results"]["objective"] <= results["objective"]:
+    if (
+        existing is not None
+        and existing["results"]["objective"] <= results["objective"]
+    ):
         print(
             f"  [cache keep] existing obj {existing['results']['objective']:.4f} "
             f"≤ new {results['objective']:.4f} — not overwriting"
@@ -464,7 +467,12 @@ if __name__ == "__main__":
     # ------------------------------------------------------------------
     print(f"\n[ref] Full MIP  P={NUM_PHASES}  λ={W_BALANCED} …")
     results_full, ops_full, t_full, cached = solve_full_ref_cached(
-        ad, INSTANCE, NUM_PHASES, W_BALANCED, args.cache_dir, args.refresh_cache,
+        ad,
+        INSTANCE,
+        NUM_PHASES,
+        W_BALANCED,
+        args.cache_dir,
+        args.refresh_cache,
         no_cache=args.no_cache,
     )
     full_alpha = max(results_full["absolute_time_per_phase"].values())
