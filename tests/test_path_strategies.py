@@ -10,7 +10,6 @@ for the full MIP to solve optimally in a few seconds.
 import pytest
 
 from pycaalp.run import create_assembly_digraph, optimize
-from pycaalp.time_balancing.path_mip import solve_by_path_mip
 from pycaalp.time_balancing.subgraph_mip import (
     build_kpath_subgraph,
     solve_by_subgraph_mip,
@@ -34,6 +33,8 @@ EXPECTED_RESULT_KEYS = {
     "absolute_time",
     "absolute_mass",
     "phase",
+    "scip_status",
+    "scip_gap",
     "operations_per_phase",
     "time_per_phase",
     "absolute_time_per_phase",
@@ -70,18 +71,6 @@ def full_mip_results(assembly1):
 
 
 @pytest.fixture(scope="module")
-def path_mip_results(assembly1):
-    results, ops_list = solve_by_path_mip(
-        assembly1,
-        k=K,
-        num_phases=NUM_PHASES,
-        w_balanced=W_BALANCED,
-        full_result_output=True,
-    )
-    return results, ops_list
-
-
-@pytest.fixture(scope="module")
 def subgraph_mip_results(assembly1):
     results, ops_list = solve_by_subgraph_mip(
         assembly1,
@@ -103,11 +92,6 @@ def test_full_mip_covers_all_joints(full_mip_results):
     assert len([op for phase in ops_list for op in phase]) == NUM_JOINTS
 
 
-def test_path_mip_covers_all_joints(path_mip_results):
-    _, ops_list = path_mip_results
-    assert len([op for phase in ops_list for op in phase]) == NUM_JOINTS
-
-
 def test_subgraph_mip_covers_all_joints(subgraph_mip_results):
     _, ops_list = subgraph_mip_results
     assert len([op for phase in ops_list for op in phase]) == NUM_JOINTS
@@ -123,11 +107,6 @@ def test_full_mip_result_keys(full_mip_results):
     assert set(results.keys()) == EXPECTED_RESULT_KEYS
 
 
-def test_path_mip_result_keys(path_mip_results):
-    results, _ = path_mip_results
-    assert set(results.keys()) == EXPECTED_RESULT_KEYS
-
-
 def test_subgraph_mip_result_keys(subgraph_mip_results):
     results, _ = subgraph_mip_results
     assert set(results.keys()) == EXPECTED_RESULT_KEYS
@@ -140,12 +119,6 @@ def test_subgraph_mip_result_keys(subgraph_mip_results):
 
 def test_full_mip_phase_count(full_mip_results):
     _, ops_list = full_mip_results
-    assert len(ops_list) == NUM_PHASES
-    assert all(len(phase) > 0 for phase in ops_list)
-
-
-def test_path_mip_phase_count(path_mip_results):
-    _, ops_list = path_mip_results
     assert len(ops_list) == NUM_PHASES
     assert all(len(phase) > 0 for phase in ops_list)
 
@@ -167,12 +140,6 @@ def test_full_mip_no_duplicate_joints(full_mip_results):
     assert len(all_ops) == len(set(all_ops))
 
 
-def test_path_mip_no_duplicate_joints(path_mip_results):
-    _, ops_list = path_mip_results
-    all_ops = [op for phase in ops_list for op in phase]
-    assert len(all_ops) == len(set(all_ops))
-
-
 def test_subgraph_mip_no_duplicate_joints(subgraph_mip_results):
     _, ops_list = subgraph_mip_results
     all_ops = [op for phase in ops_list for op in phase]
@@ -182,13 +149,6 @@ def test_subgraph_mip_no_duplicate_joints(subgraph_mip_results):
 # ---------------------------------------------------------------------------
 # Alpha consistency — alpha must equal max phase time
 # ---------------------------------------------------------------------------
-
-
-def test_path_mip_alpha_equals_max_phase_time(path_mip_results):
-    results, _ = path_mip_results
-    assert results["alpha"] == pytest.approx(
-        max(results["time_per_phase"].values()), rel=1e-3
-    )
 
 
 def test_subgraph_mip_alpha_equals_max_phase_time(subgraph_mip_results):
@@ -225,12 +185,6 @@ def test_kpath_subgraph_grows_monotonically(assembly1):
 # Solution quality — new methods must stay within a reasonable bound of the
 # full MIP optimum (measured on absolute phase time in seconds)
 # ---------------------------------------------------------------------------
-
-
-def test_path_mip_alpha_within_25_percent_of_full(full_mip_results, path_mip_results):
-    full_alpha = max(full_mip_results[0]["absolute_time_per_phase"].values())
-    path_alpha = max(path_mip_results[0]["absolute_time_per_phase"].values())
-    assert path_alpha <= full_alpha * 1.25
 
 
 def test_subgraph_mip_alpha_within_5_percent_of_full(

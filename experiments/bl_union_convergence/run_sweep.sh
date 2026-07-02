@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 # Fan the bl-union convergence experiment across cores: one process per
 # w_balanced (λ), each building its own digraph, solving its own full-MIP
-# reference + bl-union k-sweep, and writing a per-task CSV.
 #
 # Everything for one run lands in a single self-contained folder
 #   experiments/bl_union_convergence/<instance>_np_<P>/
@@ -12,20 +11,16 @@
 #   ./experiments/bl_union_convergence/run_sweep.sh                  # default λ grid
 #   ./experiments/bl_union_convergence/run_sweep.sh 0.0 0.25 0.5 0.85 # custom λ grid
 #
-# Env overrides:
-#   JOBS       max concurrent processes (default: nproc, capped at #λ)
-#   NUM_PHASES phases passed to every task (default: module default, P)
-#
 # NOTE: the default λ grid stops at 0.85 because the assembly_2 full MIP does
 # not converge for λ > 0.85 (the reference solve would hang). Override the grid
 # explicitly if you target an instance where higher λ converges.
+
 set -euo pipefail
 
 cd "$(git rev-parse --show-toplevel)"
 
 MODULE="experiments.bl_union_convergence.bl_union_convergence"
 
-# λ grid: CLI args, or a default spread across [0, 0.85].
 if [ "$#" -gt 0 ]; then
     LAMBDAS=("$@")
 else

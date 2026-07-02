@@ -22,7 +22,6 @@ import os
 import time
 
 from pycaalp.run import create_assembly_digraph, optimize
-from pycaalp.time_balancing.path_mip import solve_by_path_mip
 from pycaalp.time_balancing.subgraph_mip import (
     build_blended_union_subgraph,
     build_diverse_subgraph,
@@ -297,62 +296,6 @@ if __name__ == "__main__":
             f"blended_union: {sg_bu_edges} ({sg_bu_edges/n_edges*100:.1f}%)  "
             f"diverse: {sg_dv_edges} ({sg_dv_edges/n_edges*100:.1f}%)"
         )
-
-        # # 2a: Path-Enum MIP — edge_weight
-        # print(f"  [2a] Path-Enum / edge_w  k={k} …")
-        # (results2a, ops2a), t2a = _timed(
-        #     solve_by_path_mip,
-        #     assembly_digraph_obj=ad,
-        #     k=k,
-        #     num_phases=NUM_PHASES,
-        #     w_balanced=W_BALANCED,
-        #     hide_output=True,
-        #     full_result_output=True,
-        #     weight_attr="edge_weight",
-        # )
-        # r2a = _record(
-        #     "path_enum_mip",
-        #     "edge_weight",
-        #     k,
-        #     t2a,
-        #     results2a,
-        #     ops2a,
-        #     full_alpha,
-        #     full_obj,
-        #     n_edges,
-        # )
-        # records.append(r2a)
-        # print(
-        #     f"      obj={r2a['objective']:.3f} (vs_full={r2a['obj_vs_full_pct']:+.2f}%)  alpha={r2a['alpha_abs']:.1f}s  time={t2a:.3f}s  vs_full={r2a['vs_full_pct']:+.2f}%"
-        # )
-
-        # 2b: Path-Enum MIP — time_balanced_weight
-        # print(f"  [2b] Path-Enum / bal_w   k={k} …")
-        # (results2b, ops2b), t2b = _timed(
-        #     solve_by_path_mip,
-        #     assembly_digraph_obj=ad,
-        #     k=k,
-        #     num_phases=NUM_PHASES,
-        #     w_balanced=W_BALANCED,
-        #     hide_output=True,
-        #     full_result_output=True,
-        #     weight_attr="time_balanced_weight",
-        # )
-        # r2b = _record(
-        #     "path_enum_mip",
-        #     "time_balanced_weight",
-        #     k,
-        #     t2b,
-        #     results2b,
-        #     ops2b,
-        #     full_alpha,
-        #     full_obj,
-        #     n_edges,
-        # )
-        # records.append(r2b)
-        # print(
-        #     f"      obj={r2b['objective']:.3f} (vs_full={r2b['obj_vs_full_pct']:+.2f}%)  alpha={r2b['alpha_abs']:.1f}s  time={t2b:.3f}s  vs_full={r2b['vs_full_pct']:+.2f}%"
-        # )
 
         # 3a: Subgraph MIP — edge_weight
         print(f"  [3a] Subgraph / edge_w   k={k} …")
