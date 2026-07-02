@@ -371,6 +371,11 @@ if __name__ == "__main__":
         help="output CSV path (give each parallel task its own file)",
     )
     parser.add_argument(
+        "--stop-perc-graph",
+        default=100,  # whole graph
+        help="growing subgraph percentage stop criterion (default: %(default)s)",
+    )
+    parser.add_argument(
         "--stop",
         choices=["edge_saturation", "obj_plateau", "none"],
         default=STOP_DEFAULT,
@@ -419,6 +424,8 @@ if __name__ == "__main__":
     NUM_PHASES = args.num_phases
     RESULTS_FILE = args.out
     STOP = args.stop
+    STOP_PERC_GRAPH = args.stop_perc_graph
+    stop_perc_g_val = float(STOP_PERC_GRAPH) if STOP_PERC_GRAPH else 100.0
     GAP_TARGET = args.gap_target
     PENALTY = args.penalty
     METHODS = [m.strip() for m in args.methods.split(",") if m.strip()]
@@ -529,6 +536,7 @@ if __name__ == "__main__":
 
         print(
             f"\n[{method}] k-sweep (stop: {STOP}"
+            + (f", stop at {stop_perc_g_val}% of the full directed graph")
             + (f", gap_target={GAP_TARGET}%" if GAP_TARGET is not None else "")
             + "):"
         )
@@ -577,7 +585,8 @@ if __name__ == "__main__":
                     f"The full_ref for λ={W_BALANCED} is corrupt — re-run with "
                     f"--refresh-cache."
                 )
-
+            sub_stop = sg_edges / n_edges * 100
+            print(f"{sub_stop=}")
             # gap_target (characterisation) takes priority; else oracle-free stop.
             stop_reason = ""
             if GAP_TARGET is not None and gap_pct is not None and gap_pct <= GAP_TARGET:
@@ -586,6 +595,8 @@ if __name__ == "__main__":
                 stop_reason = "edge_saturation"
             elif STOP == "obj_plateau" and plateau_streak >= PATIENCE:
                 stop_reason = "obj_plateau"
+            elif STOP_PERC_GRAPH and sub_stop > stop_perc_g_val:
+                stop_reason = "stop_perc_graph"
 
             row = _record(
                 ctx,

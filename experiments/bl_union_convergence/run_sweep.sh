@@ -76,6 +76,7 @@ if [ "$JOBS" -gt "${#LAMBDAS[@]}" ]; then JOBS="${#LAMBDAS[@]}"; fi
 # REFRESH_CACHE.
 EXTRA_ARGS="--num-phases ${P}"
 [ -n "${STOP:-}" ]        && EXTRA_ARGS="${EXTRA_ARGS} --stop ${STOP}"
+[ -n "${STOP_PERC_GRAPH:-}" ]  && EXTRA_ARGS="${EXTRA_ARGS} --stop-perc-graph ${STOP_PERC_GRAPH}"
 [ -n "${K_MAX:-}" ]       && EXTRA_ARGS="${EXTRA_ARGS} --k-max ${K_MAX}"
 [ -n "${GAP_TARGET:-}" ]  && EXTRA_ARGS="${EXTRA_ARGS} --gap-target ${GAP_TARGET}"
 [ -n "${METHODS:-}" ]     && EXTRA_ARGS="${EXTRA_ARGS} --methods ${METHODS}"

@@ -161,27 +161,6 @@ def build_adaptive_subgraph(
 ) -> nx.DiGraph:
     """bl-union until its edge growth stalls, then switch to diverse re-routing.
 
-    Draws up to ``k`` paths total, growing one edge set:
-
-    * **Phase 1 (bl-union):** grow the subgraph one *round* at a time — a round
-      pulls the next Yen path from every blend generator, so after ``r`` rounds
-      the edge set is **exactly** ``build_blended_union_subgraph(ad, r, blends)``.
-      adaptive therefore lies *on* the bl-union curve until it switches.
-    * **switch:** after ``stall_rounds`` consecutive *duplicate rounds* — rounds
-      that add **no** new edge, i.e. every path bl-union just drew is already in
-      the subgraph. That is the crisp "bl-union has nothing new to contribute"
-      signal (no arbitrary rate threshold). ``stall_rounds`` (default 2) requires
-      it to persist because Yen's growth is bursty — a lone zero-edge round can
-      be a fluke while the next path still introduces an edge; ``stall_rounds=1``
-      switches on the very first duplicate round.
-    * **Phase 2 (diverse):** spend the remaining budget on penalised re-routing
-      on the blended weight at the true λ, unioned with the Phase-1 edges. The
-      diverse pass starts unbanned (the optimum-carrying path usually overlaps
-      bl-union's edges, so banning them would hide it); the re-routing penalty
-      then spreads onto fresh edges — escaping the plateau that traps bl-union in
-      the high-λ regime.
-
-    For k below the switch point this is exactly bl-union; past it, the extra
     paths come from the penalty approach. Deterministic.
     """
     digraph = assembly_digraph_obj.assembly_digraph
