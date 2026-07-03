@@ -1,0 +1,928 @@
+================ bl-union convergence sweep ================
+date         : 2026-07-02T13:38:22+02:00
+host         : pop-os
+git commit   : bc1a042 (research/wgp-2026)
+python       : Python 3.14.4
+instance     : assembly_1
+parts file   : data/assembly_1/assembly_1_parts.json
+dfm file     : 
+num_phases   : 4
+lambda grid  : 0.0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0
+k values     : [1, 2, 3, 4, 6, 8, 12, 16, 24, 32, 48, 64, 96, 128, 192, 256, 384, 512, 768, 1024, 1536, 2048]
+blend grid   : [0.0, 0.5, 1.0]
+jobs (par.)  : 11
+rundir       : experiments/bl_union_convergence/assembly_1_np_4_methods
+===========================================================
+extra args   : --num-phases 4 --stop none --stop-perc-graph 10 --methods bl_union,adaptive --no-cache
+
+----------------- λ = 0.0 -----------------
+========================================================================
+bl-union convergence — assembly_1  P=4  λ=0.0
+========================================================================
+
+Building assembly digraph …
+2026-07-02 13:38:22.653 | INFO     | pycaalp.gapp.assembly_digraph:compute_assembly_digraph_complete:395 - Computing assembly digraph...
+  343 nodes, 1105 edges  (0.1s)
+
+[ref] Full MIP  P=4  λ=0.0 …
+2026-07-02 13:38:22.767 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+  obj=0.8329  alpha=2156.8s  time=0.16s
+
+[bl_union] k-sweep (stop: none, stop at 10.0% of the full directed graph):
+2026-07-02 13:38:22.930 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=3.3484162895927603
+  k=    1  edges=  37 ( 3.35%)  Δe=  37  obj=0.8329  gap=+0.00%  Δobj=   —     build=0.01s solve=0.01s
+2026-07-02 13:38:22.948 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=3.8914027149321266
+  k=    2  edges=  43 ( 3.89%)  Δe=   6  obj=0.8329  gap=+0.00%  Δobj=+0.000%  build=0.01s solve=0.01s
+2026-07-02 13:38:22.973 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=4.4343891402714934
+  k=    3  edges=  49 ( 4.43%)  Δe=   6  obj=0.8329  gap=+0.00%  Δobj=+0.000%  build=0.02s solve=0.01s
+2026-07-02 13:38:23.002 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=4.97737556561086
+  k=    4  edges=  55 ( 4.98%)  Δe=   6  obj=0.8329  gap=-0.00%  Δobj=+0.000%  build=0.02s solve=0.01s
+2026-07-02 13:38:23.042 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=5.972850678733032
+  k=    6  edges=  66 ( 5.97%)  Δe=  11  obj=0.8329  gap=-0.00%  Δobj=+0.000%  build=0.03s solve=0.01s
+2026-07-02 13:38:23.093 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=6.515837104072399
+  k=    8  edges=  72 ( 6.52%)  Δe=   6  obj=0.8329  gap=-0.00%  Δobj=+0.000%  build=0.04s solve=0.01s
+2026-07-02 13:38:23.164 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=7.149321266968325
+  k=   12  edges=  79 ( 7.15%)  Δe=   7  obj=0.8329  gap=-0.00%  Δobj=+0.000%  build=0.06s solve=0.01s
+2026-07-02 13:38:23.252 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=8.144796380090497
+  k=   16  edges=  90 ( 8.14%)  Δe=  11  obj=0.8329  gap=+0.00%  Δobj=-0.000%  build=0.07s solve=0.01s
+2026-07-02 13:38:23.377 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=8.687782805429864
+  k=   24  edges=  96 ( 8.69%)  Δe=   6  obj=0.8329  gap=+0.00%  Δobj=+0.000%  build=0.11s solve=0.01s
+2026-07-02 13:38:23.541 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=9.864253393665159
+  k=   32  edges= 109 ( 9.86%)  Δe=  13  obj=0.8329  gap=-0.00%  Δobj=+0.000%  build=0.15s solve=0.01s
+2026-07-02 13:38:23.776 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=11.312217194570136
+  k=   48  edges= 125 (11.31%)  Δe=  16  obj=0.8329  gap=-0.00%  Δobj=+0.000%  build=0.22s solve=0.02s
+  → stop: stop_perc_graph (after 2 consecutive steps)
+
+[adaptive] k-sweep (stop: none, stop at 10.0% of the full directed graph):
+2026-07-02 13:38:23.799 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=3.3484162895927603
+  k=    1  edges=  37 ( 3.35%)  Δe=  37  obj=0.8329  gap=+0.00%  Δobj=   —     build=0.01s solve=0.01s
+2026-07-02 13:38:23.817 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=3.8914027149321266
+  k=    2  edges=  43 ( 3.89%)  Δe=   6  obj=0.8329  gap=+0.00%  Δobj=+0.000%  build=0.01s solve=0.01s
+2026-07-02 13:38:23.842 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=4.4343891402714934
+  k=    3  edges=  49 ( 4.43%)  Δe=   6  obj=0.8329  gap=+0.00%  Δobj=+0.000%  build=0.02s solve=0.01s
+2026-07-02 13:38:23.873 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=4.97737556561086
+  k=    4  edges=  55 ( 4.98%)  Δe=   6  obj=0.8329  gap=-0.00%  Δobj=+0.000%  build=0.02s solve=0.01s
+2026-07-02 13:38:23.914 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=5.972850678733032
+  k=    6  edges=  66 ( 5.97%)  Δe=  11  obj=0.8329  gap=-0.00%  Δobj=+0.000%  build=0.03s solve=0.01s
+2026-07-02 13:38:23.966 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=6.515837104072399
+  k=    8  edges=  72 ( 6.52%)  Δe=   6  obj=0.8329  gap=-0.00%  Δobj=+0.000%  build=0.04s solve=0.01s
+2026-07-02 13:38:24.039 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=7.149321266968325
+  k=   12  edges=  79 ( 7.15%)  Δe=   7  obj=0.8329  gap=-0.00%  Δobj=+0.000%  build=0.06s solve=0.01s
+2026-07-02 13:38:24.129 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=8.144796380090497
+  k=   16  edges=  90 ( 8.14%)  Δe=  11  obj=0.8329  gap=+0.00%  Δobj=-0.000%  build=0.08s solve=0.01s
+2026-07-02 13:38:24.241 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=10.497737556561086
+  k=   24  edges= 116 ( 10.5%)  Δe=  26  obj=0.8329  gap=+0.00%  Δobj=+0.000%  build=0.10s solve=0.01s
+  → stop: stop_perc_graph (after 2 consecutive steps)
+
+Results saved to experiments/bl_union_convergence/assembly_1_np_4_methods/bl_union_convergence_lambda_0.0.csv
+Plot with:  python -m experiments.bl_union_convergence.plot_convergence experiments/bl_union_convergence/assembly_1_np_4_methods/bl_union_convergence_lambda_0.0.csv
+
+----------------- λ = 0.1 -----------------
+========================================================================
+bl-union convergence — assembly_1  P=4  λ=0.1
+========================================================================
+
+Building assembly digraph …
+2026-07-02 13:38:22.634 | INFO     | pycaalp.gapp.assembly_digraph:compute_assembly_digraph_complete:395 - Computing assembly digraph...
+  343 nodes, 1105 edges  (0.1s)
+
+[ref] Full MIP  P=4  λ=0.1 …
+2026-07-02 13:38:22.748 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+  obj=0.8399  alpha=584.0s  time=4.06s
+
+[bl_union] k-sweep (stop: none, stop at 10.0% of the full directed graph):
+2026-07-02 13:38:26.820 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=3.3484162895927603
+  k=    1  edges=  37 ( 3.35%)  Δe=  37  obj=0.8399  gap=-0.00%  Δobj=   —     build=0.01s solve=0.21s
+2026-07-02 13:38:27.047 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=3.8914027149321266
+  k=    2  edges=  43 ( 3.89%)  Δe=   6  obj=0.8399  gap=-0.00%  Δobj=+0.000%  build=0.01s solve=0.47s
+2026-07-02 13:38:27.532 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=4.4343891402714934
+  k=    3  edges=  49 ( 4.43%)  Δe=   6  obj=0.8399  gap=-0.00%  Δobj=+0.000%  build=0.02s solve=0.26s
+2026-07-02 13:38:27.816 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=4.97737556561086
+  k=    4  edges=  55 ( 4.98%)  Δe=   6  obj=0.8399  gap=-0.00%  Δobj=-0.000%  build=0.02s solve=0.30s
+2026-07-02 13:38:28.149 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=5.972850678733032
+  k=    6  edges=  66 ( 5.97%)  Δe=  11  obj=0.8399  gap=-0.00%  Δobj=+0.000%  build=0.03s solve=0.33s
+2026-07-02 13:38:28.521 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=6.515837104072399
+  k=    8  edges=  72 ( 6.52%)  Δe=   6  obj=0.8399  gap=-0.00%  Δobj=+0.000%  build=0.04s solve=0.32s
+2026-07-02 13:38:28.901 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=7.149321266968325
+  k=   12  edges=  79 ( 7.15%)  Δe=   7  obj=0.8399  gap=-0.00%  Δobj=-0.000%  build=0.06s solve=0.41s
+2026-07-02 13:38:29.391 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=8.144796380090497
+  k=   16  edges=  90 ( 8.14%)  Δe=  11  obj=0.8399  gap=-0.00%  Δobj=+0.000%  build=0.08s solve=0.65s
+2026-07-02 13:38:30.155 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=8.687782805429864
+  k=   24  edges=  96 ( 8.69%)  Δe=   6  obj=0.8399  gap=-0.00%  Δobj=+0.000%  build=0.12s solve=0.86s
+2026-07-02 13:38:31.167 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=9.864253393665159
+  k=   32  edges= 109 ( 9.86%)  Δe=  13  obj=0.8399  gap=-0.00%  Δobj=+0.000%  build=0.15s solve=0.63s
+2026-07-02 13:38:32.015 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=11.312217194570136
+  k=   48  edges= 125 (11.31%)  Δe=  16  obj=0.8399  gap=-0.00%  Δobj=+0.000%  build=0.22s solve=0.84s
+  → stop: stop_perc_graph (after 2 consecutive steps)
+
+[adaptive] k-sweep (stop: none, stop at 10.0% of the full directed graph):
+2026-07-02 13:38:32.862 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=3.3484162895927603
+  k=    1  edges=  37 ( 3.35%)  Δe=  37  obj=0.8399  gap=-0.00%  Δobj=   —     build=0.01s solve=0.20s
+2026-07-02 13:38:33.071 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=3.8914027149321266
+  k=    2  edges=  43 ( 3.89%)  Δe=   6  obj=0.8399  gap=-0.00%  Δobj=+0.000%  build=0.01s solve=0.44s
+2026-07-02 13:38:33.524 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=4.4343891402714934
+  k=    3  edges=  49 ( 4.43%)  Δe=   6  obj=0.8399  gap=-0.00%  Δobj=+0.000%  build=0.02s solve=0.24s
+2026-07-02 13:38:33.784 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=4.97737556561086
+  k=    4  edges=  55 ( 4.98%)  Δe=   6  obj=0.8399  gap=-0.00%  Δobj=-0.000%  build=0.02s solve=0.28s
+2026-07-02 13:38:34.091 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=5.972850678733032
+  k=    6  edges=  66 ( 5.97%)  Δe=  11  obj=0.8399  gap=-0.00%  Δobj=+0.000%  build=0.03s solve=0.30s
+2026-07-02 13:38:34.434 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=6.515837104072399
+  k=    8  edges=  72 ( 6.52%)  Δe=   6  obj=0.8399  gap=-0.00%  Δobj=+0.000%  build=0.04s solve=0.26s
+2026-07-02 13:38:34.750 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=7.149321266968325
+  k=   12  edges=  79 ( 7.15%)  Δe=   7  obj=0.8399  gap=-0.00%  Δobj=+0.000%  build=0.06s solve=0.37s
+2026-07-02 13:38:35.194 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=8.144796380090497
+  k=   16  edges=  90 ( 8.14%)  Δe=  11  obj=0.8399  gap=-0.00%  Δobj=+0.000%  build=0.08s solve=0.59s
+2026-07-02 13:38:35.884 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=10.76923076923077
+  k=   24  edges= 119 (10.77%)  Δe=  29  obj=0.8399  gap=-0.00%  Δobj=+0.000%  build=0.10s solve=1.80s
+  → stop: stop_perc_graph (after 2 consecutive steps)
+
+Results saved to experiments/bl_union_convergence/assembly_1_np_4_methods/bl_union_convergence_lambda_0.1.csv
+Plot with:  python -m experiments.bl_union_convergence.plot_convergence experiments/bl_union_convergence/assembly_1_np_4_methods/bl_union_convergence_lambda_0.1.csv
+
+----------------- λ = 0.2 -----------------
+========================================================================
+bl-union convergence — assembly_1  P=4  λ=0.2
+========================================================================
+
+Building assembly digraph …
+2026-07-02 13:38:22.644 | INFO     | pycaalp.gapp.assembly_digraph:compute_assembly_digraph_complete:395 - Computing assembly digraph...
+  343 nodes, 1105 edges  (0.1s)
+
+[ref] Full MIP  P=4  λ=0.2 …
+2026-07-02 13:38:22.759 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+  obj=0.8468  alpha=584.0s  time=6.57s
+
+[bl_union] k-sweep (stop: none, stop at 10.0% of the full directed graph):
+2026-07-02 13:38:29.339 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=3.3484162895927603
+  k=    1  edges=  37 ( 3.35%)  Δe=  37  obj=0.8468  gap=+0.00%  Δobj=   —     build=0.01s solve=0.33s
+2026-07-02 13:38:29.682 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=3.8914027149321266
+  k=    2  edges=  43 ( 3.89%)  Δe=   6  obj=0.8468  gap=-0.00%  Δobj=+0.000%  build=0.01s solve=0.20s
+2026-07-02 13:38:29.903 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=4.4343891402714934
+  k=    3  edges=  49 ( 4.43%)  Δe=   6  obj=0.8468  gap=+0.00%  Δobj=-0.000%  build=0.02s solve=0.28s
+2026-07-02 13:38:30.202 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=4.97737556561086
+  k=    4  edges=  55 ( 4.98%)  Δe=   6  obj=0.8468  gap=-0.00%  Δobj=+0.000%  build=0.02s solve=0.64s
+2026-07-02 13:38:30.875 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=5.972850678733032
+  k=    6  edges=  66 ( 5.97%)  Δe=  11  obj=0.8468  gap=+0.00%  Δobj=-0.000%  build=0.03s solve=0.40s
+2026-07-02 13:38:31.312 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=6.515837104072399
+  k=    8  edges=  72 ( 6.52%)  Δe=   6  obj=0.8468  gap=+0.00%  Δobj=-0.000%  build=0.04s solve=0.42s
+2026-07-02 13:38:31.795 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=7.149321266968325
+  k=   12  edges=  79 ( 7.15%)  Δe=   7  obj=0.8468  gap=+0.00%  Δobj=+0.000%  build=0.06s solve=0.49s
+2026-07-02 13:38:32.358 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=8.144796380090497
+  k=   16  edges=  90 ( 8.14%)  Δe=  11  obj=0.8468  gap=+0.00%  Δobj=+0.000%  build=0.08s solve=0.76s
+2026-07-02 13:38:33.232 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=8.687782805429864
+  k=   24  edges=  96 ( 8.69%)  Δe=   6  obj=0.8468  gap=+0.00%  Δobj=+0.000%  build=0.12s solve=0.76s
+2026-07-02 13:38:34.147 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=9.864253393665159
+  k=   32  edges= 109 ( 9.86%)  Δe=  13  obj=0.8468  gap=+0.00%  Δobj=+0.000%  build=0.15s solve=0.68s
+2026-07-02 13:38:35.057 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=11.312217194570136
+  k=   48  edges= 125 (11.31%)  Δe=  16  obj=0.8468  gap=+0.00%  Δobj=+0.000%  build=0.23s solve=0.74s
+  → stop: stop_perc_graph (after 2 consecutive steps)
+
+[adaptive] k-sweep (stop: none, stop at 10.0% of the full directed graph):
+2026-07-02 13:38:35.808 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=3.3484162895927603
+  k=    1  edges=  37 ( 3.35%)  Δe=  37  obj=0.8468  gap=+0.00%  Δobj=   —     build=0.01s solve=0.33s
+2026-07-02 13:38:36.152 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=3.8914027149321266
+  k=    2  edges=  43 ( 3.89%)  Δe=   6  obj=0.8468  gap=-0.00%  Δobj=+0.000%  build=0.01s solve=0.21s
+2026-07-02 13:38:36.374 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=4.4343891402714934
+  k=    3  edges=  49 ( 4.43%)  Δe=   6  obj=0.8468  gap=+0.00%  Δobj=-0.000%  build=0.02s solve=0.28s
+2026-07-02 13:38:36.676 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=4.97737556561086
+  k=    4  edges=  55 ( 4.98%)  Δe=   6  obj=0.8468  gap=-0.00%  Δobj=+0.000%  build=0.02s solve=0.64s
+2026-07-02 13:38:37.353 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=5.972850678733032
+  k=    6  edges=  66 ( 5.97%)  Δe=  11  obj=0.8468  gap=+0.00%  Δobj=-0.000%  build=0.03s solve=0.33s
+2026-07-02 13:38:37.728 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=6.515837104072399
+  k=    8  edges=  72 ( 6.52%)  Δe=   6  obj=0.8468  gap=+0.00%  Δobj=+0.000%  build=0.04s solve=0.53s
+2026-07-02 13:38:38.325 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=7.149321266968325
+  k=   12  edges=  79 ( 7.15%)  Δe=   7  obj=0.8468  gap=+0.00%  Δobj=+0.000%  build=0.06s solve=0.49s
+2026-07-02 13:38:38.893 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=8.144796380090497
+  k=   16  edges=  90 ( 8.14%)  Δe=  11  obj=0.8468  gap=+0.00%  Δobj=+0.000%  build=0.08s solve=0.76s
+2026-07-02 13:38:39.755 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=11.221719457013576
+  k=   24  edges= 124 (11.22%)  Δe=  34  obj=0.8468  gap=+0.00%  Δobj=+0.000%  build=0.10s solve=0.76s
+  → stop: stop_perc_graph (after 2 consecutive steps)
+
+Results saved to experiments/bl_union_convergence/assembly_1_np_4_methods/bl_union_convergence_lambda_0.2.csv
+Plot with:  python -m experiments.bl_union_convergence.plot_convergence experiments/bl_union_convergence/assembly_1_np_4_methods/bl_union_convergence_lambda_0.2.csv
+
+----------------- λ = 0.3 -----------------
+========================================================================
+bl-union convergence — assembly_1  P=4  λ=0.3
+========================================================================
+
+Building assembly digraph …
+2026-07-02 13:38:22.593 | INFO     | pycaalp.gapp.assembly_digraph:compute_assembly_digraph_complete:395 - Computing assembly digraph...
+  343 nodes, 1105 edges  (0.1s)
+
+[ref] Full MIP  P=4  λ=0.3 …
+2026-07-02 13:38:22.707 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+  obj=0.8537  alpha=584.0s  time=23.53s
+
+[bl_union] k-sweep (stop: none, stop at 10.0% of the full directed graph):
+2026-07-02 13:38:46.242 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=3.3484162895927603
+  k=    1  edges=  37 ( 3.35%)  Δe=  37  obj=0.8537  gap=+0.00%  Δobj=   —     build=0.01s solve=0.24s
+2026-07-02 13:38:46.490 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=3.8914027149321266
+  k=    2  edges=  43 ( 3.89%)  Δe=   6  obj=0.8537  gap=+0.00%  Δobj=-0.000%  build=0.01s solve=0.44s
+2026-07-02 13:38:46.946 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=4.4343891402714934
+  k=    3  edges=  49 ( 4.43%)  Δe=   6  obj=0.8537  gap=-0.00%  Δobj=+0.000%  build=0.02s solve=0.22s
+2026-07-02 13:38:47.187 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=4.97737556561086
+  k=    4  edges=  55 ( 4.98%)  Δe=   6  obj=0.8537  gap=+0.00%  Δobj=-0.000%  build=0.02s solve=0.25s
+2026-07-02 13:38:47.466 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=5.972850678733032
+  k=    6  edges=  66 ( 5.97%)  Δe=  11  obj=0.8537  gap=+0.00%  Δobj=+0.000%  build=0.03s solve=0.49s
+2026-07-02 13:38:47.994 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=6.515837104072399
+  k=    8  edges=  72 ( 6.52%)  Δe=   6  obj=0.8537  gap=+0.00%  Δobj=+0.000%  build=0.04s solve=0.20s
+2026-07-02 13:38:48.251 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=7.149321266968325
+  k=   12  edges=  79 ( 7.15%)  Δe=   7  obj=0.8537  gap=+0.00%  Δobj=+0.000%  build=0.06s solve=0.40s
+2026-07-02 13:38:48.733 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=8.144796380090497
+  k=   16  edges=  90 ( 8.14%)  Δe=  11  obj=0.8537  gap=-0.00%  Δobj=+0.000%  build=0.08s solve=0.83s
+2026-07-02 13:38:49.681 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=8.687782805429864
+  k=   24  edges=  96 ( 8.69%)  Δe=   6  obj=0.8537  gap=-0.00%  Δobj=+0.000%  build=0.12s solve=1.13s
+2026-07-02 13:38:50.966 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=9.864253393665159
+  k=   32  edges= 109 ( 9.86%)  Δe=  13  obj=0.8537  gap=+0.00%  Δobj=-0.000%  build=0.15s solve=0.77s
+2026-07-02 13:38:51.957 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=11.312217194570136
+  k=   48  edges= 125 (11.31%)  Δe=  16  obj=0.8537  gap=+0.00%  Δobj=+0.000%  build=0.22s solve=0.86s
+  → stop: stop_perc_graph (after 2 consecutive steps)
+
+[adaptive] k-sweep (stop: none, stop at 10.0% of the full directed graph):
+2026-07-02 13:38:52.828 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=3.3484162895927603
+  k=    1  edges=  37 ( 3.35%)  Δe=  37  obj=0.8537  gap=+0.00%  Δobj=   —     build=0.01s solve=0.23s
+2026-07-02 13:38:53.075 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=3.8914027149321266
+  k=    2  edges=  43 ( 3.89%)  Δe=   6  obj=0.8537  gap=+0.00%  Δobj=-0.000%  build=0.01s solve=0.43s
+2026-07-02 13:38:53.525 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=4.4343891402714934
+  k=    3  edges=  49 ( 4.43%)  Δe=   6  obj=0.8537  gap=-0.00%  Δobj=+0.000%  build=0.02s solve=0.21s
+2026-07-02 13:38:53.761 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=4.97737556561086
+  k=    4  edges=  55 ( 4.98%)  Δe=   6  obj=0.8537  gap=+0.00%  Δobj=-0.000%  build=0.02s solve=0.24s
+2026-07-02 13:38:54.036 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=5.972850678733032
+  k=    6  edges=  66 ( 5.97%)  Δe=  11  obj=0.8537  gap=+0.00%  Δobj=+0.000%  build=0.03s solve=0.48s
+2026-07-02 13:38:54.558 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=6.515837104072399
+  k=    8  edges=  72 ( 6.52%)  Δe=   6  obj=0.8537  gap=+0.00%  Δobj=+0.000%  build=0.04s solve=0.20s
+2026-07-02 13:38:54.815 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=7.149321266968325
+  k=   12  edges=  79 ( 7.15%)  Δe=   7  obj=0.8537  gap=+0.00%  Δobj=+0.000%  build=0.06s solve=0.40s
+2026-07-02 13:38:55.293 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=8.144796380090497
+  k=   16  edges=  90 ( 8.14%)  Δe=  11  obj=0.8537  gap=-0.00%  Δobj=+0.000%  build=0.08s solve=0.83s
+2026-07-02 13:38:56.228 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=10.407239819004525
+  k=   24  edges= 115 (10.41%)  Δe=  25  obj=0.8537  gap=+0.00%  Δobj=-0.000%  build=0.10s solve=1.25s
+  → stop: stop_perc_graph (after 2 consecutive steps)
+
+Results saved to experiments/bl_union_convergence/assembly_1_np_4_methods/bl_union_convergence_lambda_0.3.csv
+Plot with:  python -m experiments.bl_union_convergence.plot_convergence experiments/bl_union_convergence/assembly_1_np_4_methods/bl_union_convergence_lambda_0.3.csv
+
+----------------- λ = 0.4 -----------------
+========================================================================
+bl-union convergence — assembly_1  P=4  λ=0.4
+========================================================================
+
+Building assembly digraph …
+2026-07-02 13:38:22.648 | INFO     | pycaalp.gapp.assembly_digraph:compute_assembly_digraph_complete:395 - Computing assembly digraph...
+  343 nodes, 1105 edges  (0.1s)
+
+[ref] Full MIP  P=4  λ=0.4 …
+2026-07-02 13:38:22.762 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+  obj=0.8606  alpha=584.0s  time=38.99s
+
+[bl_union] k-sweep (stop: none, stop at 10.0% of the full directed graph):
+2026-07-02 13:39:01.763 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=3.3484162895927603
+  k=    1  edges=  37 ( 3.35%)  Δe=  37  obj=0.8606  gap=+0.00%  Δobj=   —     build=0.01s solve=0.09s
+2026-07-02 13:39:01.864 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=3.8914027149321266
+  k=    2  edges=  43 ( 3.89%)  Δe=   6  obj=0.8606  gap=+0.00%  Δobj=+0.000%  build=0.01s solve=0.59s
+2026-07-02 13:39:02.472 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=4.4343891402714934
+  k=    3  edges=  49 ( 4.43%)  Δe=   6  obj=0.8606  gap=+0.00%  Δobj=+0.000%  build=0.02s solve=0.32s
+2026-07-02 13:39:02.812 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=4.97737556561086
+  k=    4  edges=  55 ( 4.98%)  Δe=   6  obj=0.8606  gap=+0.00%  Δobj=+0.000%  build=0.02s solve=0.64s
+2026-07-02 13:39:03.487 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=5.972850678733032
+  k=    6  edges=  66 ( 5.97%)  Δe=  11  obj=0.8606  gap=+0.00%  Δobj=+0.000%  build=0.03s solve=0.68s
+2026-07-02 13:39:04.205 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=6.515837104072399
+  k=    8  edges=  72 ( 6.52%)  Δe=   6  obj=0.8606  gap=+0.00%  Δobj=-0.000%  build=0.04s solve=0.58s
+2026-07-02 13:39:04.840 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=7.149321266968325
+  k=   12  edges=  79 ( 7.15%)  Δe=   7  obj=0.8606  gap=+0.00%  Δobj=+0.000%  build=0.06s solve=0.57s
+2026-07-02 13:39:05.481 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=8.144796380090497
+  k=   16  edges=  90 ( 8.14%)  Δe=  11  obj=0.8606  gap=+0.00%  Δobj=+0.000%  build=0.08s solve=0.31s
+2026-07-02 13:39:05.903 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=8.687782805429864
+  k=   24  edges=  96 ( 8.69%)  Δe=   6  obj=0.8606  gap=+0.00%  Δobj=+0.000%  build=0.11s solve=1.11s
+2026-07-02 13:39:07.165 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=9.864253393665159
+  k=   32  edges= 109 ( 9.86%)  Δe=  13  obj=0.8606  gap=-0.00%  Δobj=+0.000%  build=0.15s solve=1.11s
+2026-07-02 13:39:08.491 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=11.312217194570136
+  k=   48  edges= 125 (11.31%)  Δe=  16  obj=0.8606  gap=+0.00%  Δobj=-0.000%  build=0.22s solve=0.74s
+  → stop: stop_perc_graph (after 2 consecutive steps)
+
+[adaptive] k-sweep (stop: none, stop at 10.0% of the full directed graph):
+2026-07-02 13:39:09.241 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=3.3484162895927603
+  k=    1  edges=  37 ( 3.35%)  Δe=  37  obj=0.8606  gap=+0.00%  Δobj=   —     build=0.01s solve=0.09s
+2026-07-02 13:39:09.341 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=3.8914027149321266
+  k=    2  edges=  43 ( 3.89%)  Δe=   6  obj=0.8606  gap=+0.00%  Δobj=+0.000%  build=0.01s solve=0.59s
+2026-07-02 13:39:09.946 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=4.4343891402714934
+  k=    3  edges=  49 ( 4.43%)  Δe=   6  obj=0.8606  gap=+0.00%  Δobj=+0.000%  build=0.02s solve=0.31s
+2026-07-02 13:39:10.282 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=4.97737556561086
+  k=    4  edges=  55 ( 4.98%)  Δe=   6  obj=0.8606  gap=+0.00%  Δobj=+0.000%  build=0.02s solve=0.64s
+2026-07-02 13:39:10.951 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=5.972850678733032
+  k=    6  edges=  66 ( 5.97%)  Δe=  11  obj=0.8606  gap=+0.00%  Δobj=+0.000%  build=0.03s solve=0.67s
+2026-07-02 13:39:11.665 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=6.515837104072399
+  k=    8  edges=  72 ( 6.52%)  Δe=   6  obj=0.8606  gap=+0.00%  Δobj=-0.000%  build=0.04s solve=0.58s
+2026-07-02 13:39:12.305 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=7.149321266968325
+  k=   12  edges=  79 ( 7.15%)  Δe=   7  obj=0.8606  gap=+0.00%  Δobj=+0.000%  build=0.06s solve=0.57s
+2026-07-02 13:39:12.948 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=8.144796380090497
+  k=   16  edges=  90 ( 8.14%)  Δe=  11  obj=0.8606  gap=+0.00%  Δobj=+0.000%  build=0.08s solve=0.31s
+2026-07-02 13:39:13.354 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=10.407239819004525
+  k=   24  edges= 115 (10.41%)  Δe=  25  obj=0.8606  gap=+0.00%  Δobj=+0.000%  build=0.10s solve=0.27s
+  → stop: stop_perc_graph (after 2 consecutive steps)
+
+Results saved to experiments/bl_union_convergence/assembly_1_np_4_methods/bl_union_convergence_lambda_0.4.csv
+Plot with:  python -m experiments.bl_union_convergence.plot_convergence experiments/bl_union_convergence/assembly_1_np_4_methods/bl_union_convergence_lambda_0.4.csv
+
+----------------- λ = 0.5 -----------------
+========================================================================
+bl-union convergence — assembly_1  P=4  λ=0.5
+========================================================================
+
+Building assembly digraph …
+2026-07-02 13:38:22.656 | INFO     | pycaalp.gapp.assembly_digraph:compute_assembly_digraph_complete:395 - Computing assembly digraph...
+  343 nodes, 1105 edges  (0.1s)
+
+[ref] Full MIP  P=4  λ=0.5 …
+2026-07-02 13:38:22.770 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+  obj=0.8676  alpha=584.0s  time=44.97s
+
+[bl_union] k-sweep (stop: none, stop at 10.0% of the full directed graph):
+2026-07-02 13:39:07.752 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=3.3484162895927603
+  k=    1  edges=  37 ( 3.35%)  Δe=  37  obj=0.8676  gap=-0.00%  Δobj=   —     build=0.01s solve=0.14s
+2026-07-02 13:39:07.903 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=3.8914027149321266
+  k=    2  edges=  43 ( 3.89%)  Δe=   6  obj=0.8676  gap=-0.00%  Δobj=+0.000%  build=0.01s solve=0.14s
+2026-07-02 13:39:08.063 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=4.4343891402714934
+  k=    3  edges=  49 ( 4.43%)  Δe=   6  obj=0.8676  gap=-0.00%  Δobj=+0.000%  build=0.02s solve=0.15s
+2026-07-02 13:39:08.232 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=4.97737556561086
+  k=    4  edges=  55 ( 4.98%)  Δe=   6  obj=0.8676  gap=+0.00%  Δobj=-0.000%  build=0.02s solve=0.22s
+2026-07-02 13:39:08.484 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=5.972850678733032
+  k=    6  edges=  66 ( 5.97%)  Δe=  11  obj=0.8676  gap=+0.00%  Δobj=+0.000%  build=0.03s solve=0.35s
+2026-07-02 13:39:08.877 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=6.515837104072399
+  k=    8  edges=  72 ( 6.52%)  Δe=   6  obj=0.8676  gap=+0.00%  Δobj=+0.000%  build=0.04s solve=0.20s
+2026-07-02 13:39:09.138 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=7.149321266968325
+  k=   12  edges=  79 ( 7.15%)  Δe=   7  obj=0.8676  gap=+0.00%  Δobj=+0.000%  build=0.06s solve=0.25s
+2026-07-02 13:39:09.463 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=8.144796380090497
+  k=   16  edges=  90 ( 8.14%)  Δe=  11  obj=0.8676  gap=+0.00%  Δobj=-0.000%  build=0.07s solve=0.88s
+2026-07-02 13:39:10.457 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=8.687782805429864
+  k=   24  edges=  96 ( 8.69%)  Δe=   6  obj=0.8676  gap=-0.00%  Δobj=+0.000%  build=0.11s solve=0.64s
+2026-07-02 13:39:11.248 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=9.864253393665159
+  k=   32  edges= 109 ( 9.86%)  Δe=  13  obj=0.8676  gap=-0.00%  Δobj=+0.000%  build=0.15s solve=0.34s
+2026-07-02 13:39:11.812 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=11.312217194570136
+  k=   48  edges= 125 (11.31%)  Δe=  16  obj=0.8676  gap=-0.00%  Δobj=+0.000%  build=0.22s solve=0.70s
+  → stop: stop_perc_graph (after 2 consecutive steps)
+
+[adaptive] k-sweep (stop: none, stop at 10.0% of the full directed graph):
+2026-07-02 13:39:12.517 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=3.3484162895927603
+  k=    1  edges=  37 ( 3.35%)  Δe=  37  obj=0.8676  gap=-0.00%  Δobj=   —     build=0.01s solve=0.14s
+2026-07-02 13:39:12.667 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=3.8914027149321266
+  k=    2  edges=  43 ( 3.89%)  Δe=   6  obj=0.8676  gap=-0.00%  Δobj=+0.000%  build=0.01s solve=0.14s
+2026-07-02 13:39:12.826 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=4.4343891402714934
+  k=    3  edges=  49 ( 4.43%)  Δe=   6  obj=0.8676  gap=-0.00%  Δobj=+0.000%  build=0.02s solve=0.15s
+2026-07-02 13:39:12.995 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=4.97737556561086
+  k=    4  edges=  55 ( 4.98%)  Δe=   6  obj=0.8676  gap=+0.00%  Δobj=-0.000%  build=0.02s solve=0.22s
+2026-07-02 13:39:13.246 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=5.972850678733032
+  k=    6  edges=  66 ( 5.97%)  Δe=  11  obj=0.8676  gap=+0.00%  Δobj=+0.000%  build=0.03s solve=0.35s
+2026-07-02 13:39:13.635 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=6.515837104072399
+  k=    8  edges=  72 ( 6.52%)  Δe=   6  obj=0.8676  gap=+0.00%  Δobj=+0.000%  build=0.04s solve=0.20s
+2026-07-02 13:39:13.896 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=7.149321266968325
+  k=   12  edges=  79 ( 7.15%)  Δe=   7  obj=0.8676  gap=+0.00%  Δobj=+0.000%  build=0.06s solve=0.25s
+2026-07-02 13:39:14.218 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=8.144796380090497
+  k=   16  edges=  90 ( 8.14%)  Δe=  11  obj=0.8676  gap=+0.00%  Δobj=-0.000%  build=0.08s solve=0.87s
+2026-07-02 13:39:15.187 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=10.678733031674208
+  k=   24  edges= 118 (10.68%)  Δe=  28  obj=0.8676  gap=+0.00%  Δobj=+0.000%  build=0.10s solve=0.41s
+  → stop: stop_perc_graph (after 2 consecutive steps)
+
+Results saved to experiments/bl_union_convergence/assembly_1_np_4_methods/bl_union_convergence_lambda_0.5.csv
+Plot with:  python -m experiments.bl_union_convergence.plot_convergence experiments/bl_union_convergence/assembly_1_np_4_methods/bl_union_convergence_lambda_0.5.csv
+
+----------------- λ = 0.6 -----------------
+========================================================================
+bl-union convergence — assembly_1  P=4  λ=0.6
+========================================================================
+
+Building assembly digraph …
+2026-07-02 13:38:22.656 | INFO     | pycaalp.gapp.assembly_digraph:compute_assembly_digraph_complete:395 - Computing assembly digraph...
+  343 nodes, 1105 edges  (0.1s)
+
+[ref] Full MIP  P=4  λ=0.6 …
+2026-07-02 13:38:22.769 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+  obj=0.8745  alpha=584.0s  time=20.82s
+
+[bl_union] k-sweep (stop: none, stop at 10.0% of the full directed graph):
+2026-07-02 13:38:43.600 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=3.3484162895927603
+  k=    1  edges=  37 ( 3.35%)  Δe=  37  obj=0.8745  gap=-0.00%  Δobj=   —     build=0.01s solve=0.15s
+2026-07-02 13:38:43.765 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=3.8914027149321266
+  k=    2  edges=  43 ( 3.89%)  Δe=   6  obj=0.8745  gap=+0.00%  Δobj=-0.000%  build=0.01s solve=0.17s
+2026-07-02 13:38:43.956 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=4.4343891402714934
+  k=    3  edges=  49 ( 4.43%)  Δe=   6  obj=0.8745  gap=-0.00%  Δobj=+0.000%  build=0.02s solve=0.42s
+2026-07-02 13:38:44.401 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=4.97737556561086
+  k=    4  edges=  55 ( 4.98%)  Δe=   6  obj=0.8745  gap=-0.00%  Δobj=+0.000%  build=0.02s solve=0.22s
+2026-07-02 13:38:44.653 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=5.972850678733032
+  k=    6  edges=  66 ( 5.97%)  Δe=  11  obj=0.8745  gap=-0.00%  Δobj=+0.000%  build=0.03s solve=0.21s
+2026-07-02 13:38:44.910 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=6.515837104072399
+  k=    8  edges=  72 ( 6.52%)  Δe=   6  obj=0.8745  gap=+0.00%  Δobj=-0.000%  build=0.04s solve=0.85s
+2026-07-02 13:38:45.816 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=7.149321266968325
+  k=   12  edges=  79 ( 7.15%)  Δe=   7  obj=0.8745  gap=-0.00%  Δobj=+0.000%  build=0.06s solve=0.25s
+2026-07-02 13:38:46.141 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=8.144796380090497
+  k=   16  edges=  90 ( 8.14%)  Δe=  11  obj=0.8745  gap=-0.00%  Δobj=+0.000%  build=0.08s solve=0.94s
+2026-07-02 13:38:47.194 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=8.687782805429864
+  k=   24  edges=  96 ( 8.69%)  Δe=   6  obj=0.8745  gap=+0.00%  Δobj=-0.000%  build=0.12s solve=0.66s
+2026-07-02 13:38:48.010 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=9.864253393665159
+  k=   32  edges= 109 ( 9.86%)  Δe=  13  obj=0.8745  gap=-0.00%  Δobj=+0.000%  build=0.16s solve=0.64s
+2026-07-02 13:38:48.876 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=11.312217194570136
+  k=   48  edges= 125 (11.31%)  Δe=  16  obj=0.8745  gap=-0.00%  Δobj=+0.000%  build=0.23s solve=0.40s
+  → stop: stop_perc_graph (after 2 consecutive steps)
+
+[adaptive] k-sweep (stop: none, stop at 10.0% of the full directed graph):
+2026-07-02 13:38:49.283 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=3.3484162895927603
+  k=    1  edges=  37 ( 3.35%)  Δe=  37  obj=0.8745  gap=-0.00%  Δobj=   —     build=0.01s solve=0.15s
+2026-07-02 13:38:49.445 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=3.8914027149321266
+  k=    2  edges=  43 ( 3.89%)  Δe=   6  obj=0.8745  gap=+0.00%  Δobj=-0.000%  build=0.01s solve=0.17s
+2026-07-02 13:38:49.632 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=4.4343891402714934
+  k=    3  edges=  49 ( 4.43%)  Δe=   6  obj=0.8745  gap=-0.00%  Δobj=+0.000%  build=0.02s solve=0.42s
+2026-07-02 13:38:50.074 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=4.97737556561086
+  k=    4  edges=  55 ( 4.98%)  Δe=   6  obj=0.8745  gap=-0.00%  Δobj=+0.000%  build=0.02s solve=0.21s
+2026-07-02 13:38:50.321 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=5.972850678733032
+  k=    6  edges=  66 ( 5.97%)  Δe=  11  obj=0.8745  gap=-0.00%  Δobj=+0.000%  build=0.03s solve=0.21s
+2026-07-02 13:38:50.574 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=6.515837104072399
+  k=    8  edges=  72 ( 6.52%)  Δe=   6  obj=0.8745  gap=+0.00%  Δobj=-0.000%  build=0.04s solve=0.84s
+2026-07-02 13:38:51.472 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=7.149321266968325
+  k=   12  edges=  79 ( 7.15%)  Δe=   7  obj=0.8745  gap=-0.00%  Δobj=+0.000%  build=0.06s solve=0.24s
+2026-07-02 13:38:51.794 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=8.144796380090497
+  k=   16  edges=  90 ( 8.14%)  Δe=  11  obj=0.8745  gap=-0.00%  Δobj=+0.000%  build=0.08s solve=0.63s
+2026-07-02 13:38:52.523 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=10.85972850678733
+  k=   24  edges= 120 (10.86%)  Δe=  30  obj=0.8745  gap=-0.00%  Δobj=+0.000%  build=0.10s solve=0.36s
+  → stop: stop_perc_graph (after 2 consecutive steps)
+
+Results saved to experiments/bl_union_convergence/assembly_1_np_4_methods/bl_union_convergence_lambda_0.6.csv
+Plot with:  python -m experiments.bl_union_convergence.plot_convergence experiments/bl_union_convergence/assembly_1_np_4_methods/bl_union_convergence_lambda_0.6.csv
+
+----------------- λ = 0.7 -----------------
+========================================================================
+bl-union convergence — assembly_1  P=4  λ=0.7
+========================================================================
+
+Building assembly digraph …
+2026-07-02 13:38:22.585 | INFO     | pycaalp.gapp.assembly_digraph:compute_assembly_digraph_complete:395 - Computing assembly digraph...
+  343 nodes, 1105 edges  (0.1s)
+
+[ref] Full MIP  P=4  λ=0.7 …
+2026-07-02 13:38:22.699 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+  obj=0.8805  alpha=581.1s  time=25.52s
+
+[bl_union] k-sweep (stop: none, stop at 10.0% of the full directed graph):
+2026-07-02 13:38:48.229 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=3.3484162895927603
+  k=    1  edges=  37 ( 3.35%)  Δe=  37  obj=0.8814  gap=+0.10%  Δobj=   —     build=0.01s solve=0.24s
+2026-07-02 13:38:48.478 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=3.8914027149321266
+  k=    2  edges=  43 ( 3.89%)  Δe=   6  obj=0.8814  gap=+0.10%  Δobj=+0.000%  build=0.01s solve=0.35s
+2026-07-02 13:38:48.847 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=4.4343891402714934
+  k=    3  edges=  49 ( 4.43%)  Δe=   6  obj=0.8814  gap=+0.10%  Δobj=-0.000%  build=0.02s solve=0.16s
+2026-07-02 13:38:49.031 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=4.97737556561086
+  k=    4  edges=  55 ( 4.98%)  Δe=   6  obj=0.8814  gap=+0.10%  Δobj=+0.000%  build=0.02s solve=0.61s
+2026-07-02 13:38:49.670 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=5.972850678733032
+  k=    6  edges=  66 ( 5.97%)  Δe=  11  obj=0.8814  gap=+0.10%  Δobj=+0.000%  build=0.03s solve=0.75s
+2026-07-02 13:38:50.461 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=6.515837104072399
+  k=    8  edges=  72 ( 6.52%)  Δe=   6  obj=0.8814  gap=+0.10%  Δobj=+0.000%  build=0.04s solve=0.26s
+2026-07-02 13:38:50.779 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=7.149321266968325
+  k=   12  edges=  79 ( 7.15%)  Δe=   7  obj=0.8814  gap=+0.10%  Δobj=+0.000%  build=0.06s solve=0.37s
+2026-07-02 13:38:51.225 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=8.144796380090497
+  k=   16  edges=  90 ( 8.14%)  Δe=  11  obj=0.8814  gap=+0.10%  Δobj=-0.000%  build=0.08s solve=0.56s
+2026-07-02 13:38:51.905 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=8.687782805429864
+  k=   24  edges=  96 ( 8.69%)  Δe=   6  obj=0.8814  gap=+0.10%  Δobj=+0.000%  build=0.12s solve=0.34s
+2026-07-02 13:38:52.397 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=9.864253393665159
+  k=   32  edges= 109 ( 9.86%)  Δe=  13  obj=0.8814  gap=+0.10%  Δobj=+0.000%  build=0.15s solve=0.33s
+2026-07-02 13:38:52.952 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=11.312217194570136
+  k=   48  edges= 125 (11.31%)  Δe=  16  obj=0.8814  gap=+0.10%  Δobj=+0.000%  build=0.23s solve=0.93s
+  → stop: stop_perc_graph (after 2 consecutive steps)
+
+[adaptive] k-sweep (stop: none, stop at 10.0% of the full directed graph):
+2026-07-02 13:38:53.891 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=3.3484162895927603
+  k=    1  edges=  37 ( 3.35%)  Δe=  37  obj=0.8814  gap=+0.10%  Δobj=   —     build=0.01s solve=0.23s
+2026-07-02 13:38:54.136 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=3.8914027149321266
+  k=    2  edges=  43 ( 3.89%)  Δe=   6  obj=0.8814  gap=+0.10%  Δobj=+0.000%  build=0.01s solve=0.35s
+2026-07-02 13:38:54.499 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=4.4343891402714934
+  k=    3  edges=  49 ( 4.43%)  Δe=   6  obj=0.8814  gap=+0.10%  Δobj=-0.000%  build=0.02s solve=0.16s
+2026-07-02 13:38:54.683 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=4.97737556561086
+  k=    4  edges=  55 ( 4.98%)  Δe=   6  obj=0.8814  gap=+0.10%  Δobj=+0.000%  build=0.02s solve=0.60s
+2026-07-02 13:38:55.316 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=5.972850678733032
+  k=    6  edges=  66 ( 5.97%)  Δe=  11  obj=0.8814  gap=+0.10%  Δobj=+0.000%  build=0.03s solve=0.74s
+2026-07-02 13:38:56.100 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=6.515837104072399
+  k=    8  edges=  72 ( 6.52%)  Δe=   6  obj=0.8814  gap=+0.10%  Δobj=+0.000%  build=0.04s solve=0.25s
+2026-07-02 13:38:56.416 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=7.149321266968325
+  k=   12  edges=  79 ( 7.15%)  Δe=   7  obj=0.8814  gap=+0.10%  Δobj=+0.000%  build=0.06s solve=0.37s
+2026-07-02 13:38:56.864 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=8.144796380090497
+  k=   16  edges=  90 ( 8.14%)  Δe=  11  obj=0.8814  gap=+0.10%  Δobj=-0.000%  build=0.08s solve=0.56s
+2026-07-02 13:38:57.527 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=10.497737556561086
+  k=   24  edges= 116 ( 10.5%)  Δe=  26  obj=0.8814  gap=+0.10%  Δobj=+0.000%  build=0.10s solve=0.27s
+  → stop: stop_perc_graph (after 2 consecutive steps)
+
+Results saved to experiments/bl_union_convergence/assembly_1_np_4_methods/bl_union_convergence_lambda_0.7.csv
+Plot with:  python -m experiments.bl_union_convergence.plot_convergence experiments/bl_union_convergence/assembly_1_np_4_methods/bl_union_convergence_lambda_0.7.csv
+
+----------------- λ = 0.8 -----------------
+========================================================================
+bl-union convergence — assembly_1  P=4  λ=0.8
+========================================================================
+
+Building assembly digraph …
+2026-07-02 13:38:22.552 | INFO     | pycaalp.gapp.assembly_digraph:compute_assembly_digraph_complete:395 - Computing assembly digraph...
+  343 nodes, 1105 edges  (0.1s)
+
+[ref] Full MIP  P=4  λ=0.8 …
+2026-07-02 13:38:22.664 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+  obj=0.8855  alpha=574.6s  time=84.43s
+
+[bl_union] k-sweep (stop: none, stop at 10.0% of the full directed graph):
+2026-07-02 13:39:47.099 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=3.3484162895927603
+  k=    1  edges=  37 ( 3.35%)  Δe=  37  obj=0.8883  gap=+0.32%  Δobj=   —     build=0.01s solve=0.15s
+2026-07-02 13:39:47.264 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=3.8914027149321266
+  k=    2  edges=  43 ( 3.89%)  Δe=   6  obj=0.8883  gap=+0.32%  Δobj=-0.000%  build=0.01s solve=0.62s
+2026-07-02 13:39:47.904 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=4.4343891402714934
+  k=    3  edges=  49 ( 4.43%)  Δe=   6  obj=0.8883  gap=+0.32%  Δobj=-0.000%  build=0.02s solve=0.29s
+2026-07-02 13:39:48.213 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=4.97737556561086
+  k=    4  edges=  55 ( 4.98%)  Δe=   6  obj=0.8883  gap=+0.32%  Δobj=+0.000%  build=0.02s solve=0.39s
+2026-07-02 13:39:48.628 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=5.972850678733032
+  k=    6  edges=  66 ( 5.97%)  Δe=  11  obj=0.8883  gap=+0.32%  Δobj=+0.000%  build=0.03s solve=0.23s
+2026-07-02 13:39:48.894 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=6.515837104072399
+  k=    8  edges=  72 ( 6.52%)  Δe=   6  obj=0.8883  gap=+0.32%  Δobj=-0.000%  build=0.04s solve=0.30s
+2026-07-02 13:39:49.249 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=7.149321266968325
+  k=   12  edges=  79 ( 7.15%)  Δe=   7  obj=0.8883  gap=+0.32%  Δobj=+0.000%  build=0.06s solve=0.32s
+2026-07-02 13:39:49.645 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=8.144796380090497
+  k=   16  edges=  90 ( 8.14%)  Δe=  11  obj=0.8883  gap=+0.32%  Δobj=+0.000%  build=0.07s solve=0.28s
+2026-07-02 13:39:50.042 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=8.687782805429864
+  k=   24  edges=  96 ( 8.69%)  Δe=   6  obj=0.8883  gap=+0.32%  Δobj=+0.000%  build=0.11s solve=0.32s
+2026-07-02 13:39:50.506 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=9.864253393665159
+  k=   32  edges= 109 ( 9.86%)  Δe=  13  obj=0.8883  gap=+0.32%  Δobj=+0.000%  build=0.15s solve=0.36s
+2026-07-02 13:39:51.079 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=11.312217194570136
+  k=   48  edges= 125 (11.31%)  Δe=  16  obj=0.8883  gap=+0.32%  Δobj=+0.000%  build=0.22s solve=0.58s
+  → stop: stop_perc_graph (after 2 consecutive steps)
+
+[adaptive] k-sweep (stop: none, stop at 10.0% of the full directed graph):
+2026-07-02 13:39:51.669 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=3.3484162895927603
+  k=    1  edges=  37 ( 3.35%)  Δe=  37  obj=0.8883  gap=+0.32%  Δobj=   —     build=0.01s solve=0.15s
+2026-07-02 13:39:51.833 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=3.8914027149321266
+  k=    2  edges=  43 ( 3.89%)  Δe=   6  obj=0.8883  gap=+0.32%  Δobj=-0.000%  build=0.01s solve=0.62s
+2026-07-02 13:39:52.473 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=4.4343891402714934
+  k=    3  edges=  49 ( 4.43%)  Δe=   6  obj=0.8883  gap=+0.32%  Δobj=-0.000%  build=0.02s solve=0.29s
+2026-07-02 13:39:52.785 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=4.97737556561086
+  k=    4  edges=  55 ( 4.98%)  Δe=   6  obj=0.8883  gap=+0.32%  Δobj=+0.000%  build=0.02s solve=0.38s
+2026-07-02 13:39:53.198 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=5.972850678733032
+  k=    6  edges=  66 ( 5.97%)  Δe=  11  obj=0.8883  gap=+0.32%  Δobj=+0.000%  build=0.03s solve=0.23s
+2026-07-02 13:39:53.465 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=6.515837104072399
+  k=    8  edges=  72 ( 6.52%)  Δe=   6  obj=0.8883  gap=+0.32%  Δobj=-0.000%  build=0.04s solve=0.30s
+2026-07-02 13:39:53.820 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=7.149321266968325
+  k=   12  edges=  79 ( 7.15%)  Δe=   7  obj=0.8883  gap=+0.32%  Δobj=+0.000%  build=0.06s solve=0.32s
+2026-07-02 13:39:54.215 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=8.144796380090497
+  k=   16  edges=  90 ( 8.14%)  Δe=  11  obj=0.8883  gap=+0.32%  Δobj=+0.000%  build=0.07s solve=0.28s
+2026-07-02 13:39:54.594 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=10.497737556561086
+  k=   24  edges= 116 ( 10.5%)  Δe=  26  obj=0.8883  gap=+0.32%  Δobj=-0.000%  build=0.10s solve=0.34s
+  → stop: stop_perc_graph (after 2 consecutive steps)
+
+Results saved to experiments/bl_union_convergence/assembly_1_np_4_methods/bl_union_convergence_lambda_0.8.csv
+Plot with:  python -m experiments.bl_union_convergence.plot_convergence experiments/bl_union_convergence/assembly_1_np_4_methods/bl_union_convergence_lambda_0.8.csv
+
+----------------- λ = 0.9 -----------------
+========================================================================
+bl-union convergence — assembly_1  P=4  λ=0.9
+========================================================================
+
+Building assembly digraph …
+2026-07-02 13:38:22.595 | INFO     | pycaalp.gapp.assembly_digraph:compute_assembly_digraph_complete:395 - Computing assembly digraph...
+  343 nodes, 1105 edges  (0.1s)
+
+[ref] Full MIP  P=4  λ=0.9 …
+2026-07-02 13:38:22.709 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+  obj=0.8865  alpha=574.6s  time=102.50s
+
+[bl_union] k-sweep (stop: none, stop at 10.0% of the full directed graph):
+2026-07-02 13:40:05.218 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=3.3484162895927603
+  k=    1  edges=  37 ( 3.35%)  Δe=  37  obj=0.8952  gap=+0.98%  Δobj=   —     build=0.01s solve=0.23s
+2026-07-02 13:40:05.457 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=3.8914027149321266
+  k=    2  edges=  43 ( 3.89%)  Δe=   6  obj=0.8952  gap=+0.98%  Δobj=+0.000%  build=0.01s solve=0.37s
+2026-07-02 13:40:05.845 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=4.4343891402714934
+  k=    3  edges=  49 ( 4.43%)  Δe=   6  obj=0.8952  gap=+0.98%  Δobj=-0.000%  build=0.02s solve=0.12s
+2026-07-02 13:40:05.985 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=4.97737556561086
+  k=    4  edges=  55 ( 4.98%)  Δe=   6  obj=0.8952  gap=+0.98%  Δobj=+0.000%  build=0.02s solve=0.16s
+2026-07-02 13:40:06.177 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=5.972850678733032
+  k=    6  edges=  66 ( 5.97%)  Δe=  11  obj=0.8952  gap=+0.98%  Δobj=+0.000%  build=0.03s solve=0.22s
+2026-07-02 13:40:06.431 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=6.515837104072399
+  k=    8  edges=  72 ( 6.52%)  Δe=   6  obj=0.8952  gap=+0.98%  Δobj=+0.000%  build=0.04s solve=0.23s
+2026-07-02 13:40:06.716 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=7.149321266968325
+  k=   12  edges=  79 ( 7.15%)  Δe=   7  obj=0.8952  gap=+0.98%  Δobj=+0.000%  build=0.06s solve=0.28s
+2026-07-02 13:40:07.071 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=8.144796380090497
+  k=   16  edges=  90 ( 8.14%)  Δe=  11  obj=0.8952  gap=+0.98%  Δobj=-0.000%  build=0.07s solve=0.26s
+2026-07-02 13:40:07.440 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=8.687782805429864
+  k=   24  edges=  96 ( 8.69%)  Δe=   6  obj=0.8952  gap=+0.98%  Δobj=+0.000%  build=0.11s solve=0.31s
+2026-07-02 13:40:07.893 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=9.864253393665159
+  k=   32  edges= 109 ( 9.86%)  Δe=  13  obj=0.8952  gap=+0.98%  Δobj=+0.000%  build=0.15s solve=0.57s
+2026-07-02 13:40:08.677 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=11.312217194570136
+  k=   48  edges= 125 (11.31%)  Δe=  16  obj=0.8952  gap=+0.98%  Δobj=+0.000%  build=0.22s solve=0.68s
+  → stop: stop_perc_graph (after 2 consecutive steps)
+
+[adaptive] k-sweep (stop: none, stop at 10.0% of the full directed graph):
+2026-07-02 13:40:09.364 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=3.3484162895927603
+  k=    1  edges=  37 ( 3.35%)  Δe=  37  obj=0.8952  gap=+0.98%  Δobj=   —     build=0.01s solve=0.23s
+2026-07-02 13:40:09.604 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=3.8914027149321266
+  k=    2  edges=  43 ( 3.89%)  Δe=   6  obj=0.8952  gap=+0.98%  Δobj=+0.000%  build=0.01s solve=0.37s
+2026-07-02 13:40:09.991 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=4.4343891402714934
+  k=    3  edges=  49 ( 4.43%)  Δe=   6  obj=0.8952  gap=+0.98%  Δobj=-0.000%  build=0.02s solve=0.12s
+2026-07-02 13:40:10.130 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=4.97737556561086
+  k=    4  edges=  55 ( 4.98%)  Δe=   6  obj=0.8952  gap=+0.98%  Δobj=+0.000%  build=0.02s solve=0.16s
+2026-07-02 13:40:10.321 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=5.972850678733032
+  k=    6  edges=  66 ( 5.97%)  Δe=  11  obj=0.8952  gap=+0.98%  Δobj=+0.000%  build=0.03s solve=0.21s
+2026-07-02 13:40:10.575 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=6.515837104072399
+  k=    8  edges=  72 ( 6.52%)  Δe=   6  obj=0.8952  gap=+0.98%  Δobj=+0.000%  build=0.04s solve=0.23s
+2026-07-02 13:40:10.861 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=7.149321266968325
+  k=   12  edges=  79 ( 7.15%)  Δe=   7  obj=0.8952  gap=+0.98%  Δobj=+0.000%  build=0.06s solve=0.28s
+2026-07-02 13:40:11.216 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=8.144796380090497
+  k=   16  edges=  90 ( 8.14%)  Δe=  11  obj=0.8952  gap=+0.98%  Δobj=-0.000%  build=0.07s solve=0.26s
+2026-07-02 13:40:11.570 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=11.131221719457013
+  k=   24  edges= 123 (11.13%)  Δe=  33  obj=0.8952  gap=+0.98%  Δobj=+0.000%  build=0.10s solve=0.53s
+  → stop: stop_perc_graph (after 2 consecutive steps)
+
+Results saved to experiments/bl_union_convergence/assembly_1_np_4_methods/bl_union_convergence_lambda_0.9.csv
+Plot with:  python -m experiments.bl_union_convergence.plot_convergence experiments/bl_union_convergence/assembly_1_np_4_methods/bl_union_convergence_lambda_0.9.csv
+
+----------------- λ = 1.0 -----------------
+========================================================================
+bl-union convergence — assembly_1  P=4  λ=1.0
+========================================================================
+
+Building assembly digraph …
+2026-07-02 13:38:22.638 | INFO     | pycaalp.gapp.assembly_digraph:compute_assembly_digraph_complete:395 - Computing assembly digraph...
+  343 nodes, 1105 edges  (0.1s)
+
+[ref] Full MIP  P=4  λ=1.0 …
+2026-07-02 13:38:22.752 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+  obj=0.8766  alpha=567.5s  time=110.91s
+
+[bl_union] k-sweep (stop: none, stop at 10.0% of the full directed graph):
+2026-07-02 13:40:13.672 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=3.3484162895927603
+  k=    1  edges=  37 ( 3.35%)  Δe=  37  obj=0.8876  gap=+1.25%  Δobj=   —     build=0.01s solve=0.19s
+2026-07-02 13:40:13.868 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=3.8914027149321266
+  k=    2  edges=  43 ( 3.89%)  Δe=   6  obj=0.8876  gap=+1.25%  Δobj=+0.000%  build=0.01s solve=0.09s
+2026-07-02 13:40:13.974 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=4.4343891402714934
+  k=    3  edges=  49 ( 4.43%)  Δe=   6  obj=0.8876  gap=+1.25%  Δobj=+0.000%  build=0.02s solve=0.10s
+2026-07-02 13:40:14.097 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=4.97737556561086
+  k=    4  edges=  55 ( 4.98%)  Δe=   6  obj=0.8876  gap=+1.25%  Δobj=+0.000%  build=0.02s solve=0.10s
+2026-07-02 13:40:14.230 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=5.972850678733032
+  k=    6  edges=  66 ( 5.97%)  Δe=  11  obj=0.8876  gap=+1.25%  Δobj=+0.000%  build=0.03s solve=0.12s
+2026-07-02 13:40:14.383 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=6.515837104072399
+  k=    8  edges=  72 ( 6.52%)  Δe=   6  obj=0.8876  gap=+1.25%  Δobj=+0.000%  build=0.04s solve=0.23s
+2026-07-02 13:40:14.665 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=7.149321266968325
+  k=   12  edges=  79 ( 7.15%)  Δe=   7  obj=0.8876  gap=+1.25%  Δobj=+0.000%  build=0.05s solve=0.16s
+2026-07-02 13:40:14.898 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=8.144796380090497
+  k=   16  edges=  90 ( 8.14%)  Δe=  11  obj=0.8876  gap=+1.25%  Δobj=-0.000%  build=0.07s solve=0.26s
+2026-07-02 13:40:15.267 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=8.687782805429864
+  k=   24  edges=  96 ( 8.69%)  Δe=   6  obj=0.8876  gap=+1.25%  Δobj=+0.000%  build=0.11s solve=0.26s
+2026-07-02 13:40:15.667 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=9.864253393665159
+  k=   32  edges= 109 ( 9.86%)  Δe=  13  obj=0.8876  gap=+1.25%  Δobj=-0.000%  build=0.14s solve=0.32s
+2026-07-02 13:40:16.201 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=11.312217194570136
+  k=   48  edges= 125 (11.31%)  Δe=  16  obj=0.8876  gap=+1.25%  Δobj=+0.000%  build=0.21s solve=0.34s
+  → stop: stop_perc_graph (after 2 consecutive steps)
+
+[adaptive] k-sweep (stop: none, stop at 10.0% of the full directed graph):
+2026-07-02 13:40:16.546 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=3.3484162895927603
+  k=    1  edges=  37 ( 3.35%)  Δe=  37  obj=0.8876  gap=+1.25%  Δobj=   —     build=0.01s solve=0.19s
+2026-07-02 13:40:16.742 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=3.8914027149321266
+  k=    2  edges=  43 ( 3.89%)  Δe=   6  obj=0.8876  gap=+1.25%  Δobj=+0.000%  build=0.01s solve=0.09s
+2026-07-02 13:40:16.847 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=4.4343891402714934
+  k=    3  edges=  49 ( 4.43%)  Δe=   6  obj=0.8876  gap=+1.25%  Δobj=+0.000%  build=0.02s solve=0.10s
+2026-07-02 13:40:16.971 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=4.97737556561086
+  k=    4  edges=  55 ( 4.98%)  Δe=   6  obj=0.8876  gap=+1.25%  Δobj=+0.000%  build=0.02s solve=0.10s
+2026-07-02 13:40:17.103 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=5.972850678733032
+  k=    6  edges=  66 ( 5.97%)  Δe=  11  obj=0.8876  gap=+1.25%  Δobj=+0.000%  build=0.03s solve=0.12s
+2026-07-02 13:40:17.257 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=6.515837104072399
+  k=    8  edges=  72 ( 6.52%)  Δe=   6  obj=0.8876  gap=+1.25%  Δobj=+0.000%  build=0.04s solve=0.23s
+2026-07-02 13:40:17.540 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=7.149321266968325
+  k=   12  edges=  79 ( 7.15%)  Δe=   7  obj=0.8876  gap=+1.25%  Δobj=+0.000%  build=0.06s solve=0.16s
+2026-07-02 13:40:17.775 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=8.144796380090497
+  k=   16  edges=  90 ( 8.14%)  Δe=  11  obj=0.8876  gap=+1.25%  Δobj=-0.000%  build=0.07s solve=0.26s
+2026-07-02 13:40:18.130 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+sub_stop=10.678733031674208
+  k=   24  edges= 118 (10.68%)  Δe=  28  obj=0.8831  gap=+0.74%  Δobj=+0.508%  build=0.09s solve=0.48s
+  → stop: stop_perc_graph (after 2 consecutive steps)
+
+Results saved to experiments/bl_union_convergence/assembly_1_np_4_methods/bl_union_convergence_lambda_1.0.csv
+Plot with:  python -m experiments.bl_union_convergence.plot_convergence experiments/bl_union_convergence/assembly_1_np_4_methods/bl_union_convergence_lambda_1.0.csv
+Combined CSV → experiments/bl_union_convergence/assembly_1_np_4_methods/bl_union_convergence.csv
+Saved experiments/bl_union_convergence/assembly_1_np_4_methods/convergence_obj_vs_pct_bl_union_assembly_1_P4.svg
+Saved experiments/bl_union_convergence/assembly_1_np_4_methods/convergence_alpha_vs_pct_bl_union_assembly_1_P4.svg
+Saved experiments/bl_union_convergence/assembly_1_np_4_methods/convergence_obj_vs_k_bl_union_assembly_1_P4.svg
+Saved experiments/bl_union_convergence/assembly_1_np_4_methods/convergence_obj_vs_pct_adaptive_assembly_1_P4.svg
+Saved experiments/bl_union_convergence/assembly_1_np_4_methods/convergence_alpha_vs_pct_adaptive_assembly_1_P4.svg
+Saved experiments/bl_union_convergence/assembly_1_np_4_methods/convergence_obj_vs_k_adaptive_assembly_1_P4.svg
+Saved experiments/bl_union_convergence/assembly_1_np_4_methods/method_best_gap_vs_lambda_assembly_1_P4.svg
+Saved experiments/bl_union_convergence/assembly_1_np_4_methods/metrics_grid_bl_union_assembly_1_P4.svg
+Saved experiments/bl_union_convergence/assembly_1_np_4_methods/metrics_grid_adaptive_assembly_1_P4.svg
