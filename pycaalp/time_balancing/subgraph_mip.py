@@ -161,7 +161,14 @@ def build_adaptive_subgraph(
 ) -> nx.DiGraph:
     """bl-union until its edge growth stalls, then switch to diverse re-routing.
 
-    paths come from the penalty approach. Deterministic.
+    The strategy comparison experiments showed that bl-union fails to grow the subgraph
+    producing many duplicate edges.
+    Diverse strategy is underperforming compared to the bl-union, i.e, diverging fast from
+    high quality solutions.
+    Therefore a fusion of bl-union and diverse strategies guarantees quality preservation and
+
+
+    paths come from the penalty approach. Fully deterministic.
     """
     digraph = assembly_digraph_obj.assembly_digraph
     src, tgt = "0_1", f"{assembly_digraph_obj.graph.number_of_edges()}_1"

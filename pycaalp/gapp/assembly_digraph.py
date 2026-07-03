@@ -23,6 +23,7 @@ from pycaalp.gapp.freedom_matrices import (
 )
 
 from pycaalp.gapp.paths import calculate_num_simple_paths
+from pycaalp.gapp.paths import set_blended_weights as _set_blended
 
 from pycaalp.gapp.filtering import (
     normalize_attributes,
@@ -428,8 +429,6 @@ class AssemblyDigraph:
         One call serves any k; re-call with a different λ to re-blend without
         rebuilding the (expensive) digraph. Returns the assembly digraph.
         """
-        from pycaalp.gapp.paths import set_blended_weights as _set_blended
-
         time_weights = nx.get_edge_attributes(self.graph, "time")
         return _set_blended(
             self.assembly_digraph, time_weights, self.num_phases, lam, out_attr

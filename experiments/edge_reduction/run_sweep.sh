@@ -34,13 +34,14 @@ fi
 
 # Pull instance + default P from the base config so the folder name and log are
 # a single source of truth.
-read -r INSTANCE DEFP FILE_NAME < <(python -c "
+read -r INSTANCE DEFP FILE_NAME DFM_FILE < <(python -c "
 import importlib.util, os
 s = importlib.util.spec_from_file_location('c', '$CONFIG')
 m = importlib.util.module_from_spec(s); s.loader.exec_module(m)
 d = m.config_data
 print(os.path.basename(os.path.dirname(d['assembly_fname'])),
-      d.get('num_phases', 3), d['assembly_fname'])
+      d.get('num_phases', 3), d['assembly_fname'],
+      d.get('dfm_fname') or '(none)')
 ")
 P="${NUM_PHASES:-$DEFP}"
 
@@ -62,6 +63,7 @@ if [ "$JOBS" -gt "${#LAMBDAS[@]}" ]; then JOBS="${#LAMBDAS[@]}"; fi
     echo "base config  : ${CONFIG}"
     echo "instance     : ${INSTANCE}"
     echo "parts file   : ${FILE_NAME}"
+    echo "dfm file     : ${DFM_FILE}"
     echo "num_phases   : ${P}"
     echo "lambda grid  : ${LAMBDAS[*]}"
     echo "jobs (par.)  : ${JOBS}"
