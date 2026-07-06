@@ -100,7 +100,10 @@ K_VALUES = [
 # catches compromise paths. λ-agnostic (the MIP still solves at the true λ).
 BLEND_GRID = [0.0, 0.5, 1.0]
 
-METHODS_DEFAULT = "bl_union,diverse, adaptive"
+# Baseline default: the adaptive method only (bl-union frontier until its edge
+# growth stalls, then diverse re-routing). Add "bl_union,diverse" via --methods
+# to reproduce the full strategy comparison.
+METHODS_DEFAULT = "adaptive"
 PENALTY = 0.5  # diverse re-routing penalty (see diverse_shortest_paths)
 
 # Stop criterion. Two useful ones (see --stop):
@@ -116,6 +119,11 @@ PENALTY = 0.5  # diverse re-routing penalty (see diverse_shortest_paths)
 # Independently, --gap-target X stops as soon as the gap to the (cached) full-MIP
 # objective is ≤ X% — the characterization stop: "how little graph for <X%".
 STOP_DEFAULT = "edge_saturation"
+# Baseline stop: cap the subgraph at 10% of the full-graph edges (the same
+# threshold the adaptive edge protection uses). STOP_DEFAULT above stays on as a
+# backstop so a subgraph that saturates below 10% still halts. Set to 100 to
+# disable the percentage cap and rely only on --stop.
+STOP_PERC_GRAPH_DEFAULT = 10
 OBJ_EPS = 0.5  # %: relative objective improvement below this counts as a plateau
 PATIENCE = 2  # consecutive plateau / saturation steps required to stop
 
@@ -155,6 +163,7 @@ CSV_FIELDS = [
     "phase_time_max",
     "phase_time_std",
     "imbalance_pct",  # (max - min) / ideal * 100; P-agnostic
+    "alpha_vs_width_pct",  # (alpha - phase_width) / phase_width * 100; 0 = perfect balance
     "abs_time_per_phase",  # JSON list, any P
     "ops_per_phase",  # JSON list, any P
     "n_ops_total",
@@ -306,6 +315,9 @@ def _record(
         else 0.0
     )
     imbalance_pct = round((alpha_abs - pt_min) / ideal * 100, 2) if ideal else None
+    # Makespan gap to the perfect-balance floor (phase width = T_total/P = ideal).
+    # 0 ⇒ α hit the ideal; the residual is the unavoidable sequencing misalignment.
+    alpha_vs_width_pct = round((alpha_abs / ideal - 1) * 100, 2) if ideal else None
 
     full_alpha = ctx["full_alpha"]
     full_obj = ctx["full_obj"]
@@ -350,6 +362,9 @@ def _record(
         "phase_time_max": round(alpha_abs, 3),
         "phase_time_std": round(std, 3),
         "imbalance_pct": imbalance_pct if imbalance_pct is not None else "",
+        "alpha_vs_width_pct": (
+            alpha_vs_width_pct if alpha_vs_width_pct is not None else ""
+        ),
         "abs_time_per_phase": json.dumps([round(t, 3) for t in phase_times]),
         "ops_per_phase": json.dumps(n_ops),
         "n_ops_total": sum(n_ops),
@@ -372,8 +387,9 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--stop-perc-graph",
-        default=100,  # whole graph
-        help="growing subgraph percentage stop criterion (default: %(default)s)",
+        default=STOP_PERC_GRAPH_DEFAULT,
+        help="stop once the subgraph reaches this %% of the full-graph edges "
+        "(100 = disabled; default: %(default)s)",
     )
     parser.add_argument(
         "--stop",

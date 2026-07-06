@@ -80,8 +80,14 @@ def plot_grid(cfg, cfg_rows, method, res_dir):
                 if not xs:
                     continue
                 ax.plot(
-                    xs, ys, "-", color=colors[lam], linewidth=1.0,
-                    marker=MARKERS[i % len(MARKERS)], ms=4, mfc=colors[lam],
+                    xs,
+                    ys,
+                    "-",
+                    color=colors[lam],
+                    linewidth=1.0,
+                    marker=MARKERS[i % len(MARKERS)],
+                    ms=4,
+                    mfc=colors[lam],
                     label=f"λ={lam:g}",
                 )
             if xlog:
@@ -95,7 +101,8 @@ def plot_grid(cfg, cfg_rows, method, res_dir):
     instance, num_phases = cfg
     fig.suptitle(
         f"{method} — every metric vs k / %edges / time  ({instance}  P={num_phases})",
-        fontname="Liberation Serif", fontsize=13,
+        fontname="Liberation Serif",
+        fontsize=13,
     )
     # One shared legend (λ) to the right.
     handles, labels = axes[0][0].get_legend_handles_labels()
@@ -114,7 +121,9 @@ def plot_grid(cfg, cfg_rows, method, res_dir):
 if __name__ == "__main__":
     csv_fname = sys.argv[1] if len(sys.argv) > 1 else None
     if not csv_fname:
-        sys.exit("usage: python -m experiments.bl_union_convergence.plot_metrics_grid <csv>")
+        sys.exit(
+            "usage: python -m experiments.bl_union_convergence.plot_metrics_grid <csv>"
+        )
     rows = read_rows(csv_fname)
     res_dir = os.path.dirname(csv_fname) or "."
     for cfg, cfg_rows in group_by_config(rows).items():

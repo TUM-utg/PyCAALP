@@ -23,11 +23,12 @@ import sys
 import matplotlib
 
 matplotlib.use("Agg")  # headless / cluster-safe
-import matplotlib.cm as cm
 import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
 
-DEFAULT_CSV = "experiments/bl_union_convergence/assembly_2_np_3/bl_union_convergence.csv"
+DEFAULT_CSV = (
+    "experiments/bl_union_convergence/assembly_2_np_3_methods/bl_union_convergence.csv"
+)
 FORMAT = "svg"
 MARKERS = ["o", "s", "v", "^", "p", "D", "X", "<", ">", "*"]
 
@@ -78,7 +79,9 @@ def _by_lambda(cfg_rows, method=None):
 def _xy(k_rows, xfield, yfield):
     xs, ys = [], []
     for r in k_rows:
-        if r[xfield] and r[yfield] != "":
+        # .get: tolerate CSVs written before a derived column (e.g.
+        # alpha_vs_width_pct) existed, so old runs still plot the other curves.
+        if r.get(xfield) and r.get(yfield, "") != "":
             xs.append(float(r[xfield]))
             ys.append(float(r[yfield]))
     return xs, ys
@@ -87,20 +90,48 @@ def _xy(k_rows, xfield, yfield):
 def _stop_point(k_rows, xfield, yfield):
     """(x, y) of the auto-stop row for this λ, or None."""
     for r in k_rows:
-        if r["stop_reason"] and r["stop_reason"] != "full_ref" and r[xfield] and r[yfield] != "":
+        if (
+            r["stop_reason"]
+            and r["stop_reason"] != "full_ref"
+            and r.get(xfield)
+            and r.get(yfield, "") != ""
+        ):
             return float(r[xfield]), float(r[yfield])
     return None
 
 
+# TUM colour palette (grey, blue, black, green, orange, purple), as RGB 0-255 —
+# matches strategy_comparison's MFCS_RGB. λ is a continuous sweep, so we build a
+# gradient from the TUM anchors rather than picking discrete swatches.
+MFCS_RGB = [
+    (153, 153, 153),
+    (0, 101, 189),
+    (0, 0, 0),
+    (159, 186, 54),
+    (227, 114, 34),
+    (101, 55, 142),
+]
+
+# Gradient anchors along λ: grey → TUM blue → TUM green.
+_TUM_GRADIENT_ANCHORS = [MFCS_RGB[0], MFCS_RGB[1], MFCS_RGB[3]]
+_TUM_CMAP = mcolors.LinearSegmentedColormap.from_list(
+    "tum", [tuple(c / 255 for c in rgb) for rgb in _TUM_GRADIENT_ANCHORS]
+)
+
+
 def _lambda_colors(lambdas):
-    """Map each λ to a colour along viridis (λ is a continuous sweep dim, so a
-    gradient reads better than the discrete TUM palette here)."""
+    """Map each λ to a colour along a TUM-branded gradient (λ is a continuous
+    sweep dim, so a gradient reads better than discrete swatches; the anchors are
+    the TUM palette so it matches the other experiments)."""
     lo, hi = min(lambdas), max(lambdas)
     norm = mcolors.Normalize(vmin=lo, vmax=hi if hi > lo else lo + 1)
-    return {lam: cm.viridis(norm(lam)) for lam in lambdas}
+    return {lam: _TUM_CMAP(norm(lam)) for lam in lambdas}
 
 
-def _plot(cfg, by_lam, res_dir, xfield, xlabel, xlog, yfield, ylabel, fname_stem, method):
+def _plot(
+    cfg, by_lam, res_dir, xfield, xlabel, xlog, yfield, ylabel, fname_stem, method,
+    baseline_label="full MIP",
+):
     fig, ax = plt.subplots()
     lambdas = sorted(by_lam)
     colors = _lambda_colors(lambdas)
@@ -123,16 +154,20 @@ def _plot(cfg, by_lam, res_dir, xfield, xlabel, xlog, yfield, ylabel, fname_stem
         )
         sp = _stop_point(k_rows, xfield, yfield)
         if sp:
-            ax.plot(sp[0], sp[1], marker="*", ms=13, color=colors[lam], mec="black", mew=0.6)
+            ax.plot(
+                sp[0], sp[1], marker="*", ms=13, color=colors[lam], mec="black", mew=0.6
+            )
 
-    ax.axhline(0.0, color="black", linestyle="--", linewidth=1.0, label="full MIP")
+    ax.axhline(
+        0.0, color="black", linestyle="--", linewidth=1.0, label=baseline_label
+    )
     if xlog:
         ax.set_xscale("log")
     ax.set_xlabel(xlabel, fontname="Liberation Serif", fontsize=11)
     ax.set_ylabel(ylabel, fontname="Liberation Serif", fontsize=11)
     instance, num_phases = cfg
     ax.set_title(
-        f"{method} convergence  —  {instance}  P={num_phases}",
+        f"{method.capitalize()} method convergence",
         fontname="Liberation Serif",
         fontsize=13,
     )
@@ -176,10 +211,10 @@ def plot_best_gap_vs_lambda(cfg, cfg_rows, res_dir):
                 ys.append(min(gaps))
         if not xs:
             continue
-        color, marker, label = METHOD_STYLE.get(
-            method, ((0.4, 0.4, 0.4), "^", method)
+        color, marker, label = METHOD_STYLE.get(method, ((0.4, 0.4, 0.4), "^", method))
+        ax.plot(
+            xs, ys, "-", color=color, linewidth=1.2, marker=marker, ms=6, label=label
         )
-        ax.plot(xs, ys, "-", color=color, linewidth=1.2, marker=marker, ms=6, label=label)
 
     ax.axhline(0.0, color="black", linestyle="--", linewidth=1.0, label="full MIP")
     ax.axhline(1.0, color="gray", linestyle=":", linewidth=1.0, label="1% target")
@@ -220,22 +255,55 @@ if __name__ == "__main__":
             if not by_lam:
                 continue
             _plot(
-                cfg, by_lam, res_dir, xfield="subgraph_pct",
-                xlabel="Subgraph size [% of full-graph edges]", xlog=True,
-                yfield="obj_vs_full_pct", ylabel="Objective gap to full MIP [%]",
-                fname_stem="convergence_obj_vs_pct", method=method,
+                cfg,
+                by_lam,
+                res_dir,
+                xfield="subgraph_pct",
+                xlabel="Subgraph size [% of full-graph edges]",
+                xlog=True,
+                yfield="obj_vs_full_pct",
+                ylabel="Objective gap to full MIP [%]",
+                fname_stem="convergence_obj_vs_pct",
+                method=method,
             )
             _plot(
-                cfg, by_lam, res_dir, xfield="subgraph_pct",
-                xlabel="Subgraph size [% of full-graph edges]", xlog=True,
-                yfield="vs_full_pct", ylabel="Makespan (α) gap to full MIP [%]",
-                fname_stem="convergence_alpha_vs_pct", method=method,
+                cfg,
+                by_lam,
+                res_dir,
+                xfield="subgraph_pct",
+                xlabel="Subgraph size [% of full-graph edges]",
+                xlog=True,
+                yfield="vs_full_pct",
+                ylabel="Makespan (α) gap to full MIP [%]",
+                fname_stem="convergence_alpha_vs_pct",
+                method=method,
+            )
+            # Makespan vs the perfect-balance floor (phase width = T_total/P):
+            # 0 = ideal balance, the residual is the unavoidable misalignment.
+            _plot(
+                cfg,
+                by_lam,
+                res_dir,
+                xfield="subgraph_pct",
+                xlabel="Subgraph size [% of full-graph edges]",
+                xlog=True,
+                yfield="alpha_vs_width_pct",
+                ylabel="Makespan (α) gap to phase width [%]",
+                fname_stem="convergence_alpha_vs_phase_width",
+                method=method,
+                baseline_label="phase width (ideal)",
             )
             _plot(
-                cfg, by_lam, res_dir, xfield="k",
-                xlabel="k (shortest paths)", xlog=True,
-                yfield="obj_vs_full_pct", ylabel="Objective gap to full MIP [%]",
-                fname_stem="convergence_obj_vs_k", method=method,
+                cfg,
+                by_lam,
+                res_dir,
+                xfield="k",
+                xlabel="k (shortest paths)",
+                xlog=True,
+                yfield="obj_vs_full_pct",
+                ylabel="Objective gap to full MIP [%]",
+                fname_stem="convergence_obj_vs_k",
+                method=method,
             )
 
         # Head-to-head comparison (only meaningful with ≥2 methods, but harmless
