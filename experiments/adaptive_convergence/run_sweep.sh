@@ -25,7 +25,7 @@ MODULE="experiments.adaptive_convergence.adaptive_convergence"
 if [ "$#" -gt 0 ]; then
     LAMBDAS=("$@")
 else
-    LAMBDAS=(0.05 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 0.95)
+    LAMBDAS=(0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9)
 fi
 
 # Pull config from the module so the folder name / log stay a single source of

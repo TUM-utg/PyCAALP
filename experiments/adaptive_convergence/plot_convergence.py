@@ -37,23 +37,17 @@ _CMAP = mcolors.LinearSegmentedColormap.from_list(
 
 # (csv y-field, axis label, output stem, dashed-baseline label)
 PLOTS = [
-    # (
-    #     "obj_vs_ideal_pct",
-    #     "Objective gap to ideal (Σ shortest-path) [%]",
-    #     "convergence_obj_vs_ideal",
-    #     "ideal (Σ shortest-path bound)",
-    # ),
     (
         "path_cost_vs_cmin_pct",
         "Path cost gap to shortest path [%]",
         "convergence_path_vs_cmin",
-        "shortest path (c_min)",
+        "Sequence planning solution",
     ),
     (
         "alpha_vs_width_pct",
-        "Makespan (α) gap to phase width [%]",
+        "α gap to phase width [%]",
         "convergence_alpha_vs_width",
-        "phase width (ideal)",
+        "Line planning solution",
     ),
 ]
 
@@ -91,16 +85,27 @@ def _draw_metric(ax, by_lam, lambdas, colors, yfield, ylabel, base_label, title=
             continue
         col = colors[float(lam)]
         (line,) = ax.plot(
-            xs, ys, "-", color=col, linewidth=1.0,
-            marker=MARKERS[i % len(MARKERS)], ms=5, mfc=col,
+            xs,
+            ys,
+            "-",
+            color=col,
+            linewidth=1.0,
+            marker=MARKERS[i % len(MARKERS)],
+            ms=5,
+            mfc=col,
             label=f"λ={float(lam):g}",
         )
         handles.append(line)
         sp = _stop_xy(lam_rows)
         if sp and sp.get(yfield, "") != "":
             ax.plot(
-                float(sp["subgraph_pct"]), float(sp[yfield]),
-                marker="*", ms=13, color=col, mec="black", mew=0.6,
+                float(sp["subgraph_pct"]),
+                float(sp[yfield]),
+                marker="*",
+                ms=13,
+                color=col,
+                mec="black",
+                mew=0.6,
             )
     ax.axhline(0.0, color="black", linestyle="--", linewidth=1.0, label=base_label)
     ax.set_xscale("log")
@@ -122,6 +127,20 @@ def _configs(rows):
     return configs
 
 
+def _final_row(lam_rows):
+    """The final-step solution for one λ: the stop row if present, else the row
+    at the largest subgraph size (the last k reached)."""
+    stops = [
+        r
+        for r in lam_rows
+        if r.get("stop_reason") and r["stop_reason"] not in ("", "full_ref")
+    ]
+    if stops:
+        return stops[0]
+    valid = [r for r in lam_rows if r.get("subgraph_pct")]
+    return max(valid, key=lambda r: float(r["subgraph_pct"])) if valid else None
+
+
 def plot(csv_path, out_dir=None):
     rows = _read(csv_path)
     if out_dir is None:
@@ -134,8 +153,14 @@ def plot(csv_path, out_dir=None):
         for yfield, ylabel, stem, base_label in PLOTS:
             fig, ax = plt.subplots()
             _draw_metric(
-                ax, by_lam, lambdas, colors, yfield, ylabel, base_label,
-                title="Adaptive method convergence (oracle-free)",
+                ax,
+                by_lam,
+                lambdas,
+                colors,
+                yfield,
+                ylabel,
+                base_label,
+                title="Adaptive method convergence",
             )
             ax.legend(title="λ (★ = auto-stop)", fontsize=8, ncol=2)
             fname = os.path.join(out_dir, f"{stem}_{instance}_P{num_phases}.{FORMAT}")
@@ -163,24 +188,111 @@ def plot_fused(csv_path, out_dir=None):
             # 0 = the analytical reference; ylabel already names it, so the panel
             # title just carries the baseline for a reader scanning the figure.
             h = _draw_metric(
-                ax, by_lam, lambdas, colors, yfield, ylabel, base_label,
-                title=f"0 = {base_label}",
+                ax,
+                by_lam,
+                lambdas,
+                colors,
+                yfield,
+                ylabel,
+                base_label,
+                title=f"{base_label}",
             )
             handles = h or handles  # keep the fullest set for the shared legend
         ref = Line2D([], [], color="black", linestyle="--", linewidth=1.0)
         fig.suptitle(
-            "Adaptive method convergence (oracle-free)", fontname=FONT, fontsize=13,
+            "Adaptive method convergence",
+            fontname=FONT,
+            fontsize=13,
         )
         # Single shared legend on the right side of the whole figure.
         fig.legend(
             handles + [ref],
             [h.get_label() for h in handles] + ["reference (0)"],
-            title="λ (★ = auto-stop)", fontsize=8,
-            loc="center left", bbox_to_anchor=(1.0, 0.5),
+            title="λ (★ = auto-stop)",
+            fontsize=8,
+            loc="center left",
+            bbox_to_anchor=(1.0, 0.5),
         )
         fig.tight_layout(rect=(0, 0, 1, 0.96))
         fname = os.path.join(
             out_dir, f"convergence_fused_{instance}_P{num_phases}.{FORMAT}"
+        )
+        fig.savefig(fname, format=FORMAT, dpi=1200, bbox_inches="tight")
+        plt.close(fig)
+        print(f"Saved {fname}")
+
+
+# ASP / PLP bar colours (TUM blue / green).
+ASP_COLOR = (0 / 255, 101 / 255, 189 / 255)
+PLP_COLOR = (159 / 255, 186 / 255, 54 / 255)
+PLP_COLOR = (153 / 255, 153 / 255, 153 / 255)
+
+
+def plot_solutions(csv_path, out_dir=None):
+    """Final-step solution comparison across λ (not convergence): a grouped bar
+    chart, two bars per λ — ASP (assembly sequence planning: path-cost deviation
+    from the cheapest sequence) and PLP (production line planning: makespan
+    deviation from phase width). Reads left-to-right: as λ rises the ASP bar
+    grows and the PLP bar shrinks — the trade-off the λ knob controls."""
+    rows = _read(csv_path)
+    if out_dir is None:
+        out_dir = os.path.dirname(csv_path) or "."
+    os.makedirs(out_dir, exist_ok=True)
+
+    asp_f, plp_f = "path_cost_vs_cmin_pct", "alpha_vs_width_pct"
+    for (instance, num_phases), by_lam in _configs(rows).items():
+        lambdas = sorted(by_lam, key=float)
+        labs, asp, plp = [], [], []
+        for lam in lambdas:
+            fr = _final_row(by_lam[lam])
+            if fr is None or fr.get(asp_f, "") == "" or fr.get(plp_f, "") == "":
+                continue
+            labs.append(float(lam))
+            asp.append(float(fr[asp_f]))
+            plp.append(float(fr[plp_f]))
+        if not labs:
+            continue
+
+        fig, ax = plt.subplots()
+        x = list(range(len(labs)))
+        w = 0.4
+        b1 = ax.bar(
+            [i - w / 2 for i in x],
+            asp,
+            w,
+            color=ASP_COLOR,
+            edgecolor="black",
+            linewidth=0.4,
+            label="ASP",
+        )
+        b2 = ax.bar(
+            [i + w / 2 for i in x],
+            plp,
+            w,
+            color=PLP_COLOR,
+            edgecolor="black",
+            linewidth=0.4,
+            label="PLP",
+        )
+        ax.bar_label(b1, fmt="%.1f", fontsize=6, padding=1)
+        ax.bar_label(b2, fmt="%.1f", fontsize=6, padding=1)
+
+        ax.set_xticks(x)
+        ax.set_xticklabels([f"{v:g}" for v in labs])
+        ax.set_xlabel("Time balancing weight (λ) ", fontname=FONT, fontsize=11)
+        ax.set_ylabel("Deviation [%]", fontname=FONT, fontsize=11)
+        ax.set_title(
+            f"ASP vs PLP deviation across λ (stop at {10}%)",
+            fontname=FONT,
+            fontsize=12,
+        )
+        ax.grid(True, axis="y", linewidth=0.3, color="gray", alpha=0.4)
+        ax.set_axisbelow(True)
+        ax.legend(fontsize=9)
+        for lbl in ax.get_xticklabels() + ax.get_yticklabels():
+            lbl.set_fontname(FONT)
+        fname = os.path.join(
+            out_dir, f"solutions_asp_plp_{instance}_P{num_phases}.{FORMAT}"
         )
         fig.savefig(fname, format=FORMAT, dpi=1200, bbox_inches="tight")
         plt.close(fig)
@@ -194,3 +306,4 @@ if __name__ == "__main__":
     args = parser.parse_args()
     plot(args.csv, args.out_dir)
     plot_fused(args.csv, args.out_dir)
+    plot_solutions(args.csv, args.out_dir)

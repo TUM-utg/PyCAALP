@@ -182,9 +182,7 @@ def _row(
     edge_w = ctx["edge_weight"]
     c_min = ctx["c_min"]
     path_cost = sum(edge_w.get(e, 0.0) for e in results.get("operations", {}))
-    path_cost_vs_cmin = (
-        round((path_cost / c_min - 1) * 100, 2) if c_min else None
-    )
+    path_cost_vs_cmin = round((path_cost / c_min - 1) * 100, 2) if c_min else None
     elapsed = build_s + solve_s
     digraph_edges = ctx["digraph_edges"]
     n_ops = [len(p) for p in ops_list]
