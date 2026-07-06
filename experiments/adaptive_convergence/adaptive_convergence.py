@@ -112,6 +112,7 @@ CSV_FIELDS = [
     "ops_per_phase",  # JSON list, any P
     "n_ops_total",
     # Bookkeeping
+    "stop_perc_graph",  # configured subgraph-% stop threshold (for plot titles)
     "stop_reason",
 ]
 
@@ -220,6 +221,7 @@ def _row(
         "abs_time_per_phase": json.dumps([round(t, 3) for t in phase_times]),
         "ops_per_phase": json.dumps(n_ops),
         "n_ops_total": sum(n_ops),
+        "stop_perc_graph": ctx["stop_perc_graph"],
         "stop_reason": stop_reason,
     }
 
@@ -286,6 +288,7 @@ def main():
         "digraph_build_s": build_time,
         "ideal_obj": ideal_obj,
         "phase_width": phase_width,
+        "stop_perc_graph": STOP_PERC_GRAPH,
         "c_min": ad.sum_of_sh_path_weights,
         # edge_weight over the full digraph; selected edges are a subset.
         "edge_weight": nx.get_edge_attributes(ad.assembly_digraph, "edge_weight"),

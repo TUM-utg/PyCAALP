@@ -141,6 +141,23 @@ def _final_row(lam_rows):
     return max(valid, key=lambda r: float(r["subgraph_pct"])) if valid else None
 
 
+def _stop_pct(by_lam):
+    """The subgraph-% stop threshold for this config, for figure titles: the
+    configured value from the CSV column if present, else the actual % at which
+    a run auto-stopped. None if neither is available."""
+    for lam_rows in by_lam.values():
+        for r in lam_rows:
+            v = r.get("stop_perc_graph", "")
+            if v not in ("", None):
+                return float(v)
+    reached = [
+        float(fr["subgraph_pct"])
+        for fr in (_final_row(rows) for rows in by_lam.values())
+        if fr and fr.get("stop_reason") == "stop_perc_graph" and fr.get("subgraph_pct")
+    ]
+    return max(reached) if reached else None
+
+
 def plot(csv_path, out_dir=None):
     rows = _read(csv_path)
     if out_dir is None:
@@ -241,6 +258,8 @@ def plot_solutions(csv_path, out_dir=None):
 
     asp_f, plp_f = "path_cost_vs_cmin_pct", "alpha_vs_width_pct"
     for (instance, num_phases), by_lam in _configs(rows).items():
+        stop_pct = _stop_pct(by_lam)
+        stop_txt = f" (stop at {stop_pct:g}%)" if stop_pct is not None else ""
         lambdas = sorted(by_lam, key=float)
         labs, asp, plp = [], [], []
         for lam in lambdas:
@@ -282,7 +301,7 @@ def plot_solutions(csv_path, out_dir=None):
         ax.set_xlabel("Time balancing weight (λ) ", fontname=FONT, fontsize=11)
         ax.set_ylabel("Deviation [%]", fontname=FONT, fontsize=11)
         ax.set_title(
-            f"ASP vs PLP deviation across λ (stop at {10}%)",
+            f"ASP vs PLP deviation across λ{stop_txt}",
             fontname=FONT,
             fontsize=12,
         )
