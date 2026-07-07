@@ -1,0 +1,307 @@
+============ adaptive convergence (oracle-free) sweep ============
+date         : 2026-07-06T15:40:55+02:00
+host         : TUMWUTG-MIT148
+git commit   : 3bac723 (research/wgp-2026)
+python       : Python 3.14.4
+instance     : assembly_1
+parts file   : data/assembly_1/assembly_1_parts.json
+dfm file     : (none)
+num_phases   : 6
+lambda grid  : 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9
+jobs (par.)  : 9
+rundir       : experiments/adaptive_convergence/assembly_1_np_6
+=================================================================
+extra args   : --num-phases 6
+
+----------------- λ = 0.1 -----------------
+========================================================================
+adaptive convergence (oracle-free) — assembly_1  P=6  λ=0.1
+========================================================================
+
+Building assembly digraph …
+2026-07-06 15:40:55.984 | INFO     | pycaalp.gapp.assembly_digraph:compute_assembly_digraph_complete:396 - Computing assembly digraph...
+  343 nodes, 1105 edges  (0.3s)
+  ideal obj (Σ shortest-path bound) = 0.8329
+  phase width (T_total/P)           = 359.47
+
+[adaptive] k-sweep (stop at 10.0% of edges):
+2026-07-06 15:40:56.260 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+  k=    1    3.3% edges  obj=0.8619  obj_vs_ideal=3.48%  α_vs_width=34.77%  Δobj=   —     build=0.01s solve=2.26s
+2026-07-06 15:40:58.541 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+  k=    2    3.8% edges  obj=0.8619  obj_vs_ideal=3.48%  α_vs_width=34.77%  Δobj=-0.000%  build=0.02s solve=1.14s
+2026-07-06 15:40:59.700 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+  k=    3    4.6% edges  obj=0.8619  obj_vs_ideal=3.48%  α_vs_width=34.77%  Δobj=+0.000%  build=0.02s solve=1.37s
+2026-07-06 15:41:01.104 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+  k=    4    5.0% edges  obj=0.8619  obj_vs_ideal=3.48%  α_vs_width=34.77%  Δobj=+0.000%  build=0.03s solve=1.41s
+2026-07-06 15:41:02.554 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+  k=    6    5.8% edges  obj=0.8619  obj_vs_ideal=3.48%  α_vs_width=34.77%  Δobj=-0.000%  build=0.04s solve=1.73s
+2026-07-06 15:41:04.350 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+  k=    8    6.2% edges  obj=0.8619  obj_vs_ideal=3.48%  α_vs_width=34.77%  Δobj=-0.000%  build=0.06s solve=1.80s
+2026-07-06 15:41:06.218 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+  k=   12    7.3% edges  obj=0.8558  obj_vs_ideal=2.74%  α_vs_width=13.5%  Δobj=+0.712%  build=0.07s solve=1.43s
+2026-07-06 15:41:07.725 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+  k=   16   11.1% edges  obj=0.8558  obj_vs_ideal=2.74%  α_vs_width=13.5%  Δobj=+0.000%  build=0.07s solve=1.95s
+  → stop: stop_perc_graph
+
+Done. CSV → experiments/adaptive_convergence/assembly_1_np_6/adaptive_convergence_lambda_0.1.csv
+
+----------------- λ = 0.2 -----------------
+========================================================================
+adaptive convergence (oracle-free) — assembly_1  P=6  λ=0.2
+========================================================================
+
+Building assembly digraph …
+2026-07-06 15:40:55.906 | INFO     | pycaalp.gapp.assembly_digraph:compute_assembly_digraph_complete:396 - Computing assembly digraph...
+  343 nodes, 1105 edges  (0.3s)
+  ideal obj (Σ shortest-path bound) = 0.8329
+  phase width (T_total/P)           = 359.47
+
+[adaptive] k-sweep (stop at 10.0% of edges):
+2026-07-06 15:40:56.251 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+  k=    1    3.3% edges  obj=0.8744  obj_vs_ideal=4.98%  α_vs_width=16.87%  Δobj=   —     build=0.01s solve=2.19s
+2026-07-06 15:40:58.460 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+  k=    2    3.8% edges  obj=0.8744  obj_vs_ideal=4.98%  α_vs_width=16.87%  Δobj=+0.000%  build=0.02s solve=2.36s
+2026-07-06 15:41:00.847 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+  k=    3    4.6% edges  obj=0.8744  obj_vs_ideal=4.98%  α_vs_width=16.87%  Δobj=+0.000%  build=0.02s solve=1.41s
+2026-07-06 15:41:02.289 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+  k=    4    5.0% edges  obj=0.8744  obj_vs_ideal=4.98%  α_vs_width=16.87%  Δobj=+0.000%  build=0.03s solve=1.77s
+2026-07-06 15:41:04.104 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+  k=    6    5.8% edges  obj=0.8744  obj_vs_ideal=4.98%  α_vs_width=16.87%  Δobj=-0.000%  build=0.05s solve=1.97s
+2026-07-06 15:41:06.138 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+  k=    8    6.2% edges  obj=0.8744  obj_vs_ideal=4.98%  α_vs_width=16.87%  Δobj=+0.000%  build=0.06s solve=1.07s
+2026-07-06 15:41:07.279 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+  k=   12    7.0% edges  obj=0.8657  obj_vs_ideal=3.94%  α_vs_width=13.5%  Δobj=+0.992%  build=0.07s solve=0.83s
+2026-07-06 15:41:08.181 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+  k=   16   11.0% edges  obj=0.8657  obj_vs_ideal=3.94%  α_vs_width=13.5%  Δobj=-0.000%  build=0.07s solve=1.78s
+  → stop: stop_perc_graph
+
+Done. CSV → experiments/adaptive_convergence/assembly_1_np_6/adaptive_convergence_lambda_0.2.csv
+
+----------------- λ = 0.3 -----------------
+========================================================================
+adaptive convergence (oracle-free) — assembly_1  P=6  λ=0.3
+========================================================================
+
+Building assembly digraph …
+2026-07-06 15:40:56.054 | INFO     | pycaalp.gapp.assembly_digraph:compute_assembly_digraph_complete:396 - Computing assembly digraph...
+  343 nodes, 1105 edges  (0.2s)
+  ideal obj (Σ shortest-path bound) = 0.8329
+  phase width (T_total/P)           = 359.47
+
+[adaptive] k-sweep (stop at 10.0% of edges):
+2026-07-06 15:40:56.296 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+  k=    1    3.3% edges  obj=0.8868  obj_vs_ideal=6.46%  α_vs_width=16.87%  Δobj=   —     build=0.01s solve=1.42s
+2026-07-06 15:40:57.733 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+  k=    2    3.8% edges  obj=0.8868  obj_vs_ideal=6.46%  α_vs_width=16.87%  Δobj=+0.000%  build=0.02s solve=1.59s
+2026-07-06 15:40:59.348 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+  k=    3    4.6% edges  obj=0.8868  obj_vs_ideal=6.46%  α_vs_width=16.87%  Δobj=+0.000%  build=0.02s solve=1.03s
+2026-07-06 15:41:00.409 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+  k=    4    5.0% edges  obj=0.8868  obj_vs_ideal=6.46%  α_vs_width=16.87%  Δobj=-0.000%  build=0.03s solve=1.26s
+2026-07-06 15:41:01.718 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+  k=    6    5.8% edges  obj=0.8868  obj_vs_ideal=6.46%  α_vs_width=16.87%  Δobj=+0.000%  build=0.05s solve=1.41s
+2026-07-06 15:41:03.205 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+  k=    8    6.2% edges  obj=0.8868  obj_vs_ideal=6.46%  α_vs_width=16.87%  Δobj=+0.000%  build=0.08s solve=1.41s
+2026-07-06 15:41:04.685 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+  k=   12    7.0% edges  obj=0.8757  obj_vs_ideal=5.13%  α_vs_width=13.5%  Δobj=+1.252%  build=0.07s solve=1.61s
+2026-07-06 15:41:06.363 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+  k=   16   10.6% edges  obj=0.8757  obj_vs_ideal=5.13%  α_vs_width=13.5%  Δobj=+0.000%  build=0.07s solve=2.09s
+  → stop: stop_perc_graph
+
+Done. CSV → experiments/adaptive_convergence/assembly_1_np_6/adaptive_convergence_lambda_0.3.csv
+
+----------------- λ = 0.4 -----------------
+========================================================================
+adaptive convergence (oracle-free) — assembly_1  P=6  λ=0.4
+========================================================================
+
+Building assembly digraph …
+2026-07-06 15:40:56.057 | INFO     | pycaalp.gapp.assembly_digraph:compute_assembly_digraph_complete:396 - Computing assembly digraph...
+  343 nodes, 1105 edges  (0.3s)
+  ideal obj (Σ shortest-path bound) = 0.8329
+  phase width (T_total/P)           = 359.47
+
+[adaptive] k-sweep (stop at 10.0% of edges):
+2026-07-06 15:40:56.313 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+  k=    1    3.3% edges  obj=0.8973  obj_vs_ideal=7.73%  α_vs_width=13.5%  Δobj=   —     build=0.01s solve=2.16s
+2026-07-06 15:40:58.493 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+  k=    2    3.8% edges  obj=0.8973  obj_vs_ideal=7.73%  α_vs_width=13.5%  Δobj=+0.000%  build=0.02s solve=1.01s
+2026-07-06 15:40:59.527 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+  k=    3    4.6% edges  obj=0.8973  obj_vs_ideal=7.73%  α_vs_width=13.5%  Δobj=+0.000%  build=0.02s solve=0.80s
+2026-07-06 15:41:00.373 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+  k=    4    5.0% edges  obj=0.8973  obj_vs_ideal=7.73%  α_vs_width=13.5%  Δobj=+0.000%  build=0.04s solve=1.58s
+2026-07-06 15:41:01.992 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+  k=    6    5.8% edges  obj=0.8973  obj_vs_ideal=7.73%  α_vs_width=13.5%  Δobj=+0.000%  build=0.04s solve=0.71s
+2026-07-06 15:41:02.774 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+  k=    8    6.2% edges  obj=0.8973  obj_vs_ideal=7.73%  α_vs_width=13.5%  Δobj=+0.000%  build=0.07s solve=1.01s
+2026-07-06 15:41:03.891 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+  k=   12    7.1% edges  obj=0.8973  obj_vs_ideal=7.73%  α_vs_width=13.5%  Δobj=+0.000%  build=0.11s solve=1.34s
+2026-07-06 15:41:05.304 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+  k=   16   10.7% edges  obj=0.8973  obj_vs_ideal=7.73%  α_vs_width=13.5%  Δobj=+0.000%  build=0.07s solve=1.27s
+  → stop: stop_perc_graph
+
+Done. CSV → experiments/adaptive_convergence/assembly_1_np_6/adaptive_convergence_lambda_0.4.csv
+
+----------------- λ = 0.5 -----------------
+========================================================================
+adaptive convergence (oracle-free) — assembly_1  P=6  λ=0.5
+========================================================================
+
+Building assembly digraph …
+2026-07-06 15:40:56.017 | INFO     | pycaalp.gapp.assembly_digraph:compute_assembly_digraph_complete:396 - Computing assembly digraph...
+  343 nodes, 1105 edges  (0.3s)
+  ideal obj (Σ shortest-path bound) = 0.8329
+  phase width (T_total/P)           = 359.47
+
+[adaptive] k-sweep (stop at 10.0% of edges):
+2026-07-06 15:40:56.343 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+  k=    1    3.3% edges  obj=0.9054  obj_vs_ideal=8.69%  α_vs_width=13.5%  Δobj=   —     build=0.01s solve=2.36s
+2026-07-06 15:40:58.729 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+  k=    2    3.8% edges  obj=0.9054  obj_vs_ideal=8.69%  α_vs_width=13.5%  Δobj=+0.000%  build=0.03s solve=2.29s
+2026-07-06 15:41:01.051 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+  k=    3    4.6% edges  obj=0.9054  obj_vs_ideal=8.69%  α_vs_width=13.5%  Δobj=-0.000%  build=0.03s solve=1.49s
+2026-07-06 15:41:02.573 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+  k=    4    5.0% edges  obj=0.9054  obj_vs_ideal=8.69%  α_vs_width=13.5%  Δobj=-0.000%  build=0.03s solve=2.04s
+2026-07-06 15:41:04.657 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+  k=    6    5.8% edges  obj=0.9054  obj_vs_ideal=8.69%  α_vs_width=13.5%  Δobj=+0.000%  build=0.04s solve=1.52s
+2026-07-06 15:41:06.232 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+  k=    8    6.2% edges  obj=0.9054  obj_vs_ideal=8.69%  α_vs_width=13.5%  Δobj=-0.000%  build=0.06s solve=1.14s
+2026-07-06 15:41:07.442 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+  k=   12    7.1% edges  obj=0.9054  obj_vs_ideal=8.69%  α_vs_width=13.5%  Δobj=+0.000%  build=0.07s solve=0.81s
+2026-07-06 15:41:08.323 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+  k=   16   10.4% edges  obj=0.9054  obj_vs_ideal=8.69%  α_vs_width=13.5%  Δobj=+0.000%  build=0.07s solve=0.93s
+  → stop: stop_perc_graph
+
+Done. CSV → experiments/adaptive_convergence/assembly_1_np_6/adaptive_convergence_lambda_0.5.csv
+
+----------------- λ = 0.6 -----------------
+========================================================================
+adaptive convergence (oracle-free) — assembly_1  P=6  λ=0.6
+========================================================================
+
+Building assembly digraph …
+2026-07-06 15:40:56.059 | INFO     | pycaalp.gapp.assembly_digraph:compute_assembly_digraph_complete:396 - Computing assembly digraph...
+  343 nodes, 1105 edges  (0.2s)
+  ideal obj (Σ shortest-path bound) = 0.8329
+  phase width (T_total/P)           = 359.47
+
+[adaptive] k-sweep (stop at 10.0% of edges):
+2026-07-06 15:40:56.307 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+  k=    1    3.3% edges  obj=0.9134  obj_vs_ideal=9.66%  α_vs_width=13.5%  Δobj=   —     build=0.01s solve=0.65s
+2026-07-06 15:40:56.976 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+  k=    2    3.8% edges  obj=0.9134  obj_vs_ideal=9.66%  α_vs_width=13.5%  Δobj=-0.000%  build=0.02s solve=0.44s
+2026-07-06 15:40:57.437 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+  k=    3    4.6% edges  obj=0.9134  obj_vs_ideal=9.66%  α_vs_width=13.5%  Δobj=+0.000%  build=0.02s solve=0.51s
+2026-07-06 15:40:57.973 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+  k=    4    5.0% edges  obj=0.9134  obj_vs_ideal=9.66%  α_vs_width=13.5%  Δobj=+0.000%  build=0.03s solve=1.42s
+2026-07-06 15:40:59.440 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+  k=    6    5.8% edges  obj=0.9134  obj_vs_ideal=9.66%  α_vs_width=13.5%  Δobj=+0.000%  build=0.04s solve=1.44s
+2026-07-06 15:41:00.938 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+  k=    8    6.2% edges  obj=0.9134  obj_vs_ideal=9.66%  α_vs_width=13.5%  Δobj=-0.000%  build=0.06s solve=1.61s
+2026-07-06 15:41:02.621 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+  k=   12    7.1% edges  obj=0.9134  obj_vs_ideal=9.66%  α_vs_width=13.5%  Δobj=+0.000%  build=0.07s solve=1.30s
+2026-07-06 15:41:04.001 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+  k=   16   10.4% edges  obj=0.9134  obj_vs_ideal=9.66%  α_vs_width=13.5%  Δobj=+0.000%  build=0.07s solve=1.84s
+  → stop: stop_perc_graph
+
+Done. CSV → experiments/adaptive_convergence/assembly_1_np_6/adaptive_convergence_lambda_0.6.csv
+
+----------------- λ = 0.7 -----------------
+========================================================================
+adaptive convergence (oracle-free) — assembly_1  P=6  λ=0.7
+========================================================================
+
+Building assembly digraph …
+2026-07-06 15:40:56.037 | INFO     | pycaalp.gapp.assembly_digraph:compute_assembly_digraph_complete:396 - Computing assembly digraph...
+  343 nodes, 1105 edges  (0.2s)
+  ideal obj (Σ shortest-path bound) = 0.8329
+  phase width (T_total/P)           = 359.47
+
+[adaptive] k-sweep (stop at 10.0% of edges):
+2026-07-06 15:40:56.296 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+  k=    1    3.3% edges  obj=0.9214  obj_vs_ideal=10.62%  α_vs_width=13.5%  Δobj=   —     build=0.02s solve=0.63s
+2026-07-06 15:40:56.947 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+  k=    2    3.8% edges  obj=0.9214  obj_vs_ideal=10.62%  α_vs_width=13.5%  Δobj=+0.000%  build=0.02s solve=0.75s
+2026-07-06 15:40:57.738 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+  k=    3    4.6% edges  obj=0.9214  obj_vs_ideal=10.62%  α_vs_width=13.5%  Δobj=+0.000%  build=0.04s solve=0.74s
+2026-07-06 15:40:58.509 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+  k=    4    5.0% edges  obj=0.9214  obj_vs_ideal=10.62%  α_vs_width=13.5%  Δobj=+0.000%  build=0.03s solve=0.83s
+2026-07-06 15:40:59.380 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+  k=    6    5.8% edges  obj=0.9214  obj_vs_ideal=10.62%  α_vs_width=13.5%  Δobj=+0.000%  build=0.04s solve=1.42s
+2026-07-06 15:41:00.870 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+  k=    8    6.2% edges  obj=0.9214  obj_vs_ideal=10.62%  α_vs_width=13.5%  Δobj=+0.000%  build=0.07s solve=1.21s
+2026-07-06 15:41:02.157 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+  k=   12    7.1% edges  obj=0.9214  obj_vs_ideal=10.62%  α_vs_width=13.5%  Δobj=+0.000%  build=0.08s solve=1.46s
+2026-07-06 15:41:03.701 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+  k=   16   10.3% edges  obj=0.9214  obj_vs_ideal=10.62%  α_vs_width=13.5%  Δobj=-0.000%  build=0.09s solve=2.12s
+  → stop: stop_perc_graph
+
+Done. CSV → experiments/adaptive_convergence/assembly_1_np_6/adaptive_convergence_lambda_0.7.csv
+
+----------------- λ = 0.8 -----------------
+========================================================================
+adaptive convergence (oracle-free) — assembly_1  P=6  λ=0.8
+========================================================================
+
+Building assembly digraph …
+2026-07-06 15:40:56.004 | INFO     | pycaalp.gapp.assembly_digraph:compute_assembly_digraph_complete:396 - Computing assembly digraph...
+  343 nodes, 1105 edges  (0.2s)
+  ideal obj (Σ shortest-path bound) = 0.8329
+  phase width (T_total/P)           = 359.47
+
+[adaptive] k-sweep (stop at 10.0% of edges):
+2026-07-06 15:40:56.260 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+  k=    1    3.3% edges  obj=0.9294  obj_vs_ideal=11.58%  α_vs_width=13.5%  Δobj=   —     build=0.01s solve=0.74s
+2026-07-06 15:40:57.023 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+  k=    2    3.8% edges  obj=0.9294  obj_vs_ideal=11.58%  α_vs_width=13.5%  Δobj=+0.000%  build=0.02s solve=1.61s
+2026-07-06 15:40:58.652 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+  k=    3    4.6% edges  obj=0.9294  obj_vs_ideal=11.58%  α_vs_width=13.5%  Δobj=+0.000%  build=0.02s solve=0.58s
+2026-07-06 15:40:59.259 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+  k=    4    5.0% edges  obj=0.9294  obj_vs_ideal=11.58%  α_vs_width=13.5%  Δobj=+0.000%  build=0.03s solve=1.03s
+2026-07-06 15:41:00.344 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+  k=    6    5.8% edges  obj=0.9294  obj_vs_ideal=11.58%  α_vs_width=13.5%  Δobj=-0.000%  build=0.05s solve=1.19s
+2026-07-06 15:41:01.594 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+  k=    8    6.2% edges  obj=0.9294  obj_vs_ideal=11.58%  α_vs_width=13.5%  Δobj=-0.000%  build=0.06s solve=1.81s
+2026-07-06 15:41:03.471 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+  k=   12    7.1% edges  obj=0.9294  obj_vs_ideal=11.58%  α_vs_width=13.5%  Δobj=+0.000%  build=0.07s solve=1.77s
+2026-07-06 15:41:05.332 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+  k=   16   10.4% edges  obj=0.9294  obj_vs_ideal=11.58%  α_vs_width=13.5%  Δobj=-0.000%  build=0.09s solve=3.93s
+  → stop: stop_perc_graph
+
+Done. CSV → experiments/adaptive_convergence/assembly_1_np_6/adaptive_convergence_lambda_0.8.csv
+
+----------------- λ = 0.9 -----------------
+========================================================================
+adaptive convergence (oracle-free) — assembly_1  P=6  λ=0.9
+========================================================================
+
+Building assembly digraph …
+2026-07-06 15:40:55.937 | INFO     | pycaalp.gapp.assembly_digraph:compute_assembly_digraph_complete:396 - Computing assembly digraph...
+  343 nodes, 1105 edges  (0.2s)
+  ideal obj (Σ shortest-path bound) = 0.8329
+  phase width (T_total/P)           = 359.47
+
+[adaptive] k-sweep (stop at 10.0% of edges):
+2026-07-06 15:40:56.182 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+  k=    1    3.3% edges  obj=0.9374  obj_vs_ideal=12.54%  α_vs_width=13.5%  Δobj=   —     build=0.01s solve=0.61s
+2026-07-06 15:40:56.810 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+  k=    2    3.8% edges  obj=0.9374  obj_vs_ideal=12.54%  α_vs_width=13.5%  Δobj=+0.000%  build=0.02s solve=0.62s
+2026-07-06 15:40:57.455 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+  k=    3    4.6% edges  obj=0.9374  obj_vs_ideal=12.54%  α_vs_width=13.5%  Δobj=+0.000%  build=0.02s solve=0.79s
+2026-07-06 15:40:58.278 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+  k=    4    5.0% edges  obj=0.9374  obj_vs_ideal=12.54%  α_vs_width=13.5%  Δobj=+0.000%  build=0.03s solve=1.44s
+2026-07-06 15:40:59.766 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+  k=    6    5.8% edges  obj=0.9374  obj_vs_ideal=12.54%  α_vs_width=13.5%  Δobj=-0.000%  build=0.04s solve=0.81s
+2026-07-06 15:41:00.629 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+  k=    8    6.2% edges  obj=0.9374  obj_vs_ideal=12.54%  α_vs_width=13.5%  Δobj=+0.000%  build=0.06s solve=1.25s
+2026-07-06 15:41:01.977 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+  k=   12    7.1% edges  obj=0.9374  obj_vs_ideal=12.54%  α_vs_width=13.5%  Δobj=-0.000%  build=0.09s solve=1.79s
+2026-07-06 15:41:03.867 | INFO     | pycaalp.time_balancing.model:run_mip:430 - Running MIP solver ...
+  k=   16   10.0% edges  obj=0.9374  obj_vs_ideal=12.54%  α_vs_width=13.5%  Δobj=+0.000%  build=0.10s solve=3.01s
+  → stop: stop_perc_graph
+
+Done. CSV → experiments/adaptive_convergence/assembly_1_np_6/adaptive_convergence_lambda_0.9.csv
+Combined CSV → experiments/adaptive_convergence/assembly_1_np_6/adaptive_convergence.csv
+Saved experiments/adaptive_convergence/assembly_1_np_6/convergence_path_vs_cmin_assembly_1_P6.svg
+Saved experiments/adaptive_convergence/assembly_1_np_6/convergence_alpha_vs_width_assembly_1_P6.svg
+Saved experiments/adaptive_convergence/assembly_1_np_6/convergence_fused_assembly_1_P6.svg
+Saved experiments/adaptive_convergence/assembly_1_np_6/solutions_asp_plp_assembly_1_P6.svg

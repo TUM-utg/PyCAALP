@@ -301,7 +301,7 @@ def plot_solutions(csv_path, out_dir=None):
         ax.set_xlabel("Time balancing weight (λ) ", fontname=FONT, fontsize=11)
         ax.set_ylabel("Deviation [%]", fontname=FONT, fontsize=11)
         ax.set_title(
-            f"ASP vs PLP deviation across λ{stop_txt}",
+            f"{instance.capitalize().replace("_"," ")} - ASP vs PLP deviation across λ - P={num_phases} {stop_txt}",
             fontname=FONT,
             fontsize=12,
         )
