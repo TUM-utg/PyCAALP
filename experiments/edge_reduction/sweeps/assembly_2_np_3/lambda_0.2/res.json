@@ -1,0 +1,34 @@
+{
+    "0": {
+        "total_time": 424.371475,
+        "objective_value": 1.0228680248135766
+    },
+    "10": {
+        "total_time": 508.64717659999997,
+        "objective_value": 1.0228680248135766
+    },
+    "20": {
+        "total_time": 713.8533886,
+        "objective_value": 1.0228680248135769
+    },
+    "30": {
+        "total_time": 973.7445812,
+        "objective_value": 1.0228680248135766
+    },
+    "40": {
+        "total_time": 255.9356206,
+        "objective_value": 1.0228680248135766
+    },
+    "50": {
+        "total_time": 150.1824182,
+        "objective_value": 1.0228680248135766
+    },
+    "60": {
+        "total_time": 341.2960566,
+        "objective_value": 1.0228680248135769
+    },
+    "70": {
+        "total_time": 246.50456100000002,
+        "objective_value": 1.0228680248135766
+    }
+}

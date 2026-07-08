@@ -1,0 +1,62 @@
+{
+    "0": {
+        "total_time": 79.395019,
+        "objective_value": 0.8675501056464607
+    },
+    "5": {
+        "total_time": 81.42735400000001,
+        "objective_value": 0.8675501056464607
+    },
+    "10": {
+        "total_time": 44.6226696,
+        "objective_value": 0.867550105646461
+    },
+    "15": {
+        "total_time": 36.6903438,
+        "objective_value": 0.867550105646461
+    },
+    "20": {
+        "total_time": 28.423562599999997,
+        "objective_value": 0.8675501056464607
+    },
+    "25": {
+        "total_time": 13.5442172,
+        "objective_value": 0.8675501056464607
+    },
+    "30": {
+        "total_time": 10.245267199999999,
+        "objective_value": 0.867550105646461
+    },
+    "35": {
+        "total_time": 13.1164028,
+        "objective_value": 0.8675501056464607
+    },
+    "40": {
+        "total_time": 5.818548399999999,
+        "objective_value": 0.8675501056464607
+    },
+    "45": {
+        "total_time": 7.0232934,
+        "objective_value": 0.8675501056464607
+    },
+    "50": {
+        "total_time": 2.8723232,
+        "objective_value": 0.8675501056464607
+    },
+    "55": {
+        "total_time": 2.363338,
+        "objective_value": 0.8675501056464607
+    },
+    "60": {
+        "total_time": 3.2309238000000002,
+        "objective_value": 0.8675501056464607
+    },
+    "65": {
+        "total_time": 1.934761,
+        "objective_value": 0.8675501056464607
+    },
+    "70": {
+        "total_time": 1.5266752000000001,
+        "objective_value": 0.8675501056464607
+    }
+}
