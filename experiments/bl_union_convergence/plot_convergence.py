@@ -182,6 +182,146 @@ def _plot(
     plt.close(fig)
 
 
+def _full_solve_s(k_rows):
+    """This λ's full-MIP solve time (the timing reference), or None. Every k-row
+    of the config carries it, so read it from the first one that has it."""
+    for r in k_rows:
+        if r.get("full_solve_s", "") != "":
+            return float(r["full_solve_s"])
+    return None
+
+
+def plot_timing(cfg, by_lam, res_dir, method, xfield, xlabel, fname_stem):
+    """Total subgraph time (build + solve) vs `xfield`, one line per λ, against
+    each λ's full-MIP solve time as a dashed reference in the same colour. Shows
+    how much cheaper the growing subgraph is than solving the full MIP outright."""
+    fig, ax = plt.subplots()
+    lambdas = sorted(by_lam)
+    colors = _lambda_colors(lambdas)
+
+    for i, lam in enumerate(lambdas):
+        k_rows = by_lam[lam]
+        xs, ys = _xy(k_rows, xfield, "elapsed_s")
+        if not xs:
+            continue
+        ax.plot(
+            xs,
+            ys,
+            "-",
+            color=colors[lam],
+            linewidth=1.0,
+            marker=MARKERS[i % len(MARKERS)],
+            ms=5,
+            mfc=colors[lam],
+            label=f"λ={lam:g}",
+        )
+        # This λ's full-MIP time: a horizontal dashed line in the same colour, so
+        # each subgraph curve is read against its own reference.
+        full_t = _full_solve_s(k_rows)
+        if full_t is not None:
+            ax.axhline(full_t, color=colors[lam], linestyle="--", linewidth=0.8, alpha=0.7)
+        sp = _stop_point(k_rows, xfield, "elapsed_s")
+        if sp:
+            ax.plot(
+                sp[0], sp[1], marker="*", ms=13, color=colors[lam], mec="black", mew=0.6
+            )
+
+    ax.set_xscale("log")
+    ax.set_yscale("log")
+    ax.set_xlabel(xlabel, fontname="Liberation Serif", fontsize=11)
+    ax.set_ylabel(
+        "Total time (build + solve) [s]", fontname="Liberation Serif", fontsize=11
+    )
+    instance, num_phases = cfg
+    ax.set_title(
+        f"{method.capitalize()} method timing",
+        fontname="Liberation Serif",
+        fontsize=13,
+    )
+    ax.grid(True, linewidth=0.3, color="gray", alpha=0.4)
+    ax.legend(title="λ (★ = auto-stop, -- = full MIP)", fontsize=8, ncol=2)
+
+    fname = os.path.join(
+        res_dir, f"{fname_stem}_{method}_{instance}_P{num_phases}.{FORMAT}"
+    )
+    plt.savefig(fname, format=FORMAT, dpi=1200)
+    print(f"Saved {fname}")
+    plt.close(fig)
+
+
+def plot_timing_columns(cfg, by_lam, res_dir, method, normalize=True):
+    """One column per λ: each k's total subgraph time as a dot, the ★ marking the
+    auto-stop k, against that λ's full-MIP solve time.
+
+    `normalize=True` divides by the full-MIP time (so the ceiling is 1.0 for
+    every λ — a fair cross-λ comparison despite the ~25× spread in absolute
+    time). `normalize=False` keeps absolute seconds on a log axis, with each λ's
+    full-MIP time drawn as its own coloured cap (the caps then vary in height)."""
+    fig, ax = plt.subplots()
+    lambdas = sorted(by_lam)
+    colors = _lambda_colors(lambdas)
+
+    for lam in lambdas:
+        k_rows = by_lam[lam]
+        full_t = _full_solve_s(k_rows)
+        if not full_t:
+            continue
+        xs, ys = _xy(k_rows, "k", "elapsed_s")
+        if not xs:
+            continue
+        vals = [y / full_t for y in ys] if normalize else ys
+        if normalize:
+            # Stem from 0 up to the tallest point (log-safe only in absolute mode).
+            ax.vlines(lam, 0, max(vals), color=colors[lam], linewidth=1.0, alpha=0.6)
+        else:
+            # Stem from the fastest point up to this λ's full-MIP cap.
+            ax.vlines(lam, min(vals), full_t, color=colors[lam], linewidth=1.0, alpha=0.6)
+            # This λ's full-MIP time: a short horizontal cap in the same colour
+            # (label the first one only, so the legend gets a single entry).
+            ax.plot(
+                lam, full_t, marker="_", ms=14, mew=1.6, color=colors[lam],
+                label="full MIP" if lam == lambdas[0] else None,
+            )
+        ax.plot(
+            [lam] * len(vals), vals, "o", color=colors[lam], ms=5, mec="none", alpha=0.9
+        )
+        sp = _stop_point(k_rows, "k", "elapsed_s")
+        if sp:
+            ax.plot(
+                lam, sp[1] / full_t if normalize else sp[1], marker="*", ms=13,
+                color=colors[lam], mec="black", mew=0.6,
+            )
+
+    if normalize:
+        # y = 1.0 is the full-MIP cost for every λ (the shared reference ceiling).
+        ax.axhline(1.0, color="black", linestyle="--", linewidth=1.0, label="full MIP")
+        ylabel = "Total time / full-MIP time"
+        legend_title = "★ = auto-stop k"
+        fname_stem = "convergence_timing_columns"
+    else:
+        ax.set_yscale("log")
+        ylabel = "Total time (build + solve) [s]"
+        legend_title = "★ = auto-stop, — = full MIP"
+        fname_stem = "convergence_timing_columns_abs"
+    ax.set_xlabel("λ (w_balanced)", fontname="Liberation Serif", fontsize=11)
+    ax.set_ylabel(ylabel, fontname="Liberation Serif", fontsize=11)
+    instance, num_phases = cfg
+    ax.set_title(
+        f"{method.capitalize()} method timing vs full MIP",
+        fontname="Liberation Serif",
+        fontsize=13,
+    )
+    ax.grid(True, linewidth=0.3, color="gray", alpha=0.4)
+    ax.legend(title=legend_title, fontsize=8)
+
+    fname = os.path.join(
+        res_dir, f"{fname_stem}_{method}_{instance}_P{num_phases}.{FORMAT}"
+    )
+    plt.savefig(fname, format=FORMAT, dpi=1200)
+    print(f"Saved {fname}")
+    plt.close(fig)
+
+
 # Fixed colours/markers per method for the head-to-head figure (TUM palette).
 METHOD_STYLE = {
     "bl_union": ((0 / 255, 101 / 255, 189 / 255), "o", "bl-union"),
@@ -305,6 +445,24 @@ if __name__ == "__main__":
                 fname_stem="convergence_obj_vs_k",
                 method=method,
             )
+            # Total time (build + solve) against each λ's full-MIP time, vs both
+            # k and the graph-agnostic subgraph edge fraction.
+            plot_timing(
+                cfg, by_lam, res_dir, method,
+                xfield="k",
+                xlabel="k (shortest paths)",
+                fname_stem="convergence_timing_vs_k",
+            )
+            plot_timing(
+                cfg, by_lam, res_dir, method,
+                xfield="subgraph_pct",
+                xlabel="Subgraph size [% of full-graph edges]",
+                fname_stem="convergence_timing_vs_pct",
+            )
+            # Per-λ columns of subgraph time vs that λ's full-MIP time, both
+            # normalised (fair cross-λ) and absolute seconds (log axis).
+            plot_timing_columns(cfg, by_lam, res_dir, method, normalize=True)
+            plot_timing_columns(cfg, by_lam, res_dir, method, normalize=False)
 
         # Head-to-head comparison (only meaningful with ≥2 methods, but harmless
         # with one).
