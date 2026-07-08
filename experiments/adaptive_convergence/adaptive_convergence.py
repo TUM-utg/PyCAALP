@@ -106,7 +106,8 @@ CSV_FIELDS = [
     "path_cost_vs_cmin_pct",  # (path_cost/c_min - 1)*100   ≥ 0
     "alpha_abs",  # max phase time (makespan)
     "phase_width",  # T_total / P
-    "alpha_vs_width_pct",  # (alpha/phase_width - 1)*100   ≥ 0; 0 = perfect balance
+    "t_max_abs",  # longest single operation time (absolute)
+    "alpha_vs_width_pct",  # (alpha/max(phase_width, t_max) - 1)*100 ≥ 0; 0 = floor
     "imbalance_pct",  # (max - min) / ideal_width * 100; P-agnostic
     "abs_time_per_phase",  # JSON list, any P
     "ops_per_phase",  # JSON list, any P
@@ -124,13 +125,15 @@ def _timed(fn, *args, **kwargs):
 
 
 def analytical_ideal(ad, num_phases, lam):
-    """Return (ideal_obj, phase_width_abs): the oracle-free objective lower bound
-    (in the MIP's objective units) and the perfect-balance makespan floor (in
-    absolute time units, to match alpha_abs / absolute_time_per_phase).
+    """Return (ideal_obj, phase_width_abs, t_max_abs): the oracle-free objective
+    lower bound (in the MIP's objective units), the mean phase load, and the
+    longest single operation's time (both in absolute units, to match
+    alpha_abs / absolute_time_per_phase).
 
     ``ideal_obj`` uses the model's *scaled* ``time`` (as the MIP objective and eef
-    do); ``phase_width_abs`` uses ``absolute_time`` so it is comparable to the
-    reported makespan α.
+    do). The achievable makespan floor is ``max(phase_width_abs, t_max_abs)``:
+    when one operation is longer than the mean phase load, that op — not T/P — is
+    the tightest floor, since its phase's time is ≥ t_max.
     """
     time_scaled = nx.get_edge_attributes(ad.graph, "time")  # model/objective units
     time_abs = nx.get_edge_attributes(ad.graph, "absolute_time")  # reporting units
@@ -142,7 +145,8 @@ def analytical_ideal(ad, num_phases, lam):
     alpha_floor_s = max(t_total_s / num_phases if num_phases else 0.0, t_max_s)
     ideal_obj = (1 - lam) * c_min + lam * eef * alpha_floor_s
     phase_width_abs = sum(time_abs.values()) / num_phases if num_phases else 0.0
-    return ideal_obj, phase_width_abs
+    t_max_abs = max(time_abs.values()) if time_abs else 0.0
+    return ideal_obj, phase_width_abs, t_max_abs
 
 
 def _row(
@@ -163,6 +167,9 @@ def _row(
     alpha_abs = max(phase_times) if phase_times else 0.0
     pt_min = min(phase_times) if phase_times else 0.0
     phase_width = ctx["phase_width"]  # = T_total/P (absolute time units)
+    t_max_abs = ctx["t_max_abs"]  # longest single operation (absolute)
+    # Achievable makespan floor: the longest op when it exceeds the mean load.
+    alpha_floor = max(phase_width, t_max_abs)
     ideal_obj = ctx["ideal_obj"]
     objective = results.get("objective")
 
@@ -172,8 +179,9 @@ def _row(
         else None
     )
     alpha_vs_width = (
-        round((alpha_abs / phase_width - 1) * 100, 2) if phase_width else None
+        round((alpha_abs / alpha_floor - 1) * 100, 2) if alpha_floor else None
     )
+    # imbalance stays a spread metric relative to the mean phase load.
     imbalance = (
         round((alpha_abs - pt_min) / phase_width * 100, 2) if phase_width else None
     )
@@ -216,6 +224,7 @@ def _row(
         ),
         "alpha_abs": round(alpha_abs, 3),
         "phase_width": round(phase_width, 3),
+        "t_max_abs": round(t_max_abs, 3),
         "alpha_vs_width_pct": alpha_vs_width if alpha_vs_width is not None else "",
         "imbalance_pct": imbalance if imbalance is not None else "",
         "abs_time_per_phase": json.dumps([round(t, 3) for t in phase_times]),
@@ -274,9 +283,11 @@ def main():
     n_edges = ad.assembly_digraph.number_of_edges()
     print(f"  {n_nodes} nodes, {n_edges} edges  ({build_time:.1f}s)")
 
-    ideal_obj, phase_width = analytical_ideal(ad, NUM_PHASES, W_BALANCED)
+    ideal_obj, phase_width, t_max_abs = analytical_ideal(ad, NUM_PHASES, W_BALANCED)
     print(f"  ideal obj (Σ shortest-path bound) = {ideal_obj:.4f}")
     print(f"  phase width (T_total/P)           = {phase_width:.2f}")
+    print(f"  longest op (t_max)                = {t_max_abs:.2f}"
+          + ("  ← exceeds phase width, is the floor" if t_max_abs > phase_width else ""))
 
     ctx = {
         "instance": INSTANCE,
@@ -288,6 +299,7 @@ def main():
         "digraph_build_s": build_time,
         "ideal_obj": ideal_obj,
         "phase_width": phase_width,
+        "t_max_abs": t_max_abs,
         "stop_perc_graph": STOP_PERC_GRAPH,
         "c_min": ad.sum_of_sh_path_weights,
         # edge_weight over the full digraph; selected edges are a subset.

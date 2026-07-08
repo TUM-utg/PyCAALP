@@ -17,6 +17,7 @@ Run (from the project root)::
 
 import argparse
 import csv
+import functools
 import os
 from collections import defaultdict
 
@@ -26,6 +27,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 import matplotlib.colors as mcolors  # noqa: E402
 from matplotlib.lines import Line2D  # noqa: E402
+import networkx as nx  # noqa: E402
 
 FORMAT = "svg"
 FONT = "Liberation Serif"
@@ -45,16 +47,52 @@ PLOTS = [
     ),
     (
         "alpha_vs_width_pct",
-        "α gap to phase width [%]",
+        "α gap to makespan floor [%]",
         "convergence_alpha_vs_width",
         "Line planning solution",
     ),
 ]
 
 
+@functools.lru_cache(maxsize=None)
+def _max_op_time(instance):
+    """Longest single operation's (absolute) time for an instance — the makespan
+    floor when it exceeds the phase width. Read from the parts file (O(joints),
+    no digraph build); None if the file is missing. Used to correct the PLP
+    deviation of CSVs written before ``t_max_abs`` was recorded."""
+    from pycaalp.gapp.read_write import read_graph_from_json
+
+    path = f"data/{instance}/{instance}_parts.json"
+    try:
+        graph = read_graph_from_json(path)
+    except (FileNotFoundError, ValueError, OSError):
+        return None
+    times = nx.get_edge_attributes(graph, "time")
+    return max(times.values()) if times else None
+
+
+def _apply_floor_correction(rows):
+    """Recompute ``alpha_vs_width_pct`` against the true makespan floor
+    ``max(phase_width, t_max)`` — so the PLP deviation is measured from the
+    longest operation when that op is longer than the phase width (T/P is then
+    unreachable). t_max comes from the ``t_max_abs`` column (new runs) or the
+    parts file (older CSVs). A no-op where t_max ≤ phase_width."""
+    for r in rows:
+        try:
+            alpha, pw = float(r["alpha_abs"]), float(r["phase_width"])
+        except (KeyError, ValueError):
+            continue
+        col = r.get("t_max_abs", "")
+        t_max = float(col) if col not in ("", None) else _max_op_time(r.get("instance", ""))
+        floor = max(pw, t_max) if t_max else pw
+        if floor:
+            r["alpha_vs_width_pct"] = round((alpha / floor - 1) * 100, 2)
+    return rows
+
+
 def _read(csv_path):
     with open(csv_path, newline="") as f:
-        return list(csv.DictReader(f))
+        return _apply_floor_correction(list(csv.DictReader(f)))
 
 
 def _lambda_colors(lambdas):

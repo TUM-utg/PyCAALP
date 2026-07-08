@@ -37,7 +37,7 @@ from experiments.adaptive_convergence.plot_convergence import (  # noqa: E402
 # (csv field, y-axis label, short panel title)
 PANELS = [
     ("path_cost_vs_cmin_pct", "ASP deviation [%]", "ASP (0 = sum of shortest path)"),
-    ("alpha_vs_width_pct", "PLP deviation [%]", "PLP (0 = phase width)"),
+    ("alpha_vs_width_pct", "PLP deviation [%]", "PLP (0 = makespan floor)"),
 ]
 
 # Discrete colours for the P series (TUM blue, green, orange, purple, grey).
