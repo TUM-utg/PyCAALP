@@ -92,8 +92,6 @@ result, best_path = optimize(
 
 * `examples/run_assembly_1.py`: This example uses Assembly 1 (14 parts, 13 joints) to show a simple assembly sequence calculation with balanced phase times.  
 
-## API Reference
-
 ## Citation
 
 ```bash
