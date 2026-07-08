@@ -2,4 +2,12 @@ __pycache__
 .vscode
 .idea
 .pylintrc
-.pkl
+*.pkl
+.coverage
+coverage.*
+*.csv
+*.out
+*.log
+*.svg
+*.png
+*.pyc

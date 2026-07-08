@@ -8,6 +8,7 @@ from loguru import logger
 
 from pycaalp.gapp.product_class import Product
 from pycaalp.gapp.filtering import (
+    edges_from_protected_nodes,
     filter_assembly_digraph_edges,
     filter_assembly_diagraph_nodes,
     find_unique_nodes_from_df,
@@ -111,11 +112,19 @@ def create_pkls_with_filtered_assembly_digraph(
 
         prod_class.filter_percentage = i
         if filter_method == "edges":
+            # Legacy node protection expressed as an edge set
+            protected_edges = (
+                edges_from_protected_nodes(
+                    prod_class.assembly_digraph, unique_nodes_dict
+                )
+                if unique_nodes_dict is not None
+                else None
+            )
             prod_class.assembly_digraph = filter_assembly_digraph_edges(
                 prod_class.assembly_digraph,
                 prod_class.filter_percentage,
                 prod_class.get_num_layers,
-                unique_nodes_dict,
+                protected_edges,
             )
         elif filter_method == "nodes":
             prod_class.assembly_digraph = filter_assembly_diagraph_nodes(

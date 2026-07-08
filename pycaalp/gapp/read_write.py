@@ -227,6 +227,7 @@ def read_graph_from_json(file_name: str) -> nx.Graph:
         max_handling = max(
             parts[curr_parts[0]]["handling"], parts[curr_parts[1]]["handling"]
         )
+        max_mass = max(parts[curr_parts[0]]["weight"], parts[curr_parts[1]]["weight"])
         graph.add_edge(
             curr_parts[0],
             curr_parts[1],
@@ -235,6 +236,7 @@ def read_graph_from_json(file_name: str) -> nx.Graph:
             time=curr_attrs["time"],
             tolerance=curr_attrs["tolerance"],
             handling=max_handling,
+            mass=max_mass,
         )
 
     assert len(list(parts)) == len(

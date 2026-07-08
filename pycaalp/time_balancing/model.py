@@ -1,7 +1,7 @@
-"""MILP for the assembly line balancing problem.
+"""MIP for the assembly line balancing problem.
 
 Problem formulation:
-- The problem is formulated as a MILP
+- The problem is formulated as a MIP
 
 Problem variables:
 - x_e: binary variable that is equal to 1 if edge e is selected
@@ -43,7 +43,7 @@ def load_graph_class_from_pickle(file_name: str) -> dict:
         file_name: The path to the pickle file.
 
     Returns:
-        A dict with AssemblyDigraph atrributes.
+        A dict with AssemblyDigraph attributes.
     """
     with open(file_name, "rb") as _f:
         assem_dig = pickle.load(_f)
@@ -137,7 +137,7 @@ def write_results_to_file(
         _f.write(f"alpha = {model.getVal(alpha)}\n")
 
         _f.write("\nX variables: operation\n")
-        for key, val in operations.items():
+        for key, val in results.items():
             _f.write(f"{key}: {val}\n")
 
         if print_all_solutions:
@@ -305,60 +305,65 @@ def check_and_print_results(
     results["handling"] = {}
     results["tolerance"] = {}
     results["time"] = {}
+    results["mass"] = {}
     results["absolute_handling"] = {}
     results["absolute_tolerance"] = {}
     results["absolute_time"] = {}
+    results["absolute_mass"] = {}
     results["phase"] = {}
     results["operations_per_phase"] = {}
     results["time_per_phase"] = {}
     results["absolute_time_per_phase"] = {}
-    phase_per_operation_list = []
     used_operations = []
     technology = nx.get_edge_attributes(main_graph, "technology")
     handling = nx.get_edge_attributes(main_graph, "handling")
     tolerance = nx.get_edge_attributes(main_graph, "tolerance")
     time = nx.get_edge_attributes(main_graph, "time")
+    mass = nx.get_edge_attributes(main_graph, "mass")
     abs_handling = nx.get_edge_attributes(main_graph, "absolute_handling")
     abs_tolerance = nx.get_edge_attributes(main_graph, "absolute_tolerance")
     abs_time = nx.get_edge_attributes(main_graph, "absolute_time")
+    abs_mass = nx.get_edge_attributes(main_graph, "absolute_mass")
 
+    # Build layer→phase mapping from y variables (keyed by layer index)
+    layer_to_phase = {}
     for var in model.getVars():
         if var.name.startswith("x") and model.getVal(var) > 0.99:
             edge_str = ast.literal_eval(var.name[2:])
             oper_used = assembly_digraph.edges[edge_str]["operation"]
-            used_operations.append(oper_used)  # for testing
-            # print(f"{_x.name}: {oper_used}")
+            used_operations.append(oper_used)
             results["operations"][edge_str] = oper_used
             results["technology"][edge_str] = technology[oper_used]
             results["handling"][edge_str] = handling[oper_used]
             results["tolerance"][edge_str] = tolerance[oper_used]
             results["time"][edge_str] = time[oper_used]
+            results["mass"][edge_str] = mass[oper_used]
             results["absolute_handling"][edge_str] = abs_handling[oper_used]
             results["absolute_tolerance"][edge_str] = abs_tolerance[oper_used]
             results["absolute_time"][edge_str] = abs_time[oper_used]
+            results["absolute_mass"][edge_str] = abs_mass[oper_used]
 
         if var.name.startswith("y") and model.getVal(var) > 0.99:
-            phase = int(var.name.split("_")[-1])
-            phase_per_operation_list.insert(0, phase)
+            # y variable names are "y_<layer>_<phase>"
+            parts = var.name.split("_")
+            layer_to_phase[int(parts[1])] = int(parts[2])
 
         if var.name == "alpha":
             results["alpha"] = model.getVal(var)
 
-    for ed_str, ph in zip(list(results["operations"].keys()), phase_per_operation_list):
+    # Assign phase to each selected edge using the explicit layer→phase mapping
+    for ed_str, oper in results["operations"].items():
+        layer = int(ed_str[0].split("_")[0])
+        ph = layer_to_phase[layer]
         results["phase"][ed_str] = ph
-
         results["time_per_phase"][ph] = (
-            results["time_per_phase"].get(ph, 0) + time[results["operations"][ed_str]]
+            results["time_per_phase"].get(ph, 0) + time[oper]
         )
-
         results["absolute_time_per_phase"][ph] = (
-            results["absolute_time_per_phase"].get(ph, 0)
-            + abs_time[results["operations"][ed_str]]
+            results["absolute_time_per_phase"].get(ph, 0) + abs_time[oper]
         )
-
-    for ph in phase_per_operation_list:
         results["operations_per_phase"][ph] = (
-            results["operations_per_phase"].get(ph, 0) + 1  # Just accumulate
+            results["operations_per_phase"].get(ph, 0) + 1
         )
 
     # Check if all the used operations are in the operations list
@@ -378,35 +383,34 @@ def check_and_print_results(
                     oper_used = assembly_digraph.edges[ast.literal_eval(v.name[2:])][
                         "operation"
                     ]
-
                     print(
-                        f"{v.name}: {model.getSolVal(sol, v)}, {main_graph.parts[oper_used[0]]}, {main_graph.parts_dict[oper_used[1]]} "
+                        f"{v.name}: {model.getSolVal(sol, v)}, "
+                        f"{oper_used[0]}, {oper_used[1]}"
                     )
 
-    operations_list = []
-    operations_list = [[] for _ in range(max(phase_per_operation_list) + 1)]
-    op_list = list(results["operations"].values())
-    for i in range(len(op_list) - 1, -1, -1):
-        operations_list[phase_per_operation_list[i]].append(op_list[i])
+    num_phases_used = max(results["phase"].values()) + 1 if results["phase"] else 0
+    operations_list = [[] for _ in range(num_phases_used)]
+    for ed_str, oper in results["operations"].items():
+        operations_list[results["phase"][ed_str]].append(oper)
 
     return results, operations_list
 
 
-def run_milp(
-    assembly_digraph: AssemblyDigraph = None,
-    pickle_filename: str = None,
+def run_mip(
+    assembly_digraph: AssemblyDigraph | None = None,
+    pickle_filename: str = "",
     full_result_output: bool = False,
     return_model: bool = False,
-    bal_res_filename: str = None,
-    write_milp_res: str = False,
-    print_all_solutions: str = False,
+    bal_res_filename: str = "",
+    write_milp_res: bool = False,
+    print_all_solutions: bool = False,
     num_phases: int = 3,
-    w_balanced: int = 0.5,
-    relative_gap: float = 0.05,
+    w_balanced: float = 0.5,
+    relative_gap: float = 0.0,
     hide_output: bool = True,
-    var_type: bool = "BINARY",
+    var_type: str = "BINARY",
 ):
-    """Run the MILP for the assembly line balancing problem.
+    """Run the MIP for the assembly line balancing problem.
 
     The PKL file should be a dict and contain the following:
     - assembly_digraph: The assembly digraph.
@@ -424,12 +428,12 @@ def run_milp(
         The objective function value.
     """
     logger.info("Running MIP solver ...")
-    # Access the assebmly digraph
+    # Access the assembly digraph
     if assembly_digraph:
         assem_digr = assembly_digraph.assembly_digraph
         main_graph = assembly_digraph.graph
-    elif pickle_filename:
-        assem_digr, main_graph = get_pkl_data(pickle_filename)
+    # elif pickle_filename:
+    # assem_digr, main_graph = get_pkl_data(pickle_filename)
     else:
         raise ValueError("Please provide an assembly digraph class or a pickle file")
 
@@ -441,20 +445,21 @@ def run_milp(
     time_weights = nx.get_edge_attributes(main_graph, "time")
 
     # Equal effect factor using shortest path
+    assert assembly_digraph.sum_of_sh_path_weights is not None
     equal_effect_factor = (
         assembly_digraph.sum_of_sh_path_weights
         * num_phases
         / sum(time_weights.values())
     )
 
-    # Create MILP model
+    # Create MIP model
     model = Model()
 
     # Set model parameters (https://www.scipopt.org/doc/html/PARAMETERS.php)
     model.hideOutput(hide_output)
     model.setParam("limits/gap", relative_gap)  # relative gap
     # Use parallel mode
-    model.setParam("parallel/maxnthreads", 4)
+    model.setParam("parallel/maxnthreads", 0)
 
     # STEP 1: ADD VARIABLES
     x, y, z, alpha = add_vars(
@@ -489,6 +494,13 @@ def run_milp(
     )
 
     results = results_in_ascending_order(results)
+    results["objective"] = model.getObjVal()
+    # Solver termination: "optimal" means proven to optimality; anything else
+    # (gaplimit/timelimit/…) means the objective is only an incumbent, so it may
+    # be *beaten* by an exactly-solved subgraph. Callers that use this value as a
+    # reference must check it.
+    results["scip_status"] = model.getStatus()
+    results["scip_gap"] = model.getGap()
 
     if write_milp_res:
         # Create balancing results dir
@@ -496,7 +508,7 @@ def run_milp(
         if not os.path.exists(res_dir):
             os.makedirs(res_dir)
         # Add date and time to the filename
-        if bal_res_filename is None:
+        if not bal_res_filename:
             bal_res_filename = (
                 res_dir
                 + pickle_filename.split("/")[-1][:-4]

@@ -1,6 +1,8 @@
 # PyCAALP (Computer-Aided Assembly Line Planning)
 
 [![CI](https://github.com/TUM-utg/PyCAALP/actions/workflows/python-package-conda.yml/badge.svg)](https://github.com/TUM-utg/PyCAALP/actions/workflows/python-package-conda.yml)
+[![codecov](https://codecov.io/gh/TUM-utg/PyCAALP/branch/research%2Fwgp-2026/graph/badge.svg)](https://codecov.io/gh/TUM-utg/PyCAALP/branch/research%2Fwgp-2026)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 A Unified Framework for Automated Assembly Sequence and Production Line Planning using Graph-based Optimization
 
@@ -90,8 +92,6 @@ result, best_path = optimize(
 
 * `examples/run_assembly_1.py`: This example uses Assembly 1 (14 parts, 13 joints) to show a simple assembly sequence calculation with balanced phase times.  
 
-## API Reference
-
 ## Citation
 
 ```bash
@@ -123,7 +123,3 @@ __Research Coordinator:__ Dr.-Ing. Christoph Hartmann
 
 * __Institution:__ Chair of Metal Forming and Casting, Technical University of Munich
 * __Research & Collaboration Inquiries:__ Email [christoph.hartmann@utg.de](mailto:christoph.hartmann@utg.de).
-
-
-
-

@@ -39,7 +39,7 @@ def count_num_different_technologies(technology_weights: list) -> int:
     return len(tech_list) - 1
 
 
-def create_tech_list_with_occurences(technology_values: list):
+def create_tech_list_with_occurrences(technology_values: list):
     tech_occur = {}
     for value in technology_values:
         if value not in tech_occur.keys():
@@ -52,18 +52,18 @@ def create_tech_list_with_occurences(technology_values: list):
 
 def find_min_diff(technology_occur: dict):
     max_key = max(technology_occur, key=technology_occur.get)
-    min_diff = float("-inf")
+    min_diff = float("inf")
     for tech, occurs in technology_occur.items():
         if tech != max_key:
             curr_min_diff = technology_occur[max_key] - occurs
             min_diff = min(curr_min_diff, min_diff)
-    if min_diff == float("-inf"):
+    if min_diff == float("inf"):  # loop never ran: only one technology type
         return 0
     return min_diff
 
 
 def check_technology_changes(technology_values: dict, new_edge_technology: str):
-    tech_occur = create_tech_list_with_occurences(list(technology_values.values()))
+    tech_occur = create_tech_list_with_occurrences(list(technology_values.values()))
     min_diff_prev = find_min_diff(tech_occur)
     if new_edge_technology not in tech_occur:
         tech_occur[new_edge_technology] = 1
@@ -132,7 +132,24 @@ def check_num_subgraphs_and_one_assembly_policy(
     return num_connected_subgraphs == 1
 
 
-def check_one_assembly_policy(graph: nx.Graph) -> bool:
+def get_num_connected_subgraphs(graph: nx.Graph) -> int:
+    """
+    Checks if there is only one assembly policy in the graph.
+
+    Args:
+        graph: The graph to be checked.
+
+    Returns:
+        Number of connected subgraphs of the given graph.
+    """
+    sub_graphs = np.array(list(nx.connected_components(graph)))
+    sub_graphs_lengths = np.vectorize(len)(sub_graphs)
+    return len(np.where(sub_graphs_lengths > 1)[0])
+
+
+def check_one_assembly_policy(
+    graph: nx.Graph, one_assembly_policy: bool = False, num_par_ass: int = 1
+) -> bool:
     """
     Checks if there is only one assembly policy in the graph.
 
@@ -142,10 +159,14 @@ def check_one_assembly_policy(graph: nx.Graph) -> bool:
     Returns:
         True if there is only one assembly policy, False otherwise.
     """
-    sub_graphs = np.array(list(nx.connected_components(graph)))
-    sub_graphs_lengths = np.vectorize(len)(sub_graphs)
-    num_connected_subgraphs = len(np.where(sub_graphs_lengths > 1)[0])
-    return num_connected_subgraphs in [0, 1]
+    if not one_assembly_policy:
+        return True
+    allowed_subgraphs_num = [0, 1]
+    if num_par_ass != 1:
+        allowed_subgraphs_num.append(num_par_ass)
+    num_connected_subgraphs = get_num_connected_subgraphs(graph)
+
+    return num_connected_subgraphs in allowed_subgraphs_num
 
 
 def find_max_edges_connected_per_node(graph: nx.Graph) -> int:
@@ -201,7 +222,7 @@ def dict_assembly_digraph_length_per_layer(
     if print_results:
         print("Assembly digraph length per layer:")
         print(f"Total number of nodes: {len(assembly_digraph.nodes())}")
-        print("Toal number of nodes per layer:")
+        print("Total number of nodes per layer:")
         print(layer_dict)
         print(f"Total number of edges: {len(assembly_digraph.edges())}")
     return layer_dict
@@ -227,7 +248,7 @@ def dict_assembly_digraph_nodes_per_layer(assembly_digraph: nx.DiGraph) -> dict:
     return node_dict
 
 
-def binomial_coeff(y: int, x: int):
+def binomial_coeff(y: int, x: int) -> int:
     """Using the formula C(y,x)= y!/x!(y-x)!
 
     Args:
@@ -239,7 +260,7 @@ def binomial_coeff(y: int, x: int):
     """
     # Check if x is within the valid range
     if x < 0 or x > y:
-        return "Invalid input: x should be between 0 and y."
+        raise ValueError("Invalid input: x should be between 0 and y.")
 
     num_combinations = factorial(y) // (factorial(x) * factorial(y - x))
     return num_combinations

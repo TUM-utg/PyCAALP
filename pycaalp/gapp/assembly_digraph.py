@@ -1,4 +1,4 @@
-"""The main class for the Assemlby Digraph API.
+"""The main class for the Assembly Digraph API.
 
 All the functions used for the computation of the assembly digraph.
 """
@@ -12,7 +12,7 @@ import networkx as nx
 from loguru import logger
 
 
-from pycaalp.gapp.checks import check_one_assembly_policy, check_technology_changes
+from pycaalp.gapp.checks import check_one_assembly_policy, get_num_connected_subgraphs
 from pycaalp.gapp.read_write import read_graph_from_json
 from pycaalp.gapp.file_formats import assembly_digraph_to_dict, save_to_pkl
 
@@ -23,10 +23,11 @@ from pycaalp.gapp.freedom_matrices import (
 )
 
 from pycaalp.gapp.paths import calculate_num_simple_paths
+from pycaalp.gapp.paths import set_blended_weights as _set_blended
 
 from pycaalp.gapp.filtering import (
     normalize_attributes,
-    find_all_shortest_paths,
+    find_adaptive_protected_edges,
     filter_assembly_digraph_edges,
 )
 
@@ -36,7 +37,7 @@ from pycaalp.gapp.paths import calculate_sum_of_sh_path_weights
 class AssemblyDigraph:
     """Main class for the Assembly Digraph API.
     This class contains all the functions needed to compute the assembly digraph with the
-    option of using deegree of freedom matrices.
+    option of using degree of freedom matrices.
     """
 
     def __init__(
@@ -44,12 +45,18 @@ class AssemblyDigraph:
         file_name: str = None,
         graph: nx.Graph = None,
         dfm_file=None,
-        w_tech=0.3333,
-        w_hand=0.3333,
-        w_tol=0.3333,
+        w_tech=0.25,
+        w_hand=0.25,
+        w_tol=0.25,
+        w_mass=0.25,
+        w_bal=0.5,
         reduction_percentage=0,
         pkl_save_format: str = "dict",
         log_format: str = None,
+        one_assembly_policy=True,
+        num_par_ass=1,
+        num_phases: int = 3,
+        lambda_balance: float = 0.5,
     ):
         """Create an nx graph from a file or from a given graph, otherwise graph is None.
 
@@ -61,15 +68,22 @@ class AssemblyDigraph:
             w_tech: Technology weight.
             w_hand: Handling weight.
             w_tol: Tolerance weight.
+            w_mass: Mass weight.
             reduction_percentage: Edge reduction (%) for the assembly directed graph reduction.
             pkl_save_format: Format of the pkl file: "dict" or "class".
-            log_format: Loger format: "SET_OUT"(already set before the class creation),
+            log_format: Logger format: "SET_OUT"(already set before the class creation),
                 or loguru "INFO", "DEBUG".
         """
-        if file_name.endswith(".json") or not isinstance(file_name, str):
+        if file_name is not None:
+            if not isinstance(file_name, str):
+                raise ValueError("file_name must be a string path to a JSON file")
+            if not file_name.endswith(".json"):
+                raise ValueError(f"file_name must end with '.json', got: {file_name}")
             graph = read_graph_from_json(file_name)
-        else:
-            raise ValueError("File should be a string in JSON format")
+        elif graph is None:
+            raise ValueError(
+                "Provide either file_name (JSON path) or a pre-built graph"
+            )
 
         # Check if the graph is empty, fully connected and obeys the one assembly policy
         if graph is None:
@@ -88,22 +102,29 @@ class AssemblyDigraph:
         self.w_tech = w_tech
         self.w_hand = w_hand
         self.w_tol = w_tol
+        self.w_mass = w_mass
+        self.w_bal = w_bal
         self.reduction_percentage = reduction_percentage
         self.freedom_matrices = False
         self.pkl_save_format = pkl_save_format
         self.sum_of_sh_path_weights = None
+        self.one_assembly_policy = one_assembly_policy
+        self.num_par_ass = num_par_ass
+        self.num_phases = num_phases
+        self.lambda_balance = lambda_balance
 
         assert all(
-            w >= 0.0 for w in [self.w_tech, self.w_hand, self.w_tol]
+            w >= 0.0 for w in [self.w_tech, self.w_hand, self.w_tol, self.w_mass]
         ), f"All attribute coefficients should be positive\n. w_tech:{self.w_tech}, w_hand:{self.w_hand}, w_tol:{self.w_tol}"
         assert math.isclose(
-            w_tech + w_hand + w_tol, 1.0, abs_tol=1e-3
+            self.w_tech + self.w_hand + self.w_tol + self.w_mass, 1.0, abs_tol=1e-3
         ), f"The attribute coefficients should sum to 1\n. w_tech:{self.w_tech}, w_hand:{self.w_hand}, w_tol:{self.w_tol}"
 
         # Main graph attributes
         self.node_handling = nx.get_node_attributes(graph, "handling")
         self.edge_tolerance = nx.get_edge_attributes(graph, "tolerance")
         self.edge_technology = nx.get_edge_attributes(graph, "technology")
+        self.edge_mass = nx.get_edge_attributes(graph, "mass")
 
         if dfm_file:
             if not isinstance(dfm_file, str):
@@ -147,7 +168,7 @@ class AssemblyDigraph:
             new_edge: edge to be added.
             prev_edges: previous edges in the assembly.
             layer: current layer of the assembly digraph.
-            temp_graph_edge_tech: cuttent graphs edge weights.
+            temp_graph_edge_tech: current graphs edge weights.
 
         Returns:
             Calculated edge weight of the assembly digraph.
@@ -155,9 +176,11 @@ class AssemblyDigraph:
         edge_weight = 0.0
         # Handling, Tolerance
         max_hand = self.graph[new_edge[0]][new_edge[1]]["handling"]
+        max_mass = self.graph[new_edge[0]][new_edge[1]]["mass"]
+        edge_tol = self.edge_tolerance.get(new_edge, 0.0)
         # ΝΟΤΕ: This works since each layer adds only one edge
         edge_weight += (
-            self.edge_tolerance.get(new_edge) * self.w_tol + max_hand * self.w_hand
+            edge_tol * self.w_tol + max_hand * self.w_hand + max_mass * self.w_mass
         ) / layer
 
         # Technology
@@ -176,7 +199,7 @@ class AssemblyDigraph:
         """
         Computes the assembly digraph of the given graph.
         Fully fused approach: The assembly digraph is computed in place while
-        the dissasembly states are computed.
+        the disassembly states are computed.
 
         Returns:
             nx.DiGraph: A directed graph representing the assembly states.
@@ -185,6 +208,15 @@ class AssemblyDigraph:
         edges = list(self.graph.edges)
         total_num_layers = self.graph.number_of_edges()
         digraph = nx.DiGraph()
+
+        # Backward DP state for time_balanced_weight computation.
+        # t_remaining[v] = sum of operation times from v to the sink (path-independent,
+        # since each node encodes the exact set of remaining joints).
+        time_weights = nx.get_edge_attributes(self.graph, "time")
+        T_total = sum(time_weights.values()) if time_weights else 0.0
+        phase_width = T_total / self.num_phases if T_total > 0 else 1.0
+        sink_node = f"{total_num_layers}_1"
+        t_total_assembly = {sink_node: T_total}
         # Add node layer if needed (it is already included on the node name)
         # digraph.add_node(f"{total_num_layers}_1", layer=total_num_layers)
 
@@ -201,7 +233,9 @@ class AssemblyDigraph:
                 temp_graph.remove_edges_from(edges_to_remove)
 
                 # Keep only the combinations that satisfy the one assembly policy
-                if check_one_assembly_policy(temp_graph):
+                if check_one_assembly_policy(
+                    temp_graph, self.one_assembly_policy, self.num_par_ass
+                ):
                     disassembly_states[layer].append(list(temp_graph.edges()))
                     curr_edge_index += 1
 
@@ -216,7 +250,7 @@ class AssemblyDigraph:
 
                         if set(temp_graph.edges()).issubset(set(prev_edges)):
 
-                            new_edge = (prev_edges - temp_graph.edges()).pop()
+                            new_edge = (set(prev_edges) - set(temp_graph.edges())).pop()
 
                             # DFM check
                             if self.freedom_matrices:
@@ -257,11 +291,67 @@ class AssemblyDigraph:
                                 list(digraph.out_edges(to_name, "operation")),
                             )
 
+                            connected_subgraphs = get_num_connected_subgraphs(
+                                temp_graph
+                            )
+                            # Heuristic to enforce multiple connected subgraphs at first layers
+                            # w_conn_subgraphs = (
+                            #     1 / (connected_subgraphs**10 + 1) if layer > 2 else 0
+                            # )
+
+                            op_time = time_weights.get(new_edge, 0.0)
+                            # Save subassembly times / per digraph nodes
+                            t_tot_asmb = t_total_assembly.get(to_name, 0.0)
+                            t_total_assembly.setdefault(from_name, t_tot_asmb - op_time)
+
+                            t_done_from = t_total_assembly[from_name]
+                            t_done_to = t_total_assembly[to_name]
+
+                            phase_before = min(
+                                int(t_done_from / phase_width), self.num_phases - 1
+                            )
+                            phase_after = min(
+                                int(t_done_to / phase_width), self.num_phases - 1
+                            )
+                            if phase_before < phase_after:
+                                t_bal_weight = 0  # Need to find range of edge_weights
+                            else:
+                                t_bal_weight = 1  # Need to find range of edge_weights
+
+                            # time_balanced_weight = (
+                            #     self.w_bal * t_bal_weight
+                            #     + (1 - self.w_bal) * edge_weight
+                            # )
+                            time_balanced_weight = t_bal_weight
+
+                            # TODO: try . Principled replacement: for each ideal
+                            # boundary b_k = k * phase_width inside
+                            # (t_done_from, t_done_to], add the best achievable
+                            # cut error
+                            #   min(|t_done_from - b_k|, |t_done_to - b_k|)
+                            #       / phase_width
+
+                            # if T_total > 0 and self.num_phases > 1:
+                            #     from_frac = t_done_from / T_total
+                            #     to_frac = t_done_to / T_total
+                            #     ideal_fracs = [
+                            #         p / self.num_phases
+                            #         for p in range(1, self.num_phases)
+                            #     ]
+                            #     dist_from = min(abs(from_frac - f) for f in ideal_fracs)
+                            #     dist_to = min(abs(to_frac - f) for f in ideal_fracs)
+                            #     time_balanced_weight = min(dist_from, dist_to)
+                            # else:
+                            #     time_balanced_weight = edge_weight
+
                             digraph.add_edge(
                                 from_name,
                                 to_name,
                                 operation=new_edge,
                                 edge_weight=edge_weight,
+                                connected_subgraphs=connected_subgraphs,
+                                # w_conn_subgraphs=w_conn_subgraphs,
+                                time_balanced_weight=time_balanced_weight,
                             )
 
                 temp_graph.add_edges_from(edges_to_remove)
@@ -271,7 +361,7 @@ class AssemblyDigraph:
             )
             logger.debug(f"Number of initial states: {len(disassembly_states[layer])}")
 
-            # Try to remove all the nodes without succesor in the current layer of the digraph
+            # Try to remove all the nodes without successor in the current layer of the digraph
             # to avoid checking for them in the next layer
             # Usefull only when dmf
             if self.freedom_matrices:
@@ -294,10 +384,10 @@ class AssemblyDigraph:
         return digraph
 
     def compute_assembly_digraph_complete(self) -> nx.DiGraph:
-        """Computes the assebmly digraph of the given graph.
+        """Computes the assembly digraph of the given graph.
 
         Returns:
-            nx.DiGraph: A directed graph representing the assebmly digraph.
+            nx.DiGraph: A directed graph representing the assembly digraph.
         """
         # Check if there is no graph
         if self.graph is None:
@@ -306,16 +396,21 @@ class AssemblyDigraph:
         logger.info("Computing assembly digraph...")
         # Run the complete assembly digraph code.
         self.create_assembly_digraph()
-        # Reduce the graph
+
+        assert self.assembly_digraph is not None
+
+        # Reduce the graph, protecting the adaptive subgraph's edges (bl-union
+        # + diverse re-routing up to 10% of the digraph) so the reduction
+        # cannot destroy the near-optimal paths
         if self.reduction_percentage:
-            unique_nodes_dict = find_all_shortest_paths(
-                self.assembly_digraph, self.graph.number_of_edges()
+            protected_edges = find_adaptive_protected_edges(
+                self, lam=self.lambda_balance
             )
             self.assembly_digraph = filter_assembly_digraph_edges(
                 self.assembly_digraph,
                 self.reduction_percentage,
                 self.get_num_layers,
-                unique_nodes_dict,
+                protected_edges,
             )
 
         # Independent calculation, i.e., run shortest path again
@@ -326,6 +421,19 @@ class AssemblyDigraph:
         logger.debug(f"Time to compute assembly digraph: {stop_comp_cuts_ev} sec")
         return self.assembly_digraph
 
+    def set_blended_weights(self, lam, out_attr="blended_weight"):
+        """Set the per-edge blended enumeration weight for the given λ.
+
+        Writes w_blend = (1-λ)·edge_weight_norm + λ·misalignment_norm onto every
+        edge of the assembly digraph (see pycaalp.gapp.paths.set_blended_weights).
+        One call serves any k; re-call with a different λ to re-blend without
+        rebuilding the (expensive) digraph. Returns the assembly digraph.
+        """
+        time_weights = nx.get_edge_attributes(self.graph, "time")
+        return _set_blended(
+            self.assembly_digraph, time_weights, self.num_phases, lam, out_attr
+        )
+
     def save_class_to_pickle(self, file_name: str = "assembly_digraph.pkl") -> None:
         """Saves the AssemblyDigraph class to a pickle file by converting it to a dictionary.
 
@@ -335,16 +443,16 @@ class AssemblyDigraph:
         if self.pkl_save_format == "dict":
             graph_to_dict = assembly_digraph_to_dict(self)
             save_to_pkl(graph_to_dict, file_name=file_name)
-            # elif self.pkl_save_format == "class":
+        elif self.pkl_save_format == "class":
             save_to_pkl(self, file_name=file_name)
         else:
             raise ValueError("Unknown pickle save format")
         logger.info(f"Saved assembly digraph class to pickle file {file_name}")
 
     def generate_assembly_digraph_file_complete(
-        self, file_name="assemlby_digraph.pkl"
+        self, file_name="assembly_digraph.pkl"
     ) -> None:
-        """Generates an assembly digraph file by computing the assebmly digraph
+        """Generates an assembly digraph file by computing the assembly digraph
         and saving the assembly digraph class to a pickle file.
 
         Args:
@@ -375,7 +483,7 @@ class AssemblyDigraph:
 
     @property
     def get_num_layers(self) -> int:
-        """Get the number of layers of a assebmly digraph"""
+        """Get the number of layers of a assembly digraph"""
         # NOTE: compute indirectly the number of layers but efficient
         if not self.assembly_digraph:
             raise ValueError("No assembly digraph exists")

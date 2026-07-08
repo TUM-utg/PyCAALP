@@ -7,15 +7,19 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.11"]
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Python
+      - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
         with:
-          python-version: "3.10"
+          python-version: ${{ matrix.python-version }}
+          cache: "pip" # Speeds up execution by caching pip dependencies
 
       - name: Install system dependencies
         run: |
@@ -31,11 +35,28 @@ jobs:
         run: python -m pip install --upgrade pip setuptools wheel
 
       - name: Install Python dependencies
-        run: pip install -r requirements.txt
+        run: |
+          pip install -r requirements.txt
+          pip install pytest pytest-cov
 
       - name: Import PyCAALP
+        env:
+          PYTHONPATH: ${{ github.workspace }}
         run: |
           python - <<EOF
           import pycaalp
           print("PyCAALP imported successfully")
           EOF
+
+      - name: Run pytest
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+        run: |
+          pytest --cov=pycaalp --cov-report=term-missing --cov-report=xml tests/ -v
+
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          slug: TUM-utg/PyCAALP
+          files: ./coverage.xml
