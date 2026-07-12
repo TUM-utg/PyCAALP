@@ -694,6 +694,11 @@ def plot_k_vs_subgraph(rows, res_dir, instance, num_phases):
         ys = [sum(acc[k]) / len(acc[k]) for k in ks]
         mult = 2 if weight_attr == "combined" else 1
         xs = [k * mult for k in ks]
+        num_ks_str = "(k)"
+        if weight_attr == "combined":
+            num_ks_str = "(2k)"
+        elif weight_attr == "blended_union":
+            num_ks_str = "(3k)"
         ax.plot(
             xs,
             ys,
@@ -703,13 +708,13 @@ def plot_k_vs_subgraph(rows, res_dir, instance, num_phases):
             marker=marker,
             ms=6,
             mfc=cols[ci],
-            label=f"{label} (2k)" if mult == 2 else f"{label} (k)",
+            label=f"{label} " + num_ks_str,
         )
     ax.set_xscale("log")
     ax.set_yscale("log")
     ax.set_ylim(*_pct_xlim(rows))
     ax.set_xlabel(
-        "Paths enumerated  (edge_w / bal_w: k;  combined: 2k)",
+        "Paths enumerated",
         fontname="Liberation Serif",
         fontsize=11,
     )
