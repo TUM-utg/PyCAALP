@@ -630,7 +630,7 @@ def plot_min_k(rows, res_dir, instance, num_phases, lambdas):
                     color=cols[ci],
                     linewidth=1.0,
                     marker=marker,
-                    ms=6,
+                    ms=5,
                     mfc=cols[ci],
                     label=label,
                 )
@@ -646,8 +646,8 @@ def plot_min_k(rows, res_dir, instance, num_phases, lambdas):
     )
     handles, labels = axes[0, 0].get_legend_handles_labels()
     fig.suptitle(
-        f"Graph fraction needed to stay within a target gap across λ  —  "
-        f"{instance}  P={num_phases}",
+        f"{instance.capitalize().replace("_"," ")} - Graph fraction needed to stay within "
+        f"a target gap across λ (P={num_phases})",
         fontname="Liberation Serif",
         fontsize=13,
     )
@@ -706,7 +706,7 @@ def plot_k_vs_subgraph(rows, res_dir, instance, num_phases):
             color=cols[ci],
             linewidth=1.0,
             marker=marker,
-            ms=6,
+            ms=5,
             mfc=cols[ci],
             label=f"{label} " + num_ks_str,
         )
@@ -724,7 +724,7 @@ def plot_k_vs_subgraph(rows, res_dir, instance, num_phases):
         fontsize=11,
     )
     ax.set_title(
-        f"Graph coverage vs. enumeration effort  —  {instance}  P={num_phases}",
+        f"{instance.capitalize().replace("_"," ")} - Graph coverage vs. enumeration effort  (P={num_phases})",
         fontname="Liberation Serif",
         fontsize=13,
     )

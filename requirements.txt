@@ -9,7 +9,7 @@ pyscipopt>=5.0.1
 
 # Optional dependencies for freedom matrix calculation using STL files
 # (Uncomment to download)
-# pyvista==0.45.2
+# pyvista>=0.45.2
 # trimesh==4.6.13
-# python-fcl==0.7.0.8
-# meshlib==3.0.6.229
+# python-fcl>=0.7.0.8
+# meshlib>=3.1.3
